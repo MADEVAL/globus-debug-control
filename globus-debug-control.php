@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GLOBUS Debug Control
  * Description: Полный контроль режима отладки WordPress: фильтрация типов ошибок, управление выводом и логированием, удаление php-error класса. Разработчик: GLOBUS.studio.
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: GLOBUS.studio
  * Requires at least: 5.2
  * Requires PHP: 7.4
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'gdc_options';
-	private const VERSION = '2.0.0';
+	private const VERSION = '2.0.1';
 	
 	private static $instance = null;
 	
@@ -200,7 +200,8 @@ final class Globus_Debug_Control {
 			$mask &= ~E_WARNING & ~E_USER_WARNING;
 		}
 		
-		if ( $opts['suppress_strict'] && defined( 'E_STRICT' ) ) {
+		// E_STRICT устарел в PHP 8.0+ и не существует как отдельная константа
+		if ( $opts['suppress_strict'] && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
 			$mask &= ~E_STRICT;
 		}
 		
@@ -489,6 +490,7 @@ final class Globus_Debug_Control {
 	
 	public function field_suppress() {
 		$opts = $this->get_options();
+		$is_php8 = version_compare( PHP_VERSION, '8.0.0', '>=' );
 		?>
 		<fieldset>
 			<label>
@@ -503,10 +505,17 @@ final class Globus_Debug_Control {
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_warnings]" value="1" <?php checked( $opts['suppress_warnings'], 1 ); ?>>
 				<strong>Убрать E_WARNING</strong> и E_USER_WARNING (осторожно!)
 			</label><br>
+			<?php if ( ! $is_php8 ) : ?>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_strict]" value="1" <?php checked( $opts['suppress_strict'], 1 ); ?>>
 				<strong>Убрать E_STRICT</strong>
 			</label>
+			<?php else : ?>
+			<label style="opacity: 0.5; cursor: not-allowed;">
+				<input type="checkbox" disabled>
+				<strong>Убрать E_STRICT</strong> <em>(недоступно в PHP 8.0+)</em>
+			</label>
+			<?php endif; ?>
 		</fieldset>
 		<p class="description">Выбранные типы ошибок не будут отображаться и логироваться. Ошибки (E_ERROR) всегда видны.</p>
 		<?php
@@ -602,6 +611,10 @@ final class Globus_Debug_Control {
 				<tr>
 					<td style="width: 250px;"><strong>Версия плагина:</strong></td>
 					<td><?php echo esc_html( self::VERSION ); ?></td>
+				</tr>
+				<tr>
+					<td><strong>Версия PHP:</strong></td>
+					<td><?php echo esc_html( PHP_VERSION ); ?></td>
 				</tr>
 				<tr>
 					<td><strong>WP_DEBUG:</strong></td>
