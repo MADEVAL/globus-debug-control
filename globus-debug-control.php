@@ -4,9 +4,11 @@
  * Description: Полный контроль режима отладки WordPress: фильтрация типов ошибок, управление выводом и логированием, удаление php-error класса. Разработчик: GLOBUS.studio.
  * Version: 2.0.1
  * Author: GLOBUS.studio
+ * Author URI: https://globus.studio
  * Requires at least: 5.2
  * Requires PHP: 7.4
  * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: globus-debug-control
  */
 
@@ -14,10 +16,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Основной класс плагина
- * Singleton для гарантии единственного экземпляра
- */
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'gdc_options';
@@ -25,9 +23,6 @@ final class Globus_Debug_Control {
 	
 	private static $instance = null;
 	
-	/**
-	 * Получение единственного экземпляра
-	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -35,52 +30,30 @@ final class Globus_Debug_Control {
 		return self::$instance;
 	}
 	
-	/**
-	 * Приватный конструктор (Singleton)
-	 */
 	private function __construct() {
-		// Ранняя инициализация - ДО загрузки WordPress
 		$this->early_init();
 		
-		// Стандартные хуки WordPress
 		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ], 1 );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
-		
-		// Фильтры body class - максимальный приоритет
-		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
-		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
-		
-		// Дополнительная защита от встроенного режима WP
-		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
-		
-		// Хук для удаления класса на самой ранней стадии (после setup_theme)
 		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
-		
-		// Добавляем CSS и JS для удаления класса в админке
 		add_action( 'admin_head', [ $this, 'admin_remove_php_error_class' ], 1 );
 		add_action( 'admin_footer', [ $this, 'admin_remove_php_error_class_js' ], 999 );
-		
-		// Для фронтенда
 		add_action( 'wp_head', [ $this, 'frontend_remove_php_error_class' ], 1 );
 		add_action( 'wp_footer', [ $this, 'frontend_remove_php_error_class_js' ], 999 );
+		
+		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
+		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
+		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
 	}
 	
-	/**
-	 * Ранняя установка фильтров body class
-	 */
 	public function early_body_class_filter() {
-		// Повторная регистрация с максимальным приоритетом
 		remove_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		remove_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
-		
 		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
 	}
 	
-	/**
-	 * Ранняя инициализация - применяем настройки до загрузки WP
-	 */
 	private function early_init() {
 		$opts = $this->get_options();
 		
@@ -88,19 +61,11 @@ final class Globus_Debug_Control {
 			return;
 		}
 		
-		// Применяем настройки error_reporting
 		$this->apply_error_reporting( $opts );
-		
-		// Применяем настройки display_errors
 		$this->apply_display_settings( $opts );
-		
-		// Применяем настройки логирования
 		$this->apply_log_settings( $opts );
 	}
 	
-	/**
-	 * Действия после загрузки плагинов
-	 */
 	public function plugins_loaded() {
 		$opts = $this->get_options();
 		
@@ -108,15 +73,11 @@ final class Globus_Debug_Control {
 			return;
 		}
 		
-		// Повторно применяем настройки (на случай изменений другими плагинами)
 		$this->apply_error_reporting( $opts );
 		$this->apply_display_settings( $opts );
 		$this->apply_log_settings( $opts );
 	}
 	
-	/**
-	 * Дефолтные настройки
-	 */
 	private function defaults(): array {
 		return [
 			'enabled'                    => 1,
@@ -133,9 +94,6 @@ final class Globus_Debug_Control {
 		];
 	}
 	
-	/**
-	 * Получение настроек с валидацией
-	 */
 	public function get_options(): array {
 		static $cached_options = null;
 		
@@ -146,7 +104,6 @@ final class Globus_Debug_Control {
 		$saved = get_option( self::OPT, [] );
 		$opts  = wp_parse_args( $saved, $this->defaults() );
 		
-		// Нормализация булевых значений
 		$bool_keys = [
 			'enabled',
 			'suppress_notices',
@@ -162,25 +119,18 @@ final class Globus_Debug_Control {
 			$opts[ $key ] = (int) ! empty( $opts[ $key ] );
 		}
 		
-		// Валидация display_errors_mode
 		$allowed_modes = [ 'inherit', 'on', 'off' ];
 		if ( ! in_array( $opts['display_errors_mode'], $allowed_modes, true ) ) {
 			$opts['display_errors_mode'] = 'inherit';
 		}
 		
-		// Валидация log_max_size_mb
 		$opts['log_max_size_mb'] = max( 1, min( 100, (int) $opts['log_max_size_mb'] ) );
-		
-		// Нормализация пути
-		$opts['log_path'] = trim( $opts['log_path'] );
+		$opts['log_path']        = trim( $opts['log_path'] );
 		
 		$cached_options = $opts;
 		return $opts;
 	}
 	
-	/**
-	 * Применение настроек error_reporting
-	 */
 	private function apply_error_reporting( array $opts ) {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
 			return;
@@ -200,7 +150,6 @@ final class Globus_Debug_Control {
 			$mask &= ~E_WARNING & ~E_USER_WARNING;
 		}
 		
-		// E_STRICT устарел в PHP 8.0+ и не существует как отдельная константа
 		if ( $opts['suppress_strict'] && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
 			$mask &= ~E_STRICT;
 		}
@@ -208,25 +157,19 @@ final class Globus_Debug_Control {
 		error_reporting( $mask );
 	}
 	
-	/**
-	 * Применение настроек display_errors
-	 */
 	private function apply_display_settings( array $opts ) {
 		$is_api_context = $this->is_api_context();
 		
 		$display = '0';
 		
-		// В API контекстах по умолчанию выключаем, если не форсируется
 		if ( $is_api_context && empty( $opts['force_in_api_contexts'] ) ) {
 			$display = '0';
 		} else {
-			// Обычный контекст: применяем настройки
 			if ( 'on' === $opts['display_errors_mode'] ) {
 				$display = '1';
 			} elseif ( 'off' === $opts['display_errors_mode'] ) {
 				$display = '0';
 			} else {
-				// inherit
 				$display = ( defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ) ? '1' : '0';
 			}
 		}
@@ -235,9 +178,6 @@ final class Globus_Debug_Control {
 		ini_set( 'display_startup_errors', $display );
 	}
 	
-	/**
-	 * Применение настроек логирования
-	 */
 	private function apply_log_settings( array $opts ) {
 		if ( empty( $opts['log_enabled'] ) ) {
 			ini_set( 'log_errors', '0' );
@@ -250,19 +190,14 @@ final class Globus_Debug_Control {
 			return;
 		}
 		
-		// Проверка размера лога и ротация
 		$this->rotate_log_if_needed( $log_path, $opts['log_max_size_mb'] );
 		
-		// Проверка возможности записи
 		if ( $this->ensure_log_writable( $log_path ) ) {
 			ini_set( 'log_errors', '1' );
 			ini_set( 'error_log', $log_path );
 		}
 	}
 	
-	/**
-	 * Определение пути к лог-файлу
-	 */
 	private function resolve_log_path( array $opts ): string {
 		if ( ! empty( $opts['log_path'] ) ) {
 			$path = $opts['log_path'];
@@ -293,34 +228,21 @@ final class Globus_Debug_Control {
 		return '';
 	}
 	
-	/**
-	 * Проверка абсолютности пути
-	 */
 	private function is_absolute_path( string $path ): bool {
-		return ( isset( $path[0] ) && '/' === $path[0] ) || ( preg_match( '/^[a-zA-Z]:[\\\\\/]/', $path ) );
+		return ( isset( $path[0] ) && '/' === $path[0] ) || preg_match( '/^[a-zA-Z]:[\\\\\/]/', $path );
 	}
 	
-	/**
-	 * Безопасная нормализация пути
-	 */
 	private function sanitize_path( string $path ): string {
 		$path = str_replace( [ "\0", "\r", "\n" ], '', $path );
 		$path = str_replace( '\\', '/', $path );
-		$path = preg_replace( '#/+#', '/', $path );
-		
-		return $path;
+		return preg_replace( '#/+#', '/', $path );
 	}
 	
-	/**
-	 * Проверка и создание лог-файла
-	 */
 	private function ensure_log_writable( string $log_path ): bool {
 		$dir = dirname( $log_path );
 		
-		if ( ! is_dir( $dir ) ) {
-			if ( ! wp_mkdir_p( $dir ) ) {
-				return false;
-			}
+		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
+			return false;
 		}
 		
 		if ( ! is_writable( $dir ) ) {
@@ -339,9 +261,6 @@ final class Globus_Debug_Control {
 		return is_writable( $log_path );
 	}
 	
-	/**
-	 * Ротация лога при превышении размера
-	 */
 	private function rotate_log_if_needed( string $log_path, int $max_size_mb ) {
 		if ( ! file_exists( $log_path ) ) {
 			return;
@@ -363,68 +282,29 @@ final class Globus_Debug_Control {
 		}
 	}
 	
-	/**
-	 * Определение API контекста
-	 */
 	private function is_api_context(): bool {
-		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-			return true;
-		}
-		
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			return true;
-		}
-		
-		if ( defined( 'MS_FILES_REQUEST' ) && MS_FILES_REQUEST ) {
-			return true;
-		}
-		
-		if ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) {
-			return true;
-		}
-		
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
-			return true;
-		}
-		
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			return true;
-		}
-		
-		if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
-			return true;
-		}
-		
-		if ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) {
-			return true;
-		}
-		
-		if ( isset( $_POST['action'] ) && 'heartbeat' === $_POST['action'] ) {
+		if ( ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) ||
+		     ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ||
+		     ( defined( 'MS_FILES_REQUEST' ) && MS_FILES_REQUEST ) ||
+		     ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) ||
+		     ( defined( 'DOING_CRON' ) && DOING_CRON ) ||
+		     ( defined( 'WP_CLI' ) && WP_CLI ) ||
+		     ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ||
+		     ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) ||
+		     ( isset( $_POST['action'] ) && 'heartbeat' === $_POST['action'] ) ) {
 			return true;
 		}
 		
 		return false;
 	}
 	
-	/**
-	 * Регистрация настроек
-	 */
 	public function register_settings() {
-		register_setting(
-			'globus_debug_control',
-			self::OPT,
-			[
-				'type'              => 'array',
-				'sanitize_callback' => [ $this, 'sanitize_options' ],
-			]
-		);
+		register_setting( 'globus_debug_control', self::OPT, [
+			'type'              => 'array',
+			'sanitize_callback' => [ $this, 'sanitize_options' ],
+		] );
 		
-		add_settings_section(
-			'gdc_main',
-			'Основные настройки',
-			'__return_false',
-			'globus_debug_control'
-		);
+		add_settings_section( 'gdc_main', 'Основные настройки', '__return_false', 'globus_debug_control' );
 		
 		add_settings_field( 'enabled', 'Включить плагин', [ $this, 'field_enabled' ], 'globus_debug_control', 'gdc_main' );
 		add_settings_field( 'suppress', 'Фильтрация типов ошибок', [ $this, 'field_suppress' ], 'globus_debug_control', 'gdc_main' );
@@ -434,9 +314,6 @@ final class Globus_Debug_Control {
 		add_settings_field( 'force_in_api_contexts', 'API контексты', [ $this, 'field_api_contexts' ], 'globus_debug_control', 'gdc_main' );
 	}
 	
-	/**
-	 * Санитизация опций
-	 */
 	public function sanitize_options( $input ): array {
 		$output = $this->defaults();
 		
@@ -445,14 +322,8 @@ final class Globus_Debug_Control {
 		}
 		
 		$bool_fields = [
-			'enabled',
-			'suppress_notices',
-			'suppress_deprecated',
-			'suppress_warnings',
-			'suppress_strict',
-			'log_enabled',
-			'remove_php_error_bodyclass',
-			'force_in_api_contexts',
+			'enabled', 'suppress_notices', 'suppress_deprecated', 'suppress_warnings',
+			'suppress_strict', 'log_enabled', 'remove_php_error_bodyclass', 'force_in_api_contexts',
 		];
 		
 		foreach ( $bool_fields as $field ) {
@@ -489,7 +360,7 @@ final class Globus_Debug_Control {
 	}
 	
 	public function field_suppress() {
-		$opts = $this->get_options();
+		$opts   = $this->get_options();
 		$is_php8 = version_compare( PHP_VERSION, '8.0.0', '>=' );
 		?>
 		<fieldset>
@@ -672,12 +543,9 @@ final class Globus_Debug_Control {
 	public function filter_body_class( array $classes ): array {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
-			// Удаляем все вхождения php-error
-			$classes = array_filter( $classes, function( $class ) {
+			$classes = array_values( array_filter( $classes, function( $class ) {
 				return 'php-error' !== $class;
-			});
-			// Переиндексация массива
-			$classes = array_values( $classes );
+			} ) );
 		}
 		return $classes;
 	}
@@ -685,34 +553,22 @@ final class Globus_Debug_Control {
 	public function filter_admin_body_class( string $classes ): string {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
-			// Разбиваем на массив, удаляем php-error, собираем обратно
-			$list = preg_split( '/\s+/', trim( $classes ), -1, PREG_SPLIT_NO_EMPTY );
-			$list = array_filter( $list, function( $class ) {
+			$list = array_filter( preg_split( '/\s+/', trim( $classes ), -1, PREG_SPLIT_NO_EMPTY ), function( $class ) {
 				return 'php-error' !== trim( $class );
-			});
+			} );
 			return implode( ' ', $list );
 		}
 		return $classes;
 	}
 	
-	/**
-	 * Удаление класса php-error через CSS в админке
-	 */
 	public function admin_remove_php_error_class() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
 			return;
 		}
-		?>
-		<style id="gdc-remove-php-error">
-			body.php-error { /* Скрываем индикатор класса */ }
-		</style>
-		<?php
+		echo '<style id="gdc-remove-php-error">body.php-error{}</style>';
 	}
 	
-	/**
-	 * Удаление класса php-error через JavaScript в админке
-	 */
 	public function admin_remove_php_error_class_js() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
@@ -769,24 +625,14 @@ final class Globus_Debug_Control {
 		<?php
 	}
 	
-	/**
-	 * Удаление класса php-error через CSS на фронтенде
-	 */
 	public function frontend_remove_php_error_class() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
 			return;
 		}
-		?>
-		<style id="gdc-remove-php-error">
-			body.php-error { /* Скрываем индикатор класса */ }
-		</style>
-		<?php
+		echo '<style id="gdc-remove-php-error">body.php-error{}</style>';
 	}
 	
-	/**
-	 * Удаление класса php-error через JavaScript на фронтенде
-	 */
 	public function frontend_remove_php_error_class_js() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
@@ -830,5 +676,4 @@ final class Globus_Debug_Control {
 	}
 }
 
-// Инициализация плагина
 Globus_Debug_Control::instance();
