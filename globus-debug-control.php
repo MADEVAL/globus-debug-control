@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GLOBUS Debug Control
  * Description: Полный контроль режима отладки WordPress: фильтрация типов ошибок, управление выводом и логированием, удаление php-error класса. Разработчик: GLOBUS.studio.
- * Version: 2.0.1
+ * Version: 2.1.0
  * Author: GLOBUS.studio
  * Author URI: https://globus.studio
  * Requires at least: 5.2
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'gdc_options';
-	private const VERSION = '2.0.1';
+	private const VERSION = '2.1.0';
 	
 	private static $instance = null;
 	
@@ -34,6 +34,7 @@ final class Globus_Debug_Control {
 		$this->early_init();
 		
 		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ], 1 );
+		add_action( 'wp_loaded', [ $this, 'on_wp_loaded' ], PHP_INT_MAX );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
 		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
@@ -44,6 +45,7 @@ final class Globus_Debug_Control {
 		
 		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
+		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
 		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
 	}
 	
@@ -76,6 +78,18 @@ final class Globus_Debug_Control {
 		$this->apply_error_reporting( $opts );
 		$this->apply_display_settings( $opts );
 		$this->apply_log_settings( $opts );
+	}
+	
+	public function on_wp_loaded() {
+		$opts = $this->get_options();
+		
+		if ( empty( $opts['enabled'] ) ) {
+			return;
+		}
+		
+		// Re-apply in case other plugins/themes overrode error_reporting.
+		$this->apply_error_reporting( $opts );
+		$this->install_error_handler( $opts );
 	}
 	
 	private function defaults(): array {
@@ -131,30 +145,58 @@ final class Globus_Debug_Control {
 		return $opts;
 	}
 	
+	private function build_suppress_mask( array $opts ): int {
+		$mask = 0;
+		
+		if ( $opts['suppress_deprecated'] ) {
+			$mask |= E_DEPRECATED | E_USER_DEPRECATED;
+		}
+		
+		if ( $opts['suppress_notices'] ) {
+			$mask |= E_NOTICE | E_USER_NOTICE;
+		}
+		
+		if ( $opts['suppress_warnings'] ) {
+			$mask |= E_WARNING | E_USER_WARNING;
+		}
+		
+		if ( $opts['suppress_strict'] && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
+			$mask |= E_STRICT;
+		}
+		
+		return $mask;
+	}
+	
 	private function apply_error_reporting( array $opts ) {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
 			return;
 		}
 		
-		$mask = E_ALL;
-		
-		if ( $opts['suppress_deprecated'] ) {
-			$mask &= ~E_DEPRECATED & ~E_USER_DEPRECATED;
+		error_reporting( E_ALL & ~$this->build_suppress_mask( $opts ) );
+	}
+	
+	private function install_error_handler( array $opts ) {
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+			return;
 		}
 		
-		if ( $opts['suppress_notices'] ) {
-			$mask &= ~E_NOTICE & ~E_USER_NOTICE;
+		$suppress_mask = $this->build_suppress_mask( $opts );
+		
+		if ( 0 === $suppress_mask ) {
+			return;
 		}
 		
-		if ( $opts['suppress_warnings'] ) {
-			$mask &= ~E_WARNING & ~E_USER_WARNING;
-		}
-		
-		if ( $opts['suppress_strict'] && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
-			$mask &= ~E_STRICT;
-		}
-		
-		error_reporting( $mask );
+		$previous = set_error_handler( function( $errno, $errstr, $errfile, $errline ) use ( $suppress_mask, &$previous ) {
+			if ( $errno & $suppress_mask ) {
+				return true;
+			}
+			
+			if ( is_callable( $previous ) ) {
+				return call_user_func( $previous, $errno, $errstr, $errfile, $errline );
+			}
+			
+			return false;
+		} );
 	}
 	
 	private function apply_display_settings( array $opts ) {
@@ -187,7 +229,7 @@ final class Globus_Debug_Control {
 		$log_path = $this->resolve_log_path( $opts );
 		
 		if ( empty( $log_path ) ) {
-			return;
+			$log_path = WP_CONTENT_DIR . '/debug.log';
 		}
 		
 		$this->rotate_log_if_needed( $log_path, $opts['log_max_size_mb'] );
