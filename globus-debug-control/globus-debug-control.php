@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GLOBUS Debug Control
  * Description: Полный контроль режима отладки WordPress: фильтрация типов ошибок, управление выводом и логированием, удаление php-error класса. Разработчик: GLOBUS.studio.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Author: GLOBUS.studio
  * Author URI: https://globus.studio
  * Requires at least: 5.2
@@ -19,7 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'gdc_options';
-	private const VERSION = '2.1.0';
+	private const VERSION = '2.2.0';
+	private const MU_FILE = 'gdc-early-loader.php';
 	
 	private static $instance = null;
 	
@@ -47,6 +48,8 @@ final class Globus_Debug_Control {
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
 		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
 		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
+		
+		register_deactivation_hook( __FILE__, [ $this, 'on_deactivation' ] );
 	}
 	
 	public function early_body_class_filter() {
@@ -105,6 +108,7 @@ final class Globus_Debug_Control {
 			'log_max_size_mb'            => 10,
 			'remove_php_error_bodyclass' => 1,
 			'force_in_api_contexts'      => 0,
+			'install_mu_dropin'          => 0,
 		];
 	}
 	
@@ -127,6 +131,7 @@ final class Globus_Debug_Control {
 			'log_enabled',
 			'remove_php_error_bodyclass',
 			'force_in_api_contexts',
+			'install_mu_dropin',
 		];
 		
 		foreach ( $bool_keys as $key ) {
@@ -340,6 +345,106 @@ final class Globus_Debug_Control {
 		return false;
 	}
 	
+	// ── MU-Plugin Dropin ───────────────────────────────────────────────────────
+	
+	private function get_mu_plugin_path(): string {
+		$dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' );
+		return $dir . '/' . self::MU_FILE;
+	}
+	
+	public function is_mu_dropin_installed(): bool {
+		$path = $this->get_mu_plugin_path();
+		if ( ! file_exists( $path ) ) {
+			return false;
+		}
+		$content = @file_get_contents( $path );
+		return false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' );
+	}
+	
+	private function generate_mu_content(): string {
+		$v = self::VERSION;
+		return <<<MUPHP
+<?php
+/**
+ * GLOBUS Debug Control — Early Loader (mu-plugin)
+ *
+ * Устанавливает error_reporting ДО загрузки обычных плагинов,
+ * перехватывая compile-time ошибки (E_DEPRECATED, E_NOTICE и др.)
+ * от сторонних плагинов, которые грузятся раньше по алфавиту.
+ *
+ * Авто-генерация: GLOBUS Debug Control v{$v}. Не редактируйте вручную.
+ */
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+\$gdc_opts = get_option( 'gdc_options', [] );
+
+if ( empty( \$gdc_opts ) || empty( \$gdc_opts['enabled'] ) ) {
+	return;
+}
+
+\$gdc_mask = 0;
+
+if ( ! empty( \$gdc_opts['suppress_deprecated'] ) ) {
+	\$gdc_mask |= E_DEPRECATED | E_USER_DEPRECATED;
+}
+if ( ! empty( \$gdc_opts['suppress_notices'] ) ) {
+	\$gdc_mask |= E_NOTICE | E_USER_NOTICE;
+}
+if ( ! empty( \$gdc_opts['suppress_warnings'] ) ) {
+	\$gdc_mask |= E_WARNING | E_USER_WARNING;
+}
+if ( ! empty( \$gdc_opts['suppress_strict'] ) && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
+	\$gdc_mask |= E_STRICT;
+}
+
+if ( \$gdc_mask > 0 ) {
+	error_reporting( E_ALL & ~\$gdc_mask );
+}
+
+// Prevent wp_debug_mode() from overriding our settings if called again.
+add_filter( 'enable_wp_debug_mode_checks', '__return_false', 1 );
+MUPHP;
+	}
+	
+	public function install_mu_dropin(): bool {
+		$path = $this->get_mu_plugin_path();
+		$dir  = dirname( $path );
+		
+		if ( file_exists( $path ) ) {
+			$existing = @file_get_contents( $path );
+			if ( false !== $existing && false === strpos( $existing, 'GLOBUS Debug Control' ) ) {
+				return false;
+			}
+		}
+		
+		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
+			return false;
+		}
+		
+		$result = @file_put_contents( $path, $this->generate_mu_content() );
+		if ( false !== $result ) {
+			@chmod( $path, 0644 );
+			return true;
+		}
+		return false;
+	}
+	
+	public function remove_mu_dropin(): bool {
+		$path = $this->get_mu_plugin_path();
+		if ( ! file_exists( $path ) ) {
+			return true;
+		}
+		$content = @file_get_contents( $path );
+		if ( false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' ) ) {
+			return @unlink( $path );
+		}
+		return false;
+	}
+	
+	public function on_deactivation() {
+		$this->remove_mu_dropin();
+	}
+	
 	public function register_settings() {
 		register_setting( 'globus_debug_control', self::OPT, [
 			'type'              => 'array',
@@ -354,6 +459,7 @@ final class Globus_Debug_Control {
 		add_settings_field( 'logging', 'Настройки логирования', [ $this, 'field_logging' ], 'globus_debug_control', 'gdc_main' );
 		add_settings_field( 'remove_php_error_bodyclass', 'Класс php-error', [ $this, 'field_body_class' ], 'globus_debug_control', 'gdc_main' );
 		add_settings_field( 'force_in_api_contexts', 'API контексты', [ $this, 'field_api_contexts' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'install_mu_dropin', 'Ранний перехват ошибок', [ $this, 'field_mu_dropin' ], 'globus_debug_control', 'gdc_main' );
 	}
 	
 	public function sanitize_options( $input ): array {
@@ -366,6 +472,7 @@ final class Globus_Debug_Control {
 		$bool_fields = [
 			'enabled', 'suppress_notices', 'suppress_deprecated', 'suppress_warnings',
 			'suppress_strict', 'log_enabled', 'remove_php_error_bodyclass', 'force_in_api_contexts',
+			'install_mu_dropin',
 		];
 		
 		foreach ( $bool_fields as $field ) {
@@ -385,6 +492,12 @@ final class Globus_Debug_Control {
 		
 		if ( isset( $input['log_max_size_mb'] ) ) {
 			$output['log_max_size_mb'] = max( 1, min( 100, (int) $input['log_max_size_mb'] ) );
+		}
+		
+		if ( $output['install_mu_dropin'] ) {
+			$this->install_mu_dropin();
+		} else {
+			$this->remove_mu_dropin();
 		}
 		
 		return $output;
@@ -488,6 +601,28 @@ final class Globus_Debug_Control {
 		<?php
 	}
 	
+	public function field_mu_dropin() {
+		$opts      = $this->get_options();
+		$installed = $this->is_mu_dropin_installed();
+		?>
+		<label>
+			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[install_mu_dropin]" value="1" <?php checked( $opts['install_mu_dropin'], 1 ); ?>>
+			<strong>Установить mu-plugin для раннего перехвата</strong>
+		</label>
+		<?php if ( $installed ) : ?>
+			<span style="color: #00a32a; margin-left: 8px;">● Установлен</span>
+		<?php else : ?>
+			<span style="color: #999; margin-left: 8px;">○ Не установлен</span>
+		<?php endif; ?>
+		<p class="description">
+			WordPress загружает плагины по алфавиту. Ошибки от плагинов, загружаемых раньше
+			(например, Elementor), возникают <strong>до</strong> инициализации GLOBUS Debug Control.<br>
+			Mu-plugin загружается самым первым и перехватывает такие ошибки. Файл:
+			<code><?php echo esc_html( self::MU_FILE ); ?></code> в <code>wp-content/mu-plugins/</code>
+		</p>
+		<?php
+	}
+	
 	public function add_settings_page() {
 		add_options_page(
 			'GLOBUS Debug Control',
@@ -574,6 +709,10 @@ final class Globus_Debug_Control {
 				<tr>
 					<td><strong>Контекст выполнения:</strong></td>
 					<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">API контекст</span>' : '<span style="color: #2271b1;">Обычный</span>'; ?></td>
+				</tr>
+				<tr>
+					<td><strong>MU-plugin дропин:</strong></td>
+					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> Установлен (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> Не установлен — ранний перехват отключён'; ?></td>
 				</tr>
 			</table>
 			
