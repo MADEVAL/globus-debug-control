@@ -12,10 +12,10 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 delete_option( 'gdc_options' );
 
 // Remove mu-plugin dropin if it exists.
-$gdc_mu_file = ( defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' ) ) . '/gdc-early-loader.php';
-if ( file_exists( $gdc_mu_file ) ) {
-	$gdc_content = @file_get_contents( $gdc_mu_file );
-	if ( false !== $gdc_content && false !== strpos( $gdc_content, 'GLOBUS Debug Control' ) ) {
-		@unlink( $gdc_mu_file );
+$globus_debug_control_mu_file = ( defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' ) ) . '/gdc-early-loader.php';
+if ( file_exists( $globus_debug_control_mu_file ) ) {
+	$globus_debug_control_content = @file_get_contents( $globus_debug_control_mu_file );
+	if ( false !== $globus_debug_control_content && false !== strpos( $globus_debug_control_content, 'GLOBUS Debug Control' ) ) {
+		wp_delete_file( $globus_debug_control_mu_file );
 	}
 }

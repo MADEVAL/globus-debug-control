@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: GLOBUS Debug Control
- * Description: Полный контроль режима отладки WordPress: фильтрация типов ошибок, управление выводом и логированием, удаление php-error класса. Разработчик: GLOBUS.studio.
+ * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal. Developer: GLOBUS.studio.
  * Version: 2.2.0
  * Author: GLOBUS.studio
  * Author URI: https://globus.studio
@@ -34,6 +34,7 @@ final class Globus_Debug_Control {
 	private function __construct() {
 		$this->early_init();
 		
+		add_action( 'init', [ $this, 'load_textdomain' ] );
 		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ], 1 );
 		add_action( 'wp_loaded', [ $this, 'on_wp_loaded' ], PHP_INT_MAX );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
@@ -57,6 +58,10 @@ final class Globus_Debug_Control {
 		remove_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
 		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
+	}
+	
+	public function load_textdomain() {
+		load_plugin_textdomain( 'globus-debug-control', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 	}
 	
 	private function early_init() {
@@ -177,6 +182,7 @@ final class Globus_Debug_Control {
 			return;
 		}
 		
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting -- Core debug control functionality.
 		error_reporting( E_ALL & ~$this->build_suppress_mask( $opts ) );
 	}
 	
@@ -191,6 +197,7 @@ final class Globus_Debug_Control {
 			return;
 		}
 		
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- Core debug control functionality.
 		$previous = set_error_handler( function( $errno, $errstr, $errfile, $errline ) use ( $suppress_mask, &$previous ) {
 			if ( $errno & $suppress_mask ) {
 				return true;
@@ -221,13 +228,15 @@ final class Globus_Debug_Control {
 			}
 		}
 		
+		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for debug display control.
 		ini_set( 'display_errors', $display );
+		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for debug display control.
 		ini_set( 'display_startup_errors', $display );
 	}
 	
 	private function apply_log_settings( array $opts ) {
 		if ( empty( $opts['log_enabled'] ) ) {
-			ini_set( 'log_errors', '0' );
+			ini_set( 'log_errors', '0' ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
 			return;
 		}
 		
@@ -240,8 +249,8 @@ final class Globus_Debug_Control {
 		$this->rotate_log_if_needed( $log_path, $opts['log_max_size_mb'] );
 		
 		if ( $this->ensure_log_writable( $log_path ) ) {
-			ini_set( 'log_errors', '1' );
-			ini_set( 'error_log', $log_path );
+			ini_set( 'log_errors', '1' ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
+			ini_set( 'error_log', $log_path ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
 		}
 	}
 	
@@ -292,19 +301,22 @@ final class Globus_Debug_Control {
 			return false;
 		}
 		
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Low-level check before WP_Filesystem is available.
 		if ( ! is_writable( $dir ) ) {
 			return false;
 		}
 		
 		if ( ! file_exists( $log_path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Low-level log file creation before WP_Filesystem is available.
 			$handle = @fopen( $log_path, 'a' );
 			if ( false === $handle ) {
 				return false;
 			}
-			fclose( $handle );
-			@chmod( $log_path, 0644 );
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			@chmod( $log_path, 0644 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
 		}
 		
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Low-level check before WP_Filesystem is available.
 		return is_writable( $log_path );
 	}
 	
@@ -323,8 +335,11 @@ final class Globus_Debug_Control {
 		
 		if ( $size_bytes > $max_bytes ) {
 			$backup = $log_path . '.' . gmdate( 'Y-m-d_H-i-s' ) . '.old';
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Low-level log rotation before WP_Filesystem is available.
 			@rename( $log_path, $backup );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_touch
 			@touch( $log_path );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
 			@chmod( $log_path, 0644 );
 		}
 	}
@@ -338,7 +353,8 @@ final class Globus_Debug_Control {
 		     ( defined( 'WP_CLI' ) && WP_CLI ) ||
 		     ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ||
 		     ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) ||
-		     ( isset( $_POST['action'] ) && 'heartbeat' === $_POST['action'] ) ) {
+		     // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only context detection, not form processing.
+		     ( isset( $_POST['action'] ) && 'heartbeat' === sanitize_text_field( wp_unslash( $_POST['action'] ) ) ) ) {
 			return true;
 		}
 		
@@ -362,48 +378,48 @@ final class Globus_Debug_Control {
 	}
 	
 	private function generate_mu_content(): string {
-		$v = self::VERSION;
-		return <<<MUPHP
-<?php
-/**
- * GLOBUS Debug Control — Early Loader (mu-plugin)
- *
- * Устанавливает error_reporting ДО загрузки обычных плагинов,
- * перехватывая compile-time ошибки (E_DEPRECATED, E_NOTICE и др.)
- * от сторонних плагинов, которые грузятся раньше по алфавиту.
- *
- * Авто-генерация: GLOBUS Debug Control v{$v}. Не редактируйте вручную.
- */
-if ( ! defined( 'ABSPATH' ) ) { exit; }
-
-\$gdc_opts = get_option( 'gdc_options', [] );
-
-if ( empty( \$gdc_opts ) || empty( \$gdc_opts['enabled'] ) ) {
-	return;
-}
-
-\$gdc_mask = 0;
-
-if ( ! empty( \$gdc_opts['suppress_deprecated'] ) ) {
-	\$gdc_mask |= E_DEPRECATED | E_USER_DEPRECATED;
-}
-if ( ! empty( \$gdc_opts['suppress_notices'] ) ) {
-	\$gdc_mask |= E_NOTICE | E_USER_NOTICE;
-}
-if ( ! empty( \$gdc_opts['suppress_warnings'] ) ) {
-	\$gdc_mask |= E_WARNING | E_USER_WARNING;
-}
-if ( ! empty( \$gdc_opts['suppress_strict'] ) && version_compare( PHP_VERSION, '8.0.0', '<' ) && defined( 'E_STRICT' ) ) {
-	\$gdc_mask |= E_STRICT;
-}
-
-if ( \$gdc_mask > 0 ) {
-	error_reporting( E_ALL & ~\$gdc_mask );
-}
-
-// Prevent wp_debug_mode() from overriding our settings if called again.
-add_filter( 'enable_wp_debug_mode_checks', '__return_false', 1 );
-MUPHP;
+		$lines = array(
+			'<?php',
+			'/**',
+			' * GLOBUS Debug Control — Early Loader (mu-plugin)',
+			' *',
+			' * Sets error_reporting BEFORE regular plugins are loaded,',
+			' * intercepting compile-time errors (E_DEPRECATED, E_NOTICE, etc.)',
+			' * from third-party plugins loaded earlier in alphabetical order.',
+			' *',
+			' * Auto-generated by GLOBUS Debug Control v' . self::VERSION . '. Do not edit manually.',
+			' */',
+			'if ( ! defined( \'ABSPATH\' ) ) { exit; }',
+			'',
+			'$gdc_opts = get_option( \'gdc_options\', [] );',
+			'',
+			'if ( empty( $gdc_opts ) || empty( $gdc_opts[\'enabled\'] ) ) {',
+			"\treturn;",
+			'}',
+			'',
+			'$gdc_mask = 0;',
+			'',
+			'if ( ! empty( $gdc_opts[\'suppress_deprecated\'] ) ) {',
+			"\t" . '$gdc_mask |= E_DEPRECATED | E_USER_DEPRECATED;',
+			'}',
+			'if ( ! empty( $gdc_opts[\'suppress_notices\'] ) ) {',
+			"\t" . '$gdc_mask |= E_NOTICE | E_USER_NOTICE;',
+			'}',
+			'if ( ! empty( $gdc_opts[\'suppress_warnings\'] ) ) {',
+			"\t" . '$gdc_mask |= E_WARNING | E_USER_WARNING;',
+			'}',
+			'if ( ! empty( $gdc_opts[\'suppress_strict\'] ) && version_compare( PHP_VERSION, \'8.0.0\', \'<\' ) && defined( \'E_STRICT\' ) ) {',
+			"\t" . '$gdc_mask |= E_STRICT;',
+			'}',
+			'',
+			'if ( $gdc_mask > 0 ) {',
+			"\t" . 'error_reporting( E_ALL & ~$gdc_mask );',
+			'}',
+			'',
+			'// Prevent wp_debug_mode() from overriding our settings if called again.',
+			'add_filter( \'enable_wp_debug_mode_checks\', \'__return_false\', 1 );',
+		);
+		return implode( "\n", $lines ) . "\n";
 	}
 	
 	public function install_mu_dropin(): bool {
@@ -423,6 +439,7 @@ MUPHP;
 		
 		$result = @file_put_contents( $path, $this->generate_mu_content() );
 		if ( false !== $result ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
 			@chmod( $path, 0644 );
 			return true;
 		}
@@ -436,7 +453,8 @@ MUPHP;
 		}
 		$content = @file_get_contents( $path );
 		if ( false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' ) ) {
-			return @unlink( $path );
+			wp_delete_file( $path );
+			return ! file_exists( $path );
 		}
 		return false;
 	}
@@ -451,15 +469,15 @@ MUPHP;
 			'sanitize_callback' => [ $this, 'sanitize_options' ],
 		] );
 		
-		add_settings_section( 'gdc_main', 'Основные настройки', '__return_false', 'globus_debug_control' );
+		add_settings_section( 'gdc_main', __( 'General Settings', 'globus-debug-control' ), '__return_false', 'globus_debug_control' );
 		
-		add_settings_field( 'enabled', 'Включить плагин', [ $this, 'field_enabled' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'suppress', 'Фильтрация типов ошибок', [ $this, 'field_suppress' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'display_errors_mode', 'Режим display_errors', [ $this, 'field_display_mode' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'logging', 'Настройки логирования', [ $this, 'field_logging' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'remove_php_error_bodyclass', 'Класс php-error', [ $this, 'field_body_class' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'force_in_api_contexts', 'API контексты', [ $this, 'field_api_contexts' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'install_mu_dropin', 'Ранний перехват ошибок', [ $this, 'field_mu_dropin' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'enabled', __( 'Enable Plugin', 'globus-debug-control' ), [ $this, 'field_enabled' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'suppress', __( 'Error Type Filtering', 'globus-debug-control' ), [ $this, 'field_suppress' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'display_errors_mode', __( 'display_errors Mode', 'globus-debug-control' ), [ $this, 'field_display_mode' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'logging', __( 'Logging Settings', 'globus-debug-control' ), [ $this, 'field_logging' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'remove_php_error_bodyclass', __( 'php-error Class', 'globus-debug-control' ), [ $this, 'field_body_class' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'force_in_api_contexts', __( 'API Contexts', 'globus-debug-control' ), [ $this, 'field_api_contexts' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'install_mu_dropin', __( 'Early Error Interception', 'globus-debug-control' ), [ $this, 'field_mu_dropin' ], 'globus_debug_control', 'gdc_main' );
 	}
 	
 	public function sanitize_options( $input ): array {
@@ -508,9 +526,9 @@ MUPHP;
 		?>
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[enabled]" value="1" <?php checked( $opts['enabled'], 1 ); ?>>
-			<strong>Активировать управление отладкой</strong>
+			<strong><?php esc_html_e( 'Enable debug control', 'globus-debug-control' ); ?></strong>
 		</label>
-		<p class="description">Когда выключено, плагин не влияет на настройки PHP и WordPress.</p>
+		<p class="description"><?php esc_html_e( 'When disabled, the plugin does not affect PHP or WordPress settings.', 'globus-debug-control' ); ?></p>
 		<?php
 	}
 	
@@ -521,29 +539,29 @@ MUPHP;
 		<fieldset>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_notices]" value="1" <?php checked( $opts['suppress_notices'], 1 ); ?>>
-				<strong>Убрать E_NOTICE</strong> и E_USER_NOTICE
+				<strong><?php esc_html_e( 'Suppress E_NOTICE', 'globus-debug-control' ); ?></strong> <?php esc_html_e( 'and E_USER_NOTICE', 'globus-debug-control' ); ?>
 			</label><br>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_deprecated]" value="1" <?php checked( $opts['suppress_deprecated'], 1 ); ?>>
-				<strong>Убрать E_DEPRECATED</strong> и E_USER_DEPRECATED
+				<strong><?php esc_html_e( 'Suppress E_DEPRECATED', 'globus-debug-control' ); ?></strong> <?php esc_html_e( 'and E_USER_DEPRECATED', 'globus-debug-control' ); ?>
 			</label><br>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_warnings]" value="1" <?php checked( $opts['suppress_warnings'], 1 ); ?>>
-				<strong>Убрать E_WARNING</strong> и E_USER_WARNING (осторожно!)
+				<strong><?php esc_html_e( 'Suppress E_WARNING', 'globus-debug-control' ); ?></strong> <?php esc_html_e( 'and E_USER_WARNING (use with caution!)', 'globus-debug-control' ); ?>
 			</label><br>
 			<?php if ( ! $is_php8 ) : ?>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[suppress_strict]" value="1" <?php checked( $opts['suppress_strict'], 1 ); ?>>
-				<strong>Убрать E_STRICT</strong>
+				<strong><?php esc_html_e( 'Suppress E_STRICT', 'globus-debug-control' ); ?></strong>
 			</label>
 			<?php else : ?>
 			<label style="opacity: 0.5; cursor: not-allowed;">
 				<input type="checkbox" disabled>
-				<strong>Убрать E_STRICT</strong> <em>(недоступно в PHP 8.0+)</em>
+				<strong><?php esc_html_e( 'Suppress E_STRICT', 'globus-debug-control' ); ?></strong> <em><?php esc_html_e( '(not available in PHP 8.0+)', 'globus-debug-control' ); ?></em>
 			</label>
 			<?php endif; ?>
 		</fieldset>
-		<p class="description">Выбранные типы ошибок не будут отображаться и логироваться. Ошибки (E_ERROR) всегда видны.</p>
+		<p class="description"><?php esc_html_e( 'Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible.', 'globus-debug-control' ); ?></p>
 		<?php
 	}
 	
@@ -551,11 +569,11 @@ MUPHP;
 		$opts = $this->get_options();
 		?>
 		<select name="<?php echo esc_attr( self::OPT ); ?>[display_errors_mode]">
-			<option value="inherit" <?php selected( $opts['display_errors_mode'], 'inherit' ); ?>>Наследовать из WP_DEBUG_DISPLAY</option>
-			<option value="on" <?php selected( $opts['display_errors_mode'], 'on' ); ?>>Всегда включено</option>
-			<option value="off" <?php selected( $opts['display_errors_mode'], 'off' ); ?>>Всегда выключено</option>
+			<option value="inherit" <?php selected( $opts['display_errors_mode'], 'inherit' ); ?>><?php esc_html_e( 'Inherit from WP_DEBUG_DISPLAY', 'globus-debug-control' ); ?></option>
+			<option value="on" <?php selected( $opts['display_errors_mode'], 'on' ); ?>><?php esc_html_e( 'Always on', 'globus-debug-control' ); ?></option>
+			<option value="off" <?php selected( $opts['display_errors_mode'], 'off' ); ?>><?php esc_html_e( 'Always off', 'globus-debug-control' ); ?></option>
 		</select>
-		<p class="description">Управляет выводом ошибок на экран. В API контекстах вывод автоматически отключается.</p>
+		<p class="description"><?php esc_html_e( 'Controls error output on screen. In API contexts, display is automatically disabled.', 'globus-debug-control' ); ?></p>
 		<?php
 	}
 	
@@ -565,16 +583,16 @@ MUPHP;
 		<fieldset>
 			<label>
 				<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[log_enabled]" value="1" <?php checked( $opts['log_enabled'], 1 ); ?>>
-				<strong>Включить логирование ошибок</strong>
+				<strong><?php esc_html_e( 'Enable error logging', 'globus-debug-control' ); ?></strong>
 			</label><br><br>
 			
-			<label for="gdc_log_path">Путь к лог-файлу:</label><br>
-			<input type="text" id="gdc_log_path" class="regular-text code" name="<?php echo esc_attr( self::OPT ); ?>[log_path]" value="<?php echo esc_attr( $opts['log_path'] ); ?>" placeholder="Оставьте пустым для автоопределения">
-			<p class="description">Если пусто: используется WP_DEBUG_LOG (обычно wp-content/debug.log).<br>Можно указать абсолютный или относительный (от wp-content) путь.</p>
+			<label for="gdc_log_path"><?php esc_html_e( 'Log file path:', 'globus-debug-control' ); ?></label><br>
+			<input type="text" id="gdc_log_path" class="regular-text code" name="<?php echo esc_attr( self::OPT ); ?>[log_path]" value="<?php echo esc_attr( $opts['log_path'] ); ?>" placeholder="<?php esc_attr_e( 'Leave empty for auto-detection', 'globus-debug-control' ); ?>">
+			<p class="description"><?php esc_html_e( 'If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log).', 'globus-debug-control' ); ?><br><?php esc_html_e( 'You can specify an absolute or relative (from wp-content) path.', 'globus-debug-control' ); ?></p>
 			
-			<label for="gdc_log_max_size">Максимальный размер лога (МБ):</label><br>
+			<label for="gdc_log_max_size"><?php esc_html_e( 'Maximum log size (MB):', 'globus-debug-control' ); ?></label><br>
 			<input type="number" id="gdc_log_max_size" name="<?php echo esc_attr( self::OPT ); ?>[log_max_size_mb]" value="<?php echo esc_attr( $opts['log_max_size_mb'] ); ?>" min="1" max="100" style="width: 80px;">
-			<p class="description">При превышении файл будет переименован с датой, создан новый. Диапазон: 1-100 МБ.</p>
+			<p class="description"><?php esc_html_e( 'When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB.', 'globus-debug-control' ); ?></p>
 		</fieldset>
 		<?php
 	}
@@ -584,9 +602,15 @@ MUPHP;
 		?>
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[remove_php_error_bodyclass]" value="1" <?php checked( $opts['remove_php_error_bodyclass'], 1 ); ?>>
-			<strong>Удалять класс <code>php-error</code> из &lt;body&gt;</strong>
+			<strong><?php
+				printf(
+					/* translators: %s: CSS class name */
+					esc_html__( 'Remove %s class from <body>', 'globus-debug-control' ),
+					'<code>php-error</code>'
+				);
+			?></strong>
 		</label>
-		<p class="description">WordPress добавляет этот класс при обнаружении ошибок. Может мешать стилизации.</p>
+		<p class="description"><?php esc_html_e( 'WordPress adds this class when errors are detected. It can interfere with styling.', 'globus-debug-control' ); ?></p>
 		<?php
 	}
 	
@@ -595,9 +619,9 @@ MUPHP;
 		?>
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[force_in_api_contexts]" value="1" <?php checked( $opts['force_in_api_contexts'], 1 ); ?>>
-			<strong>Показывать ошибки в API контекстах</strong>
+			<strong><?php esc_html_e( 'Show errors in API contexts', 'globus-debug-control' ); ?></strong>
 		</label>
-		<p class="description">По умолчанию вывод отключён в AJAX, REST API, Cron, CLI для корректной работы.<br>Включайте только для отладки API.</p>
+		<p class="description"><?php esc_html_e( 'By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation.', 'globus-debug-control' ); ?><br><?php esc_html_e( 'Enable only for API debugging.', 'globus-debug-control' ); ?></p>
 		<?php
 	}
 	
@@ -607,18 +631,23 @@ MUPHP;
 		?>
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[install_mu_dropin]" value="1" <?php checked( $opts['install_mu_dropin'], 1 ); ?>>
-			<strong>Установить mu-plugin для раннего перехвата</strong>
+			<strong><?php esc_html_e( 'Install mu-plugin for early interception', 'globus-debug-control' ); ?></strong>
 		</label>
 		<?php if ( $installed ) : ?>
-			<span style="color: #00a32a; margin-left: 8px;">● Установлен</span>
+			<span style="color: #00a32a; margin-left: 8px;">● <?php esc_html_e( 'Installed', 'globus-debug-control' ); ?></span>
 		<?php else : ?>
-			<span style="color: #999; margin-left: 8px;">○ Не установлен</span>
+			<span style="color: #999; margin-left: 8px;">○ <?php esc_html_e( 'Not installed', 'globus-debug-control' ); ?></span>
 		<?php endif; ?>
 		<p class="description">
-			WordPress загружает плагины по алфавиту. Ошибки от плагинов, загружаемых раньше
-			(например, Elementor), возникают <strong>до</strong> инициализации GLOBUS Debug Control.<br>
-			Mu-plugin загружается самым первым и перехватывает такие ошибки. Файл:
-			<code><?php echo esc_html( self::MU_FILE ); ?></code> в <code>wp-content/mu-plugins/</code>
+			<?php esc_html_e( 'WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes.', 'globus-debug-control' ); ?><br>
+			<?php
+			printf(
+				/* translators: 1: mu-plugin filename, 2: directory path */
+				esc_html__( 'The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s', 'globus-debug-control' ),
+				'<code>' . esc_html( self::MU_FILE ) . '</code>',
+				'<code>wp-content/mu-plugins/</code>'
+			);
+			?>
 		</p>
 		<?php
 	}
@@ -648,36 +677,37 @@ MUPHP;
 				<?php
 				settings_fields( 'globus_debug_control' );
 				do_settings_sections( 'globus_debug_control' );
-				submit_button( 'Сохранить настройки' );
+				submit_button( __( 'Save Settings', 'globus-debug-control' ) );
 				?>
 			</form>
 			
 			<hr>
 			
-			<h2>Системная информация</h2>
+			<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
 			<table class="widefat striped">
 				<tr>
-					<td style="width: 250px;"><strong>Версия плагина:</strong></td>
+					<td style="width: 250px;"><strong><?php esc_html_e( 'Plugin version:', 'globus-debug-control' ); ?></strong></td>
 					<td><?php echo esc_html( self::VERSION ); ?></td>
 				</tr>
 				<tr>
-					<td><strong>Версия PHP:</strong></td>
+					<td><strong><?php esc_html_e( 'PHP version:', 'globus-debug-control' ); ?></strong></td>
 					<td><?php echo esc_html( PHP_VERSION ); ?></td>
 				</tr>
 				<tr>
 					<td><strong>WP_DEBUG:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG' ) && WP_DEBUG ? '<span style="color: #d63638;">●</span> Включен' : '<span style="color: #999;">○</span> Выключен'; ?></td>
+					<td><?php echo defined( 'WP_DEBUG' ) && WP_DEBUG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
 				</tr>
 				<tr>
 					<td><strong>WP_DEBUG_DISPLAY:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? '<span style="color: #d63638;">●</span> Включен' : '<span style="color: #999;">○</span> Выключен'; ?></td>
+					<td><?php echo defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
 				</tr>
 				<tr>
 					<td><strong>WP_DEBUG_LOG:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? '<span style="color: #d63638;">●</span> Включен' : '<span style="color: #999;">○</span> Выключен'; ?></td>
+					<td><?php echo defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
 				</tr>
 				<tr>
-					<td><strong>Текущий error_reporting:</strong></td>
+					<td><strong><?php esc_html_e( 'Current error_reporting:', 'globus-debug-control' ); ?></strong></td>
+					<?php // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting -- Admin diagnostic display. ?>
 					<td><code><?php echo esc_html( error_reporting() ); ?></code></td>
 				</tr>
 				<tr>
@@ -689,34 +719,34 @@ MUPHP;
 					<td><code><?php echo esc_html( ini_get( 'log_errors' ) ); ?></code></td>
 				</tr>
 				<tr>
-					<td><strong>Путь к лог-файлу:</strong></td>
+					<td><strong><?php esc_html_e( 'Log file path:', 'globus-debug-control' ); ?></strong></td>
 					<td>
 						<?php
 						if ( $log_path ) {
 							echo '<code>' . esc_html( $log_path ) . '</code>';
 							if ( file_exists( $log_path ) ) {
 								$size = filesize( $log_path );
-								echo ' <span style="color: #2271b1;">(размер: ' . esc_html( size_format( $size ) ) . ')</span>';
+								echo ' <span style="color: #2271b1;">(' . esc_html__( 'size:', 'globus-debug-control' ) . ' ' . esc_html( size_format( $size ) ) . ')</span>';
 							} else {
-								echo ' <span style="color: #999;">(файл не существует)</span>';
+								echo ' <span style="color: #999;">(' . esc_html__( 'file does not exist', 'globus-debug-control' ) . ')</span>';
 							}
 						} else {
-							echo '<span style="color: #999;">Не настроен</span>';
+							echo '<span style="color: #999;">' . esc_html__( 'Not configured', 'globus-debug-control' ) . '</span>';
 						}
 						?>
 					</td>
 				</tr>
 				<tr>
-					<td><strong>Контекст выполнения:</strong></td>
-					<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">API контекст</span>' : '<span style="color: #2271b1;">Обычный</span>'; ?></td>
+					<td><strong><?php esc_html_e( 'Execution context:', 'globus-debug-control' ); ?></strong></td>
+					<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">' . esc_html__( 'API context', 'globus-debug-control' ) . '</span>' : '<span style="color: #2271b1;">' . esc_html__( 'Normal', 'globus-debug-control' ) . '</span>'; ?></td>
 				</tr>
 				<tr>
-					<td><strong>MU-plugin дропин:</strong></td>
-					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> Установлен (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> Не установлен — ранний перехват отключён'; ?></td>
+					<td><strong><?php esc_html_e( 'MU-plugin dropin:', 'globus-debug-control' ); ?></strong></td>
+					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> ' . esc_html__( 'Not installed — early interception disabled', 'globus-debug-control' ); ?></td>
 				</tr>
 			</table>
 			
-			<p style="margin-top: 20px;"><small>© 2025 GLOBUS.studio | Версия <?php echo esc_html( self::VERSION ); ?></small></p>
+			<p style="margin-top: 20px;"><small>© 2025 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
 		</div>
 		<?php
 	}
@@ -765,18 +795,18 @@ MUPHP;
 				}
 			}
 			
-			// Удаляем сразу
+			// Remove immediately
 			removePhpErrorClass();
 			
-			// Удаляем после загрузки DOM
+			// Remove after DOM loaded
 			if (document.readyState === 'loading') {
 				document.addEventListener('DOMContentLoaded', removePhpErrorClass);
 			}
 			
-			// Удаляем после полной загрузки
+			// Remove after full page load
 			window.addEventListener('load', removePhpErrorClass);
 			
-			// Следим за изменениями (на случай динамического добавления)
+			// Watch for changes (in case class is added dynamically)
 			if (window.MutationObserver) {
 				var observer = new MutationObserver(function(mutations) {
 					mutations.forEach(function(mutation) {
@@ -792,7 +822,7 @@ MUPHP;
 				}
 			}
 			
-			// Дополнительная проверка каждые 100ms первые 3 секунды
+			// Additional check every 100ms for the first 3 seconds
 			var checks = 0;
 			var interval = setInterval(function() {
 				removePhpErrorClass();
