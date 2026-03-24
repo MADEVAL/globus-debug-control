@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GLOBUS Debug Control
  * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal. Developer: GLOBUS.studio.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: GLOBUS.studio
  * Author URI: https://globus.studio
  * Requires at least: 5.2
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'gdc_options';
-	private const VERSION = '2.2.0';
+	private const VERSION = '2.2.1';
 	private const MU_FILE = 'gdc-early-loader.php';
 	
 	private static $instance = null;
