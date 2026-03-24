@@ -1,10 +1,10 @@
-# Copyright (C) 2025 GLOBUS.studio
+# Copyright (C) 2026 GLOBUS.studio
 # This file is distributed under the same license as the GLOBUS Debug Control plugin.
 msgid ""
 msgstr ""
 "Project-Id-Version: GLOBUS Debug Control 2.2.0\n"
 "Report-Msgid-Bugs-To: https://globus.studio\n"
-"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"POT-Creation-Date: 2026-03-24 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -134,8 +134,8 @@ msgid "When exceeded, the file will be renamed with a date suffix and a new one 
 msgstr ""
 
 #: globus-debug-control.php
-#. translators: %s: CSS class name
-msgid "Remove %s class from <body>"
+#. translators: 1: CSS class name, 2: HTML tag name
+msgid "Remove %1$s class from %2$s"
 msgstr ""
 
 #: globus-debug-control.php

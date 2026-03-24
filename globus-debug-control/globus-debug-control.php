@@ -32,6 +32,9 @@ final class Globus_Debug_Control {
 		return self::$instance;
 	}
 	
+	private function __clone() {}
+	public function __wakeup() {}
+	
 	private function __construct() {
 		$this->early_init();
 		
@@ -355,7 +358,7 @@ final class Globus_Debug_Control {
 		     ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ||
 		     ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) ||
 		     // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only context detection, not form processing.
-		     ( isset( $_POST['action'] ) && 'heartbeat' === sanitize_text_field( wp_unslash( $_POST['action'] ) ) ) ) {
+		     ( isset( $_POST['action'] ) && is_string( $_POST['action'] ) && 'heartbeat' === sanitize_text_field( wp_unslash( $_POST['action'] ) ) ) ) {
 			return true;
 		}
 		
@@ -608,11 +611,13 @@ final class Globus_Debug_Control {
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[remove_php_error_bodyclass]" value="1" <?php checked( $opts['remove_php_error_bodyclass'], 1 ); ?>>
 			<strong><?php
-				printf(
-					/* translators: %s: CSS class name */
-					esc_html__( 'Remove %s class from <body>', 'globus-debug-control' ),
-					'<code>php-error</code>'
+				$gdc_body_text = sprintf(
+					/* translators: 1: CSS class name, 2: HTML tag name */
+					__( 'Remove %1$s class from %2$s', 'globus-debug-control' ),
+					'<code>php-error</code>',
+					'<code>&lt;body&gt;</code>'
 				);
+				echo wp_kses( $gdc_body_text, array( 'code' => array() ) );
 			?></strong>
 		</label>
 		<p class="description"><?php esc_html_e( 'WordPress adds this class when errors are detected. It can interfere with styling.', 'globus-debug-control' ); ?></p>
@@ -646,12 +651,13 @@ final class Globus_Debug_Control {
 		<p class="description">
 			<?php esc_html_e( 'WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes.', 'globus-debug-control' ); ?><br>
 			<?php
-			printf(
+			$gdc_mu_text = sprintf(
 				/* translators: 1: mu-plugin filename, 2: directory path */
-				esc_html__( 'The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s', 'globus-debug-control' ),
+				__( 'The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s', 'globus-debug-control' ),
 				'<code>' . esc_html( self::MU_FILE ) . '</code>',
 				'<code>wp-content/mu-plugins/</code>'
 			);
+			echo wp_kses( $gdc_mu_text, array( 'code' => array() ) );
 			?>
 		</p>
 		<?php
@@ -751,7 +757,7 @@ final class Globus_Debug_Control {
 				</tr>
 			</table>
 			
-			<p style="margin-top: 20px;"><small>© 2025 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
+			<p style="margin-top: 20px;"><small>© 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
 		</div>
 		<?php
 	}
