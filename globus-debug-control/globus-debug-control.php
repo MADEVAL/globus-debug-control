@@ -10,6 +10,7 @@
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: globus-debug-control
+ * Domain Path: /languages
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -117,10 +118,10 @@ final class Globus_Debug_Control {
 		];
 	}
 	
-	public function get_options(): array {
+	public function get_options( bool $force_refresh = false ): array {
 		static $cached_options = null;
 		
-		if ( null !== $cached_options ) {
+		if ( null !== $cached_options && ! $force_refresh ) {
 			return $cached_options;
 		}
 		
@@ -373,6 +374,7 @@ final class Globus_Debug_Control {
 		if ( ! file_exists( $path ) ) {
 			return false;
 		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership.
 		$content = @file_get_contents( $path );
 		return false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' );
 	}
@@ -427,6 +429,7 @@ final class Globus_Debug_Control {
 		$dir  = dirname( $path );
 		
 		if ( file_exists( $path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership.
 			$existing = @file_get_contents( $path );
 			if ( false !== $existing && false === strpos( $existing, 'GLOBUS Debug Control' ) ) {
 				return false;
@@ -437,6 +440,7 @@ final class Globus_Debug_Control {
 			return false;
 		}
 		
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing mu-plugin file before WP_Filesystem is available.
 		$result = @file_put_contents( $path, $this->generate_mu_content() );
 		if ( false !== $result ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
@@ -451,6 +455,7 @@ final class Globus_Debug_Control {
 		if ( ! file_exists( $path ) ) {
 			return true;
 		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership before deletion.
 		$content = @file_get_contents( $path );
 		if ( false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' ) ) {
 			wp_delete_file( $path );
