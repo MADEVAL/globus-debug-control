@@ -1,4 +1,4 @@
-=== Debug Control ===
+=== GLOBUS Debug Control ===
 Contributors: globusstudio
 Tags: debug, error-reporting, logging, development, error-handling
 Requires at least: 5.2
@@ -12,7 +12,7 @@ Full WordPress debug mode control: error type filtering, display and logging man
 
 == Description ==
 
-Debug Control provides full control over WordPress debug mode directly from the admin panel.
+GLOBUS Debug Control provides full control over WordPress debug mode directly from the admin panel.
 
 **Features:**
 
@@ -40,15 +40,15 @@ All file operations are scoped to the plugin's own log files and its own mu-plug
 
 == Installation ==
 
-1. Upload the `debug-control` folder to the `/wp-content/plugins/` directory.
+1. Upload the `globus-debug-control` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the "Plugins" menu in WordPress.
-3. Configure settings under "Settings" → "Debug Control".
+3. Configure settings under "Settings" → "GLOBUS Debug Control".
 
 == Frequently Asked Questions ==
 
 = Why is the mu-plugin needed? =
 
-WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before Debug Control initializes. The mu-plugin loads first and intercepts such errors.
+WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes. The mu-plugin loads first and intercepts such errors.
 
 = Does the plugin work without WP_DEBUG? =
 
