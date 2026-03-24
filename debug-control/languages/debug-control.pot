@@ -1,8 +1,8 @@
 # Copyright (C) 2026 GLOBUS.studio
-# This file is distributed under the same license as the GLOBUS Debug Control plugin.
+# This file is distributed under the same license as the Debug Control plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: GLOBUS Debug Control 2.2.0\n"
+"Project-Id-Version: Debug Control 2.2.2\n"
 "Report-Msgid-Bugs-To: https://globus.studio\n"
 "POT-Creation-Date: 2026-03-24 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -13,228 +13,236 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "General Settings"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Enable Plugin"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Error Type Filtering"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "display_errors Mode"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Logging Settings"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "php-error Class"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "API Contexts"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Early Error Interception"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Enable debug control"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "When disabled, the plugin does not affect PHP or WordPress settings."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Suppress E_NOTICE"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "and E_USER_NOTICE"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Suppress E_DEPRECATED"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "and E_USER_DEPRECATED"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Suppress E_WARNING"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "and E_USER_WARNING (use with caution!)"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Suppress E_STRICT"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "(not available in PHP 8.0+)"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Inherit from WP_DEBUG_DISPLAY"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Always on"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Always off"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Controls error output on screen. In API contexts, display is automatically disabled."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Enable error logging"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Log file path:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Leave empty for auto-detection"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log)."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "You can specify an absolute or relative (from wp-content) path."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Maximum log size (MB):"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 #. translators: 1: CSS class name, 2: HTML tag name
 msgid "Remove %1$s class from %2$s"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "WordPress adds this class when errors are detected. It can interfere with styling."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Show errors in API contexts"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Enable only for API debugging."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Install mu-plugin for early interception"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Installed"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Not installed"
 msgstr ""
 
-#: globus-debug-control.php
-msgid "WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes."
+#: debug-control.php
+msgid "WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before Debug Control initializes."
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 #. translators: 1: mu-plugin filename, 2: directory path
 msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
+msgid "Settings"
+msgstr ""
+
+#: debug-control.php
 msgid "Save Settings"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "System Information"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Plugin version:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "PHP version:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Enabled"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Disabled"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Current error_reporting:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
+msgid "Log file path:"
+msgstr ""
+
+#: debug-control.php
 msgid "size:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "file does not exist"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Not configured"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Execution context:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "API context"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Normal"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "MU-plugin dropin:"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Not installed — early interception disabled"
 msgstr ""
 
-#: globus-debug-control.php
+#: debug-control.php
 msgid "Version"
 msgstr ""
