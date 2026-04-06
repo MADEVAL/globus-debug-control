@@ -4,7 +4,7 @@ Tags: debug, error-reporting, logging, development, error-handling
 Requires at least: 5.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,11 @@ WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g.
 The plugin is active, but error filtering (error_reporting) is only applied when WP_DEBUG is enabled.
 
 == Changelog ==
+
+= 2.2.4 =
+* Replaced inline style/script output with wp_add_inline_style() and wp_add_inline_script()
+* Renamed option key from gdc_options to globus_debug_control_options with automatic migration
+* Updated Author URI
 
 = 2.2.3 =
 * Fix minor bugs

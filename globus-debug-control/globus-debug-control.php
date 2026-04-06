@@ -3,9 +3,9 @@
  * Plugin Name: GLOBUS Debug Control
  * Plugin URI: https://globus.studio
  * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal.
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: Yevhen Leonidov
- * Author URI: https://leonidov.dev/
+ * Author URI: https://globus.studio
  * Requires at least: 5.2
  * Tested up to: 6.9
  * Requires PHP: 7.4
@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class Globus_Debug_Control {
 	
-	private const OPT     = 'gdc_options';
-	private const VERSION = '2.2.3';
+	private const OPT     = 'globus_debug_control_options';
+	private const VERSION = '2.2.4';
 	private const MU_FILE = 'gdc-early-loader.php';
 	
 	private static $instance = null;
@@ -45,10 +45,8 @@ final class Globus_Debug_Control {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
 		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
-		add_action( 'admin_head', [ $this, 'admin_remove_php_error_class' ], 1 );
-		add_action( 'admin_footer', [ $this, 'admin_remove_php_error_class_js' ], 999 );
-		add_action( 'wp_head', [ $this, 'frontend_remove_php_error_class' ], 1 );
-		add_action( 'wp_footer', [ $this, 'frontend_remove_php_error_class_js' ], 999 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_php_error_assets' ] );
+		add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_php_error_assets' ] );
 		
 		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
@@ -133,8 +131,21 @@ final class Globus_Debug_Control {
 			return $cached_options;
 		}
 		
-		$saved = get_option( self::OPT, [] );
-		$opts  = wp_parse_args( $saved, $this->defaults() );
+		$saved = get_option( self::OPT, null );
+		
+		// Migrate from legacy option key 'gdc_options'.
+		if ( null === $saved ) {
+			$legacy = get_option( 'gdc_options', null );
+			if ( is_array( $legacy ) ) {
+				update_option( self::OPT, $legacy );
+				delete_option( 'gdc_options' );
+				$saved = $legacy;
+			} else {
+				$saved = [];
+			}
+		}
+		
+		$opts = wp_parse_args( $saved, $this->defaults() );
 		
 		$bool_keys = [
 			'enabled',
@@ -401,7 +412,17 @@ final class Globus_Debug_Control {
 			' */',
 			'if ( ! defined( \'ABSPATH\' ) ) { exit; }',
 			'',
-			'$gdc_opts = get_option( \'gdc_options\', [] );',
+			'$gdc_opts = get_option( \'globus_debug_control_options\', [] );',
+			'',
+			'// Migrate from legacy option key.',
+			'if ( empty( $gdc_opts ) ) {',
+			"\t" . '$gdc_legacy = get_option( \'gdc_options\', [] );',
+			"\t" . 'if ( ! empty( $gdc_legacy ) ) {',
+			"\t\t" . 'update_option( \'globus_debug_control_options\', $gdc_legacy );',
+			"\t\t" . 'delete_option( \'gdc_options\' );',
+			"\t\t" . '$gdc_opts = $gdc_legacy;',
+			"\t" . '}',
+			'}',
 			'',
 			'if ( empty( $gdc_opts ) || empty( $gdc_opts[\'enabled\'] ) ) {',
 			"\treturn;",
@@ -788,118 +809,29 @@ final class Globus_Debug_Control {
 		return $classes;
 	}
 	
-	public function admin_remove_php_error_class() {
+	public function admin_enqueue_php_error_assets() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
 			return;
 		}
-		echo '<style id="gdc-remove-php-error">body.php-error{}</style>';
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- Inline style, no version needed.
+		wp_add_inline_style( 'common', 'body.php-error{}' );
+		wp_add_inline_script( 'common', $this->get_php_error_class_js() );
 	}
-	
-	public function admin_remove_php_error_class_js() {
+
+	public function frontend_enqueue_php_error_assets() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
 			return;
 		}
-		?>
-		<script id="gdc-remove-php-error-js">
-		(function() {
-			function removePhpErrorClass() {
-				var body = document.body || document.getElementsByTagName('body')[0];
-				if (body && body.classList.contains('php-error')) {
-					body.classList.remove('php-error');
-				}
-			}
-			
-			// Remove immediately
-			removePhpErrorClass();
-			
-			// Remove after DOM loaded
-			if (document.readyState === 'loading') {
-				document.addEventListener('DOMContentLoaded', removePhpErrorClass);
-			}
-			
-			// Remove after full page load
-			window.addEventListener('load', removePhpErrorClass);
-			
-			// Watch for changes (in case class is added dynamically)
-			if (window.MutationObserver) {
-				var observer = new MutationObserver(function(mutations) {
-					mutations.forEach(function(mutation) {
-						if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-							removePhpErrorClass();
-						}
-					});
-				});
-				
-				var body = document.body || document.getElementsByTagName('body')[0];
-				if (body) {
-					observer.observe(body, { attributes: true, attributeFilter: ['class'] });
-				}
-			}
-			
-			// Additional check every 100ms for the first 3 seconds
-			var checks = 0;
-			var interval = setInterval(function() {
-				removePhpErrorClass();
-				checks++;
-				if (checks >= 30) {
-					clearInterval(interval);
-				}
-			}, 100);
-		})();
-		</script>
-		<?php
+		wp_register_style( 'gdc-php-error', false, [], false ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters -- Inline-only handle.
+		wp_enqueue_style( 'gdc-php-error' );
+		wp_add_inline_style( 'gdc-php-error', 'body.php-error{}' );
+		wp_add_inline_script( 'jquery', $this->get_php_error_class_js() );
 	}
-	
-	public function frontend_remove_php_error_class() {
-		$opts = $this->get_options();
-		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
-			return;
-		}
-		echo '<style id="gdc-remove-php-error">body.php-error{}</style>';
-	}
-	
-	public function frontend_remove_php_error_class_js() {
-		$opts = $this->get_options();
-		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
-			return;
-		}
-		?>
-		<script id="gdc-remove-php-error-js">
-		(function() {
-			function removePhpErrorClass() {
-				var body = document.body || document.getElementsByTagName('body')[0];
-				if (body && body.classList.contains('php-error')) {
-					body.classList.remove('php-error');
-				}
-			}
-			
-			removePhpErrorClass();
-			
-			if (document.readyState === 'loading') {
-				document.addEventListener('DOMContentLoaded', removePhpErrorClass);
-			}
-			
-			window.addEventListener('load', removePhpErrorClass);
-			
-			if (window.MutationObserver) {
-				var observer = new MutationObserver(function(mutations) {
-					mutations.forEach(function(mutation) {
-						if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-							removePhpErrorClass();
-						}
-					});
-				});
-				
-				var body = document.body || document.getElementsByTagName('body')[0];
-				if (body) {
-					observer.observe(body, { attributes: true, attributeFilter: ['class'] });
-				}
-			}
-		})();
-		</script>
-		<?php
+
+	private function get_php_error_class_js(): string {
+		return '(function(){function r(){var b=document.body||document.getElementsByTagName("body")[0];if(b&&b.classList.contains("php-error")){b.classList.remove("php-error");}}r();if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",r);}window.addEventListener("load",r);if(window.MutationObserver){var o=new MutationObserver(function(m){m.forEach(function(e){if(e.type==="attributes"&&e.attributeName==="class"){r();}});});var b=document.body||document.getElementsByTagName("body")[0];if(b){o.observe(b,{attributes:true,attributeFilter:["class"]});}}var c=0,i=setInterval(function(){r();c++;if(c>=30){clearInterval(i);}},100);})();';
 	}
 }
 

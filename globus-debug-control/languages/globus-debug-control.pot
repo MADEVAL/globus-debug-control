@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the GLOBUS Debug Control plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: GLOBUS Debug Control 2.2.3\n"
+"Project-Id-Version: GLOBUS Debug Control 2.2.4\n"
 "Report-Msgid-Bugs-To: https://globus.studio\n"
 "POT-Creation-Date: 2026-03-24 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

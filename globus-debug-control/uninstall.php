@@ -9,7 +9,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-delete_option( 'gdc_options' );
+delete_option( 'globus_debug_control_options' );
+delete_option( 'gdc_options' ); // Legacy key — remove if present.
 
 // Remove mu-plugin dropin if it exists.
 $globus_debug_control_mu_file = ( defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' ) ) . '/gdc-early-loader.php';
