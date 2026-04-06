@@ -5,7 +5,7 @@
  * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal.
  * Version: 2.2.4
  * Author: Yevhen Leonidov
- * Author URI: https://globus.studio
+ * Author URI: https://leonidov.dev
  * Requires at least: 5.2
  * Tested up to: 6.9
  * Requires PHP: 7.4
