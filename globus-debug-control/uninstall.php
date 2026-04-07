@@ -1,6 +1,6 @@
 <?php
 /**
- * GLOBUS Debug Control — Uninstall
+ * GLOBUS Debug Control - Uninstall
  *
  * Removes plugin options and mu-plugin dropin when the plugin is deleted.
  */
@@ -10,7 +10,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_option( 'globus_debug_control_options' );
-delete_option( 'gdc_options' ); // Legacy key — remove if present.
+delete_option( 'gdc_options' ); // Legacy key - remove if present.
 
 // Remove mu-plugin dropin if it exists.
 $globus_debug_control_mu_file = ( defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' ) ) . '/gdc-early-loader.php';

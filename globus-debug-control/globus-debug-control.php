@@ -402,7 +402,7 @@ final class Globus_Debug_Control {
 		$lines = array(
 			'<?php',
 			'/**',
-			' * GLOBUS Debug Control — Early Loader (mu-plugin)',
+			' * GLOBUS Debug Control - Early Loader (mu-plugin)',
 			' *',
 			' * Sets error_reporting BEFORE regular plugins are loaded,',
 			' * intercepting compile-time errors (E_DEPRECATED, E_NOTICE, etc.)',
@@ -779,7 +779,7 @@ final class Globus_Debug_Control {
 				</tr>
 				<tr>
 					<td><strong><?php esc_html_e( 'MU-plugin dropin:', 'globus-debug-control' ); ?></strong></td>
-					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> ' . esc_html__( 'Not installed — early interception disabled', 'globus-debug-control' ); ?></td>
+					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> ' . esc_html__( 'Not installed - early interception disabled', 'globus-debug-control' ); ?></td>
 				</tr>
 			</table>
 			

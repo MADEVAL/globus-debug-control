@@ -240,7 +240,7 @@ msgid "MU-plugin dropin:"
 msgstr ""
 
 #: globus-debug-control.php
-msgid "Not installed — early interception disabled"
+msgid "Not installed - early interception disabled"
 msgstr ""
 
 #: globus-debug-control.php
