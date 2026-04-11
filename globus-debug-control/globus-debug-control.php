@@ -19,6 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/include/log-viewer.php';
+require_once __DIR__ . '/include/cron-viewer.php';
+require_once __DIR__ . '/include/wp-config-debug.php';
+
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'globus_debug_control_options';
@@ -47,6 +51,7 @@ final class Globus_Debug_Control {
 		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_php_error_assets' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_php_error_assets' ] );
+		add_action( 'admin_init', [ $this, 'handle_module_actions' ] );
 		
 		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
 		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
@@ -58,6 +63,11 @@ final class Globus_Debug_Control {
 		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), [ $this, 'plugin_action_links' ] );
 	}
 	
+	public function handle_module_actions(): void {
+		GDC_Log_Viewer::handle_clear_action();
+		GDC_WpConfig_Debug::handle_action();
+	}
+
 	public function plugin_action_links( array $links ): array {
 		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=globus-debug-control' ) ) . '">' . esc_html__( 'Settings', 'globus-debug-control' ) . '</a>';
 		array_unshift( $links, $settings_link );
@@ -703,91 +713,155 @@ final class Globus_Debug_Control {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		
-		$opts     = $this->get_options();
-		$log_path = $this->resolve_log_path( $opts );
+
+		$tabs = [
+			'settings' => __( 'Settings', 'globus-debug-control' ),
+			'wpcfg'    => __( 'WP_DEBUG', 'globus-debug-control' ),
+			'log'      => __( 'Error Log', 'globus-debug-control' ),
+			'cron'     => __( 'Cron Tasks', 'globus-debug-control' ),
+		];
+
+		$active_tab = isset( $_GET['tab'] ) && array_key_exists( $_GET['tab'], $tabs ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			? sanitize_key( $_GET['tab'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			: 'settings';
+
+		$opts          = $this->get_options();
+		$wp_debug_file = GDC_WpConfig_Debug::get_wp_debug_status();
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			
-			<form action="options.php" method="post">
-				<?php
-				settings_fields( 'globus_debug_control' );
-				do_settings_sections( 'globus_debug_control' );
-				submit_button( __( 'Save Settings', 'globus-debug-control' ) );
-				?>
-			</form>
-			
-			<hr>
-			
-			<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
-			<table class="widefat striped">
-				<tr>
-					<td style="width: 250px;"><strong><?php esc_html_e( 'Plugin version:', 'globus-debug-control' ); ?></strong></td>
-					<td><?php echo esc_html( self::VERSION ); ?></td>
-				</tr>
-				<tr>
-					<td><strong><?php esc_html_e( 'PHP version:', 'globus-debug-control' ); ?></strong></td>
-					<td><?php echo esc_html( PHP_VERSION ); ?></td>
-				</tr>
-				<tr>
-					<td><strong>WP_DEBUG:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG' ) && WP_DEBUG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-				</tr>
-				<tr>
-					<td><strong>WP_DEBUG_DISPLAY:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-				</tr>
-				<tr>
-					<td><strong>WP_DEBUG_LOG:</strong></td>
-					<td><?php echo defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-				</tr>
-				<tr>
-					<td><strong><?php esc_html_e( 'Current error_reporting:', 'globus-debug-control' ); ?></strong></td>
-					<?php // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting -- Admin diagnostic display. ?>
-					<td><code><?php echo esc_html( error_reporting() ); ?></code></td>
-				</tr>
-				<tr>
-					<td><strong>display_errors:</strong></td>
-					<td><code><?php echo esc_html( ini_get( 'display_errors' ) ); ?></code></td>
-				</tr>
-				<tr>
-					<td><strong>log_errors:</strong></td>
-					<td><code><?php echo esc_html( ini_get( 'log_errors' ) ); ?></code></td>
-				</tr>
-				<tr>
-					<td><strong><?php esc_html_e( 'Log file path:', 'globus-debug-control' ); ?></strong></td>
-					<td>
-						<?php
-						if ( $log_path ) {
-							echo '<code>' . esc_html( $log_path ) . '</code>';
-							if ( file_exists( $log_path ) ) {
-								$size = filesize( $log_path );
-								echo ' <span style="color: #2271b1;">(' . esc_html__( 'size:', 'globus-debug-control' ) . ' ' . esc_html( size_format( $size ) ) . ')</span>';
+			<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+			<?php if ( null !== $wp_debug_file ) : ?>
+				<?php if ( $wp_debug_file ) : ?>
+					<span class="gdc-debug-badge gdc-debug-on">
+						<span class="dashicons dashicons-warning" style="font-size:14px;vertical-align:-2px;margin-right:2px;"></span>
+						WP_DEBUG <?php esc_html_e( 'ON', 'globus-debug-control' ); ?>
+					</span>
+				<?php else : ?>
+					<span class="gdc-debug-badge gdc-debug-off">
+						WP_DEBUG <?php esc_html_e( 'OFF', 'globus-debug-control' ); ?>
+					</span>
+				<?php endif; ?>
+			<?php endif; ?>
+
+			<hr class="wp-header-end">
+
+			<nav class="nav-tab-wrapper">
+				<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
+					<a
+						href="<?php echo esc_url( add_query_arg( [ 'page' => 'globus-debug-control', 'tab' => $tab_key ], admin_url( 'options-general.php' ) ) ); ?>"
+						class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>"
+					><?php echo esc_html( $tab_label ); ?></a>
+				<?php endforeach; ?>
+			</nav>
+
+			<div class="gdc-tab-content">
+
+			<?php if ( 'settings' === $active_tab ) : ?>
+
+				<form action="options.php" method="post">
+					<?php
+					settings_fields( 'globus_debug_control' );
+					do_settings_sections( 'globus_debug_control' );
+					submit_button( __( 'Save Settings', 'globus-debug-control' ) );
+					?>
+				</form>
+
+				<hr>
+
+				<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
+				<table class="widefat striped">
+					<tr>
+						<td style="width: 250px;"><strong><?php esc_html_e( 'Plugin version:', 'globus-debug-control' ); ?></strong></td>
+						<td><?php echo esc_html( self::VERSION ); ?></td>
+					</tr>
+					<tr>
+						<td><strong><?php esc_html_e( 'PHP version:', 'globus-debug-control' ); ?></strong></td>
+						<td><?php echo esc_html( PHP_VERSION ); ?></td>
+					</tr>
+					<tr>
+						<td><strong>WP_DEBUG:</strong></td>
+						<td><?php echo defined( 'WP_DEBUG' ) && WP_DEBUG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
+					</tr>
+					<tr>
+						<td><strong>WP_DEBUG_DISPLAY:</strong></td>
+						<td><?php echo defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
+					</tr>
+					<tr>
+						<td><strong>WP_DEBUG_LOG:</strong></td>
+						<td><?php echo defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? '<span style="color: #d63638;">●</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">○</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
+					</tr>
+					<tr>
+						<td><strong><?php esc_html_e( 'Current error_reporting:', 'globus-debug-control' ); ?></strong></td>
+						<?php // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting -- Admin diagnostic display. ?>
+						<td><code><?php echo esc_html( error_reporting() ); ?></code></td>
+					</tr>
+					<tr>
+						<td><strong>display_errors:</strong></td>
+						<td><code><?php echo esc_html( ini_get( 'display_errors' ) ); ?></code></td>
+					</tr>
+					<tr>
+						<td><strong>log_errors:</strong></td>
+						<td><code><?php echo esc_html( ini_get( 'log_errors' ) ); ?></code></td>
+					</tr>
+					<tr>
+						<td><strong><?php esc_html_e( 'Log file path:', 'globus-debug-control' ); ?></strong></td>
+						<td>
+							<?php
+							$log_path = $this->resolve_log_path( $opts );
+							if ( $log_path ) {
+								echo '<code>' . esc_html( $log_path ) . '</code>';
+								if ( file_exists( $log_path ) ) {
+									$size = filesize( $log_path );
+									echo ' <span style="color: #2271b1;">(' . esc_html__( 'size:', 'globus-debug-control' ) . ' ' . esc_html( size_format( $size ) ) . ')</span>';
+								} else {
+									echo ' <span style="color: #999;">(' . esc_html__( 'file does not exist', 'globus-debug-control' ) . ')</span>';
+								}
 							} else {
-								echo ' <span style="color: #999;">(' . esc_html__( 'file does not exist', 'globus-debug-control' ) . ')</span>';
+								echo '<span style="color: #999;">' . esc_html__( 'Not configured', 'globus-debug-control' ) . '</span>';
 							}
-						} else {
-							echo '<span style="color: #999;">' . esc_html__( 'Not configured', 'globus-debug-control' ) . '</span>';
-						}
-						?>
-					</td>
-				</tr>
-				<tr>
-					<td><strong><?php esc_html_e( 'Execution context:', 'globus-debug-control' ); ?></strong></td>
-					<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">' . esc_html__( 'API context', 'globus-debug-control' ) . '</span>' : '<span style="color: #2271b1;">' . esc_html__( 'Normal', 'globus-debug-control' ) . '</span>'; ?></td>
-				</tr>
-				<tr>
-					<td><strong><?php esc_html_e( 'MU-plugin dropin:', 'globus-debug-control' ); ?></strong></td>
-					<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> ' . esc_html__( 'Not installed - early interception disabled', 'globus-debug-control' ); ?></td>
-				</tr>
-			</table>
-			
-			<p style="margin-top: 20px;"><small>© 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
+							?>
+						</td>
+					</tr>
+					<tr>
+						<td><strong><?php esc_html_e( 'Execution context:', 'globus-debug-control' ); ?></strong></td>
+						<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">' . esc_html__( 'API context', 'globus-debug-control' ) . '</span>' : '<span style="color: #2271b1;">' . esc_html__( 'Normal', 'globus-debug-control' ) . '</span>'; ?></td>
+					</tr>
+					<tr>
+						<td><strong><?php esc_html_e( 'MU-plugin dropin:', 'globus-debug-control' ); ?></strong></td>
+						<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">●</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">●</span> ' . esc_html__( 'Not installed - early interception disabled', 'globus-debug-control' ); ?></td>
+					</tr>
+				</table>
+
+				<p style="margin-top: 20px;"><small>© 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
+
+			<?php elseif ( 'wpcfg' === $active_tab ) : ?>
+
+				<?php GDC_WpConfig_Debug::render(); ?>
+
+			<?php elseif ( 'log' === $active_tab ) : ?>
+
+				<?php wp_add_inline_style( 'common', GDC_Log_Viewer::get_inline_styles() ); ?>
+				<?php GDC_Log_Viewer::render(); ?>
+
+			<?php elseif ( 'cron' === $active_tab ) : ?>
+
+				<?php wp_add_inline_style( 'common', GDC_Cron_Viewer::get_inline_styles() ); ?>
+				<?php GDC_Cron_Viewer::render(); ?>
+
+			<?php endif; ?>
+
+			</div>
 		</div>
+		<style>
+			.gdc-tab-content { margin-top: 16px; }
+			.gdc-debug-badge { display: inline-block; margin-left: 10px; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; vertical-align: middle; }
+			.gdc-debug-on { background: #fcf0f1; color: #8a2424; border: 1px solid #f8c4c4; }
+			.gdc-debug-off { background: #f6f7f7; color: #646970; border: 1px solid #dcdcde; }
+		</style>
 		<?php
 	}
-	
+
 	public function filter_body_class( array $classes ): array {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
@@ -797,7 +871,7 @@ final class Globus_Debug_Control {
 		}
 		return $classes;
 	}
-	
+
 	public function filter_admin_body_class( string $classes ): string {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {

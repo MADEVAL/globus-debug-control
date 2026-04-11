@@ -382,6 +382,99 @@ if (! function_exists('wp_is_json_request')) {
 	}
 }
 
+if (! function_exists('_get_cron_array')) {
+	function _get_cron_array(): array {
+		return $GLOBALS['gdc_test_state']['cron_array'] ?? [];
+	}
+}
+
+if (! function_exists('human_time_diff')) {
+	function human_time_diff(int $from, int $to = 0): string {
+		$diff = abs($to - $from);
+		if ($diff < 60) {
+			return $diff . ' seconds';
+		}
+		if ($diff < 3600) {
+			return (int) ($diff / 60) . ' minutes';
+		}
+		return (int) ($diff / 3600) . ' hours';
+	}
+}
+
+if (! class_exists('GDC_Test_RedirectException')) {
+	class GDC_Test_RedirectException extends \RuntimeException {
+		public string $location;
+		public function __construct(string $location) {
+			$this->location = $location;
+			parent::__construct('Redirect to: ' . $location);
+		}
+	}
+}
+
+if (! function_exists('wp_safe_redirect')) {
+	function wp_safe_redirect(string $location, int $status = 302): bool {
+		$GLOBALS['gdc_test_state']['redirected_to'] = $location;
+		throw new \GDC_Test_RedirectException($location);
+	}
+}
+
+if (! function_exists('wp_nonce_field')) {
+	function wp_nonce_field(string $action, string $name = '_wpnonce', bool $referer = true, bool $echo = true): string {
+		$field = '<input type="hidden" name="' . esc_attr($name) . '" value="test_nonce">';
+		if ($echo) {
+			echo $field;
+		}
+		return $field;
+	}
+}
+
+if (! function_exists('check_admin_referer')) {
+	function check_admin_referer(string $action): int {
+		return 1;
+	}
+}
+
+if (! function_exists('add_query_arg')) {
+	function add_query_arg($args, string $url = ''): string {
+		$query = http_build_query($args);
+		return $url . (str_contains((string) $url, '?') ? '&' : '?') . $query;
+	}
+}
+
+if (! function_exists('wp_json_encode')) {
+	function wp_json_encode($data): string {
+		return (string) json_encode($data);
+	}
+}
+
+if (! function_exists('disabled')) {
+	function disabled($disabled, $current = true, $display = true): string {
+		$result = ((string) $disabled === (string) $current) ? 'disabled="disabled"' : '';
+		if ($display) {
+			echo $result;
+		}
+		return $result;
+	}
+}
+
+if (! function_exists('esc_js')) {
+	function esc_js(string $text): string {
+		return addslashes($text);
+	}
+}
+
+if (! function_exists('_n')) {
+	function _n(string $single, string $plural, int $number, string $domain = ''): string {
+		return $number === 1 ? $single : $plural;
+	}
+}
+
+if (! function_exists('number_format_i18n')) {
+	function number_format_i18n(float $number): string {
+		return number_format($number);
+	}
+}
+
 gdc_test_reset_state();
 
 require dirname(__DIR__) . '/globus-debug-control/globus-debug-control.php';

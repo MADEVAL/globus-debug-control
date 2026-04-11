@@ -1,0 +1,322 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+final class GDC_WpConfig_Debug {
+
+	private const NONCE_ACTION = 'gdc_wp_config_debug';
+
+	private const CONSTANTS = [
+		'WP_DEBUG'         => [ 'type' => 'bool', 'label' => 'WP_DEBUG' ],
+		'WP_DEBUG_LOG'     => [ 'type' => 'bool_or_string', 'label' => 'WP_DEBUG_LOG' ],
+		'WP_DEBUG_DISPLAY' => [ 'type' => 'bool', 'label' => 'WP_DEBUG_DISPLAY' ],
+		'SCRIPT_DEBUG'     => [ 'type' => 'bool', 'label' => 'SCRIPT_DEBUG' ],
+		'SAVEQUERIES'      => [ 'type' => 'bool', 'label' => 'SAVEQUERIES' ],
+	];
+
+	public static function find_wp_config(): string {
+		$path = ABSPATH . 'wp-config.php';
+
+		if ( file_exists( $path ) ) {
+			return $path;
+		}
+
+		$parent = dirname( ABSPATH ) . '/wp-config.php';
+
+		if ( file_exists( $parent ) && ! file_exists( dirname( ABSPATH ) . '/wp-settings.php' ) ) {
+			return $parent;
+		}
+
+		return '';
+	}
+
+	public static function read_constants( string $config_path ): array {
+		if ( ! file_exists( $config_path ) ) {
+			return [];
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$content = @file_get_contents( $config_path );
+
+		if ( false === $content ) {
+			return [];
+		}
+
+		$result = [];
+
+		foreach ( self::CONSTANTS as $name => $meta ) {
+			$pattern = '/^\s*define\s*\(\s*[\'"]' . preg_quote( $name, '/' ) . '[\'"]\s*,\s*(.+?)\s*\)\s*;/m';
+
+			if ( preg_match( $pattern, $content, $m ) ) {
+				$raw = trim( $m[1] );
+				$result[ $name ] = [
+					'defined' => true,
+					'raw'     => $raw,
+					'value'   => self::parse_raw_value( $raw ),
+					'label'   => $meta['label'],
+					'type'    => $meta['type'],
+				];
+			} else {
+				$result[ $name ] = [
+					'defined' => false,
+					'raw'     => '',
+					'value'   => null,
+					'label'   => $meta['label'],
+					'type'    => $meta['type'],
+				];
+			}
+		}
+
+		return $result;
+	}
+
+	public static function set_constant( string $config_path, string $name, string $new_raw_value ): bool {
+		if ( ! array_key_exists( $name, self::CONSTANTS ) ) {
+			return false;
+		}
+
+		if ( ! file_exists( $config_path ) || ! is_writable( $config_path ) ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$content = @file_get_contents( $config_path );
+
+		if ( false === $content ) {
+			return false;
+		}
+
+		$quoted_name = preg_quote( $name, '/' );
+		$new_line    = "define( '" . $name . "', " . $new_raw_value . ' );';
+		$pattern     = '/^\s*define\s*\(\s*[\'"]' . $quoted_name . '[\'"]\s*,\s*.+?\s*\)\s*;/m';
+
+		if ( preg_match( $pattern, $content ) ) {
+			$updated = preg_replace( $pattern, $new_line, $content );
+		} else {
+			$insert_before = "/* That's all, stop editing!";
+			$alt_before    = '/** Absolute path to the WordPress directory.';
+
+			if ( strpos( $content, $insert_before ) !== false ) {
+				$updated = str_replace( $insert_before, $new_line . "\n" . $insert_before, $content );
+			} elseif ( strpos( $content, $alt_before ) !== false ) {
+				$updated = str_replace( $alt_before, $new_line . "\n" . $alt_before, $content );
+			} else {
+				$updated = $content . "\n" . $new_line . "\n";
+			}
+		}
+
+		if ( null === $updated ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$result = @file_put_contents( $config_path, $updated );
+
+		return false !== $result;
+	}
+
+	public static function parse_raw_value( string $raw ): bool {
+		$lower = strtolower( trim( $raw ) );
+
+		if ( 'true' === $lower || '1' === $lower ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public static function handle_action(): void {
+		if ( ! isset( $_POST['gdc_wpcfg_save'] ) ) {
+			return;
+		}
+
+		check_admin_referer( self::NONCE_ACTION );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$config_path = self::find_wp_config();
+
+		if ( empty( $config_path ) || ! is_writable( $config_path ) ) {
+			wp_safe_redirect(
+				add_query_arg(
+					[ 'page' => 'globus-debug-control', 'tab' => 'wpcfg', 'gdc_cfg_error' => 'nowrite' ],
+					admin_url( 'options-general.php' )
+				)
+			);
+			exit;
+		}
+
+		$fields = isset( $_POST['gdc_wpcfg'] ) && is_array( $_POST['gdc_wpcfg'] )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['gdc_wpcfg'] ) )
+			: [];
+
+		foreach ( self::CONSTANTS as $name => $meta ) {
+			if ( ! array_key_exists( $name, $fields ) ) {
+				continue;
+			}
+
+			$raw_value = 'true' === $fields[ $name ] ? 'true' : 'false';
+
+			if ( 'WP_DEBUG_LOG' === $name && isset( $fields['WP_DEBUG_LOG_value'] ) ) {
+				$str = sanitize_text_field( wp_unslash( $fields['WP_DEBUG_LOG_value'] ) );
+				if ( '' !== $str ) {
+					$raw_value = "'" . addslashes( $str ) . "'";
+				}
+			}
+
+			self::set_constant( $config_path, $name, $raw_value );
+		}
+
+		wp_safe_redirect(
+			add_query_arg(
+				[ 'page' => 'globus-debug-control', 'tab' => 'wpcfg', 'gdc_cfg_saved' => '1' ],
+				admin_url( 'options-general.php' )
+			)
+		);
+		exit;
+	}
+
+	public static function render(): void {
+		$config_path = self::find_wp_config();
+		$writable    = ! empty( $config_path ) && is_writable( $config_path );
+		$constants   = ! empty( $config_path ) ? self::read_constants( $config_path ) : [];
+
+		if ( isset( $_GET['gdc_cfg_saved'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'wp-config.php updated.', 'globus-debug-control' ) . '</p></div>';
+		}
+
+		if ( isset( $_GET['gdc_cfg_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'wp-config.php is not writable.', 'globus-debug-control' ) . '</p></div>';
+		}
+
+		?>
+		<div class="gdc-wpcfg-wrap">
+			<?php if ( empty( $config_path ) ) : ?>
+				<div class="notice notice-warning inline"><p><?php esc_html_e( 'wp-config.php not found.', 'globus-debug-control' ); ?></p></div>
+			<?php elseif ( ! $writable ) : ?>
+				<div class="notice notice-warning inline">
+					<p>
+						<?php
+						echo wp_kses(
+							sprintf(
+								/* translators: %s: file path */
+								__( '<strong>%s</strong> is not writable. Changes cannot be saved.', 'globus-debug-control' ),
+								esc_html( $config_path )
+							),
+							[ 'strong' => [] ]
+						);
+						?>
+					</p>
+				</div>
+			<?php else : ?>
+				<p class="description">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: file path */
+							__( 'Editing: <code>%s</code>', 'globus-debug-control' ),
+							esc_html( $config_path )
+						),
+						[ 'code' => [] ]
+					);
+					?>
+				</p>
+			<?php endif; ?>
+
+			<form method="post">
+				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
+				<input type="hidden" name="gdc_wpcfg_save" value="1">
+
+				<table class="form-table" role="presentation">
+					<?php foreach ( $constants as $name => $info ) :
+						$is_true = $info['defined'] && $info['value'];
+						?>
+					<tr>
+						<th scope="row">
+							<label>
+								<code><?php echo esc_html( $name ); ?></code>
+							</label>
+						</th>
+						<td>
+							<label class="gdc-toggle-label">
+								<input
+									type="checkbox"
+									name="gdc_wpcfg[<?php echo esc_attr( $name ); ?>]"
+									value="true"
+									<?php checked( $is_true ); ?>
+									<?php disabled( ! $writable ); ?>
+									class="gdc-wpcfg-checkbox"
+								>
+								<?php if ( $is_true ) : ?>
+									<span class="gdc-status-badge gdc-status-on">
+										<span class="dashicons dashicons-yes-alt" style="font-size:14px;vertical-align:-2px;"></span>
+										<?php esc_html_e( 'Enabled', 'globus-debug-control' ); ?>
+									</span>
+								<?php else : ?>
+									<span class="gdc-status-badge gdc-status-off">
+										<span class="dashicons dashicons-no" style="font-size:14px;vertical-align:-2px;"></span>
+										<?php esc_html_e( 'Disabled', 'globus-debug-control' ); ?>
+									</span>
+								<?php endif; ?>
+							</label>
+							<?php if ( ! $info['defined'] ) : ?>
+								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php esc_html_e( '(not defined, will be added)', 'globus-debug-control' ); ?></span>
+							<?php else : ?>
+								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php echo esc_html__( 'Current:', 'globus-debug-control' ) . ' <code>' . esc_html( $info['raw'] ) . '</code>'; ?></span>
+							<?php endif; ?>
+						</td>
+					</tr>
+					<?php endforeach; ?>
+				</table>
+
+				<?php if ( $writable ) : ?>
+					<p class="submit">
+						<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Save to wp-config.php', 'globus-debug-control' ); ?>">
+					</p>
+				<?php endif; ?>
+			</form>
+		</div>
+		<style>
+			.gdc-status-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600; }
+			.gdc-status-on { background:#edfaef;color:#1a7c36;border:1px solid #a7d9aa; }
+			.gdc-status-off { background:#f6f7f7;color:#646970;border:1px solid #dcdcde; }
+			.gdc-toggle-label { cursor:pointer;display:inline-flex;align-items:center;gap:8px; }
+		</style>
+		<script>
+		(function(){
+			document.querySelectorAll('.gdc-wpcfg-checkbox').forEach(function(cb){
+				cb.addEventListener('change', function(){
+					var badge = this.nextElementSibling;
+					if (this.checked) {
+						badge.className = 'gdc-status-badge gdc-status-on';
+						badge.innerHTML = '<span class="dashicons dashicons-yes-alt" style="font-size:14px;vertical-align:-2px;"></span> <?php echo esc_js( __( 'Enabled', 'globus-debug-control' ) ); ?>';
+					} else {
+						badge.className = 'gdc-status-badge gdc-status-off';
+						badge.innerHTML = '<span class="dashicons dashicons-no" style="font-size:14px;vertical-align:-2px;"></span> <?php echo esc_js( __( 'Disabled', 'globus-debug-control' ) ); ?>';
+					}
+				});
+			});
+		})();
+		</script>
+		<?php
+	}
+
+	public static function get_wp_debug_status(): ?bool {
+		$config_path = self::find_wp_config();
+
+		if ( empty( $config_path ) ) {
+			return null;
+		}
+
+		$constants = self::read_constants( $config_path );
+
+		if ( empty( $constants['WP_DEBUG']['defined'] ) ) {
+			return null;
+		}
+
+		return $constants['WP_DEBUG']['value'];
+	}
+}
