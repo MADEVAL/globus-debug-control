@@ -22,7 +22,7 @@ jobs:
       
       # APP GS
       - name: Rsync files PLUGIN to APP
+        working-directory: globus-debug-control
         run: |
-          cd plugin
           export SSHPASS=${{ secrets.SSH_PASSWORD }}
           rsync -e "sshpass -e ssh -p 3333 -i $HOME/.ssh/key -o StrictHostKeyChecking=no" --archive --compress --update . globus_studio_user@91.90.193.238:/var/www/globus_studio_user/data/www/app.globus.studio
