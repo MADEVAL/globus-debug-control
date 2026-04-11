@@ -25,4 +25,4 @@ jobs:
         working-directory: globus-debug-control
         run: |
           export SSHPASS=${{ secrets.SSH_PASSWORD }}
-          rsync -e "sshpass -e ssh -p 3333 -i $HOME/.ssh/key -o StrictHostKeyChecking=no" --archive --compress --update . globus_studio_user@91.90.193.238:/var/www/globus_studio_user/data/www/app.globus.studio
+          rsync -e "sshpass -e ssh -p 3333 -i $HOME/.ssh/key -o StrictHostKeyChecking=no" --archive --compress --update . globus_studio_user@91.90.193.238:/var/www/globus_studio_user/data/www/app.globus.studio/wp-content/plugins/globus-debug-control
