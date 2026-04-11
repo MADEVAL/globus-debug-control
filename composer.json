@@ -1,0 +1,19 @@
+{
+	"name": "globusstudio/globus-debug-control-dev",
+	"description": "Development tooling for the GLOBUS Debug Control plugin",
+	"type": "project",
+	"require-dev": {
+		"phpunit/phpunit": "^9.6 || ^10.5 || ^11.5 || ^12.0"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"GDC\\Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"test": "phpunit"
+	},
+	"config": {
+		"sort-packages": true
+	}
+}

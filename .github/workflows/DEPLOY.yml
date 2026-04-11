@@ -1,0 +1,28 @@
+name: DEPLOY
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: set -eu
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - run: mkdir "$HOME/.ssh"
+      - run: echo "${{ secrets.GSS }}" > "$HOME/.ssh/key"
+      - run: chmod 600 "$HOME/.ssh/key"
+      
+      # APP GS
+      - name: Rsync files PLUGIN to APP
+        run: |
+          cd plugin
+          export SSHPASS=${{ secrets.SSH_PASSWORD }}
+          rsync -e "sshpass -e ssh -p 3333 -i $HOME/.ssh/key -o StrictHostKeyChecking=no" --archive --compress --update . globus_studio_user@91.90.193.238:/var/www/globus_studio_user/data/www/app.globus.studio
