@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -43,12 +43,17 @@ final class GDC_WpConfig_Debug {
 			return [];
 		}
 
+		$active = preg_replace( '#/\*.*?\*/#s', '', $content );
+		if ( null === $active ) {
+			$active = $content;
+		}
+
 		$result = [];
 
 		foreach ( self::CONSTANTS as $name => $meta ) {
-			$pattern = '/^\s*define\s*\(\s*[\'"]' . preg_quote( $name, '/' ) . '[\'"]\s*,\s*(.+?)\s*\)\s*;/m';
+			$pattern = '/^\s*define\s*\(\s*[\'"\']' . preg_quote( $name, '/' ) . '[\'"\']\s*,\s*(.+?)\s*\)\s*;/m';
 
-			if ( preg_match( $pattern, $content, $m ) ) {
+			if ( preg_match( $pattern, $active, $m ) ) {
 				$raw = trim( $m[1] );
 				$result[ $name ] = [
 					'defined' => true,
@@ -87,33 +92,62 @@ final class GDC_WpConfig_Debug {
 			return false;
 		}
 
-		$quoted_name = preg_quote( $name, '/' );
-		$new_line    = "define( '" . $name . "', " . $new_raw_value . ' );';
-		$pattern     = '/^\s*define\s*\(\s*[\'"]' . $quoted_name . '[\'"]\s*,\s*.+?\s*\)\s*;/m';
+		$new_line_body  = "define( '" . $name . "', " . $new_raw_value . ' );';
+		$define_pattern = '/^(\s*)define\s*\(\s*[\'"]' . preg_quote( $name, '/' ) . '[\'"]\s*,\s*.+?\s*\)\s*;/';
+		$lines          = explode( "\n", $content );
+		$in_block       = false;
+		$replaced       = false;
+		$out            = [];
 
-		if ( preg_match( $pattern, $content ) ) {
-			$updated = preg_replace( $pattern, $new_line, $content );
-		} else {
-			$insert_before = "/* That's all, stop editing!";
-			$alt_before    = '/** Absolute path to the WordPress directory.';
+		foreach ( $lines as $line ) {
+			if ( $in_block ) {
+				$out[] = $line;
+				if ( strpos( $line, '*/' ) !== false ) {
+					$in_block = false;
+				}
+				continue;
+			}
 
-			if ( strpos( $content, $insert_before ) !== false ) {
-				$updated = str_replace( $insert_before, $new_line . "\n" . $insert_before, $content );
-			} elseif ( strpos( $content, $alt_before ) !== false ) {
-				$updated = str_replace( $alt_before, $new_line . "\n" . $alt_before, $content );
+			$open  = strpos( $line, '/*' );
+			$close = strpos( $line, '*/' );
+			if ( $open !== false && ( $close === false || $close < $open ) ) {
+				$in_block = true;
+				$out[]    = $line;
+				continue;
+			}
+
+			$trimmed = ltrim( $line );
+			if ( substr( $trimmed, 0, 2 ) === '//' || substr( $trimmed, 0, 1 ) === '#' ) {
+				$out[] = $line;
+				continue;
+			}
+
+			if ( ! $replaced && preg_match( $define_pattern, $line, $match ) ) {
+				$out[]    = $match[1] . $new_line_body;
+				$replaced = true;
+				continue;
+			}
+
+			$out[] = $line;
+		}
+
+		$output = implode( "\n", $out );
+
+		if ( ! $replaced ) {
+			$stop = "/* That's all, stop editing!";
+			$absp = '/** Absolute path to the WordPress directory.';
+
+			if ( strpos( $output, $stop ) !== false ) {
+				$output = str_replace( $stop, $new_line_body . "\n" . $stop, $output );
+			} elseif ( strpos( $output, $absp ) !== false ) {
+				$output = str_replace( $absp, $new_line_body . "\n" . $absp, $output );
 			} else {
-				$updated = $content . "\n" . $new_line . "\n";
+				$output .= "\n" . $new_line_body;
 			}
 		}
 
-		if ( null === $updated ) {
-			return false;
-		}
-
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		$result = @file_put_contents( $config_path, $updated );
-
-		return false !== $result;
+		return false !== @file_put_contents( $config_path, $output );
 	}
 
 	public static function parse_raw_value( string $raw ): bool {
@@ -153,21 +187,25 @@ final class GDC_WpConfig_Debug {
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['gdc_wpcfg'] ) )
 			: [];
 
+		$current_constants = self::read_constants( $config_path );
+
 		foreach ( self::CONSTANTS as $name => $meta ) {
-			if ( ! array_key_exists( $name, $fields ) ) {
+			$is_checked = isset( $fields[ $name ] ) && 'true' === $fields[ $name ];
+			$is_defined = ! empty( $current_constants[ $name ]['defined'] );
+
+			if ( ! $is_checked && ! $is_defined ) {
 				continue;
 			}
 
-			$raw_value = 'true' === $fields[ $name ] ? 'true' : 'false';
-
-			if ( 'WP_DEBUG_LOG' === $name && isset( $fields['WP_DEBUG_LOG_value'] ) ) {
+			if ( 'WP_DEBUG_LOG' === $name && $is_checked && isset( $fields['WP_DEBUG_LOG_value'] ) ) {
 				$str = sanitize_text_field( wp_unslash( $fields['WP_DEBUG_LOG_value'] ) );
 				if ( '' !== $str ) {
-					$raw_value = "'" . addslashes( $str ) . "'";
+					self::set_constant( $config_path, $name, "'" . addslashes( $str ) . "'" );
+					continue;
 				}
 			}
 
-			self::set_constant( $config_path, $name, $raw_value );
+			self::set_constant( $config_path, $name, $is_checked ? 'true' : 'false' );
 		}
 
 		wp_safe_redirect(
