@@ -3,7 +3,7 @@
  * Plugin Name: GLOBUS Debug Control
  * Plugin URI: https://globus.studio
  * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal.
- * Version: 2.2.4
+ * Version: 2.2.5
  * Author: Yevhen Leonidov
  * Author URI: https://leonidov.dev
  * Requires at least: 5.2
@@ -26,7 +26,7 @@ require_once __DIR__ . '/include/wp-config-debug.php';
 final class Globus_Debug_Control {
 	
 	private const OPT     = 'globus_debug_control_options';
-	private const VERSION = '2.2.4';
+	private const VERSION = '2.2.5';
 	private const MU_FILE = 'gdc-early-loader.php';
 	
 	private static $instance = null;

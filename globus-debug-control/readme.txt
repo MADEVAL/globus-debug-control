@@ -4,11 +4,11 @@ Tags: debug, error-reporting, logging, development, error-handling
 Requires at least: 5.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.2.4
+Stable tag: 2.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Manage WordPress debug mode from the admin panel - choose which errors to see, where to log them, and keep your frontend clean.
+Manage WordPress debug mode from the admin panel - toggle debug constants, view the error log, monitor cron tasks, and keep your frontend clean.
 
 == Description ==
 
@@ -51,6 +51,26 @@ When WordPress encounters a PHP error, it adds a `php-error` class to the `<body
 
 WordPress loads plugins in alphabetical order. If another plugin (such as Elementor, WooCommerce, or any "A…" plugin) throws an error before GLOBUS Debug Control initializes, those errors won't be filtered. Enabling the **MU-plugin dropin** installs a small helper file into `wp-content/mu-plugins/` that runs before any regular plugin - ensuring your filter settings apply to all PHP errors from the very start of the request.
 
+**Toggle WP_DEBUG constants without editing files**
+
+The **WP_DEBUG** tab lets you enable or disable the five most important debug constants directly from the admin panel - no manual `wp-config.php` editing required:
+
+* `WP_DEBUG` - master debug switch
+* `WP_DEBUG_LOG` - write errors to a log file
+* `WP_DEBUG_DISPLAY` - show errors on screen
+* `SCRIPT_DEBUG` - use unminified JS/CSS
+* `SAVEQUERIES` - log all database queries
+
+The plugin locates your `wp-config.php` automatically and patches it in place, adding the constant if it is missing or updating the existing value. Commented-out defines and block-comment sections are never touched. The current status of `WP_DEBUG` is always visible as a badge in the plugin header.
+
+**Error log viewer**
+
+The **Error Log** tab displays the contents of your `debug.log` file directly in the admin panel. Lines are color-coded by severity (fatal errors, warnings, notices, cron messages). The log is paginated (200 lines per page) and can be cleared with one click.
+
+**Cron task viewer**
+
+The **Cron Tasks** tab lists all scheduled WordPress cron events - hook name, next run time, recurrence interval, and arguments. Overdue events are highlighted so you can spot stuck or misfiring tasks at a glance.
+
 == Installation ==
 
 1. Upload the `globus-debug-control` folder to the `/wp-content/plugins/` directory.
@@ -61,7 +81,7 @@ WordPress loads plugins in alphabetical order. If another plugin (such as Elemen
 
 = Does the plugin require WP_DEBUG to be enabled? =
 
-The plugin is always active, but error filtering only takes effect when `WP_DEBUG` is set to `true` in `wp-config.php`. Error display and logging settings work independently of `WP_DEBUG`.
+The plugin is always active, but error filtering only takes effect when `WP_DEBUG` is set to `true` in `wp-config.php`. Error display and logging settings work independently of `WP_DEBUG`. You can toggle `WP_DEBUG` and related constants from the **WP_DEBUG** tab without editing any files manually.
 
 = Will it hide errors in AJAX or REST API responses? =
 
@@ -73,13 +93,24 @@ It's an optional small file installed into `wp-content/mu-plugins/`. It makes GL
 
 = Where is the log file saved? =
 
-By default, errors are logged to `wp-content/debug.log`. You can set a custom path in the plugin settings. The log file rotates automatically once it exceeds the size limit you set.
+By default, errors are logged to `wp-content/debug.log`. You can set a custom path in the plugin settings. The log file rotates automatically once it exceeds the size limit you set. The **Error Log** tab lets you read and clear the log directly from the admin panel.
+
+= Can I see scheduled cron tasks? =
+
+Yes. The **Cron Tasks** tab lists all registered WordPress cron events with their next run time, interval, and arguments. Overdue events are highlighted.
 
 = Can I use this on a live site? =
 
 Yes. The recommended setup for a production site is: suppress all error types, disable error display, enable logging to a file, and keep the `php-error` class removal active.
 
 == Changelog ==
+
+= 2.2.5 =
+* Added WP_DEBUG tab: toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, SAVEQUERIES directly from the admin panel
+* WP_DEBUG status indicator badge shown in plugin header
+* Added Error Log viewer with color-coded lines, pagination, and one-click clear
+* Added Cron Tasks viewer showing all scheduled events with overdue highlighting
+* Plugin settings UI reorganized into four tabs: Settings, WP_DEBUG, Error Log, Cron Tasks
 
 = 2.2.4 =
 * Replaced inline style/script output with wp_add_inline_style() and wp_add_inline_script()
@@ -111,6 +142,9 @@ Yes. The recommended setup for a production site is: suppress all error types, d
 * Complete plugin rewrite
 
 == Upgrade Notice ==
+
+= 2.2.5 =
+New: toggle WP_DEBUG constants from the admin panel, built-in error log viewer, and cron task monitor. No configuration required after update.
 
 = 2.2.0 =
 Added optional MU-plugin dropin to catch errors from plugins that load before GLOBUS Debug Control.
