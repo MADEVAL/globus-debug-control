@@ -107,6 +107,32 @@ if (! defined('FS_CHMOD_FILE')) {
 	define('FS_CHMOD_FILE', 0644);
 }
 
+if (! function_exists('wp_create_nonce')) {
+	function wp_create_nonce(string $action = ''): string {
+		return 'test_nonce_' . md5($action);
+	}
+}
+
+if (! function_exists('check_ajax_referer')) {
+	function check_ajax_referer(string $action = '', $query_arg = false, bool $die = true): int {
+		return 1;
+	}
+}
+
+if (! function_exists('wp_send_json_success')) {
+	function wp_send_json_success($data = null, int $status_code = 200): void {
+		$GLOBALS['gdc_test_state']['json_response'] = array( 'success' => true, 'data' => $data );
+		throw new \GDC_Test_WpDieException('wp_send_json_success');
+	}
+}
+
+if (! function_exists('wp_send_json_error')) {
+	function wp_send_json_error($data = null, int $status_code = 200): void {
+		$GLOBALS['gdc_test_state']['json_response'] = array( 'success' => false, 'data' => $data );
+		throw new \GDC_Test_WpDieException('wp_send_json_error');
+	}
+}
+
 if (! function_exists('WP_Filesystem')) {
 	function WP_Filesystem(): bool {
 		global $wp_filesystem;

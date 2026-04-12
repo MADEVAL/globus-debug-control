@@ -56,5 +56,60 @@
 					);
 			}
 		}
+		// Log Viewer: Generate test error
+		var genBtn = document.getElementById( 'gdc-generate-error' );
+		if ( genBtn && typeof gdcLog !== 'undefined' ) {
+			genBtn.addEventListener(
+				'click',
+				function () {
+					var type = document.getElementById( 'gdc-error-type' ).value;
+					var body = new FormData();
+					body.append( 'action', 'gdc_generate_error' );
+					body.append( 'type', type );
+					body.append( '_ajax_nonce', gdcLog.nonce );
+					genBtn.disabled = true;
+					fetch( gdcLog.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+						.then( function () { window.location.reload(); } )
+						.catch( function () { genBtn.disabled = false; } );
+				}
+			);
+		}
+
+		// Log Viewer: Live auto-refresh (polls file mtime every 2 s)
+		var liveBtn = document.getElementById( 'gdc-live-toggle' );
+		if ( liveBtn && typeof gdcLog !== 'undefined' ) {
+			var liveTimer = null;
+			var liveMtime = gdcLog.mtime;
+
+			liveBtn.addEventListener(
+				'click',
+				function () {
+					if ( liveTimer ) {
+						clearInterval( liveTimer );
+						liveTimer = null;
+						liveBtn.classList.remove( 'gdc-live-active' );
+					} else {
+						liveBtn.classList.add( 'gdc-live-active' );
+						liveTimer = setInterval(
+							function () {
+								fetch(
+									gdcLog.ajaxUrl + '?action=gdc_log_status',
+									{ credentials: 'same-origin' }
+								)
+									.then( function ( r ) { return r.json(); } )
+									.then(
+										function ( data ) {
+											if ( data.success && data.data.mtime !== liveMtime ) {
+												window.location.reload();
+											}
+										}
+									);
+							},
+							2000
+						);
+					}
+				}
+			);
+		}
 	}()
 );

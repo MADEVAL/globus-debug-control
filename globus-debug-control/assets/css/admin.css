@@ -173,6 +173,41 @@
 	margin-right: 3px;
 }
 
+.gdc-log-right {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.gdc-log-generate {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.gdc-select-small {
+	height: 30px;
+	font-size: 12px;
+	padding: 0 4px;
+	border-radius: 3px;
+}
+
+#gdc-live-toggle.gdc-live-active {
+	background: #1a7c36;
+	border-color: #155d2a;
+	color: #fff;
+}
+
+#gdc-live-toggle.gdc-live-active .dashicons {
+	animation: gdc-spin 1.5s linear infinite;
+}
+
+@keyframes gdc-spin {
+	from { transform: rotate( 0deg ); }
+	to   { transform: rotate( 360deg ); }
+}
+
 .gdc-clear-form {
 	display: inline;
 }

@@ -98,6 +98,8 @@ final class Globus_Debug_Control {
 		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_enqueue_php_error_assets' ) );
 		add_action( 'admin_init', array( $this, 'handle_module_actions' ) );
 
+		GDC_Log_Viewer::register_ajax_hooks();
+
 		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
 		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
