@@ -254,11 +254,12 @@ final class GDC_Log_Viewer {
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>
 						<button type="button" id="gdc-live-toggle" class="button button-secondary" title="<?php esc_attr_e( 'Auto-refresh when log file changes', 'globus-debug-control' ); ?>">
-							<span class="dashicons dashicons-update" style="font-size:14px;vertical-align:-2px;"></span>
+							<span class="dashicons dashicons-update gdc-live-icon"></span>
 							Live
 						</button>
 					</div>
 				</div>
+			</div><!-- /.gdc-log-toolbar -->
 
 			<?php if ( ! empty( $lines ) ) : ?>
 				<?php

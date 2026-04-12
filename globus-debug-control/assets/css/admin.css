@@ -199,7 +199,17 @@
 	color: #fff;
 }
 
-#gdc-live-toggle.gdc-live-active .dashicons {
+#gdc-live-toggle .gdc-live-icon {
+	display: inline-block;
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
+	margin-right: 2px;
+	transform-origin: 50% 50%;
+}
+
+#gdc-live-toggle.gdc-live-active .gdc-live-icon {
 	animation: gdc-spin 1.5s linear infinite;
 }
 
@@ -232,6 +242,10 @@
 }
 
 /* Log Viewer: CodeMirror dark theme */
+
+#gdc-log-wrap {
+	width: 100%;
+}
 
 #gdc-log-wrap .CodeMirror {
 	background: #1e1e1e;

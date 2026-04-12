@@ -167,4 +167,192 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString('gdc-log-code', $html);
 		$this->assertStringContainsString('gdc-log-line-data', $html);
 	}
+
+	public function testRenderAlwaysOutputsToolbarWithGenerateButton(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-log-toolbar', $html);
+		$this->assertStringContainsString('gdc-generate-error', $html);
+		$this->assertStringContainsString('gdc-live-toggle', $html);
+		$this->assertStringContainsString('gdc-error-type', $html);
+	}
+
+	public function testRenderToolbarPresentWhenLogEmpty(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		file_put_contents($path, '');
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-log-toolbar', $html);
+		$this->assertStringContainsString('gdc-generate-error', $html);
+		$this->assertStringContainsString('gdc-log-empty-state', $html);
+	}
+
+	public function testAjaxLogStatusReturnsMtimeAndSize(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		file_put_contents($path, "test line\n");
+
+		try {
+			\GDC_Log_Viewer::ajax_log_status();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertArrayHasKey('mtime', $response['data']);
+		$this->assertArrayHasKey('size', $response['data']);
+		$this->assertGreaterThan(0, $response['data']['size']);
+	}
+
+	public function testAjaxLogStatusReturnsZerosWhenNoFile(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		try {
+			\GDC_Log_Viewer::ajax_log_status();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame(0, $response['data']['mtime']);
+		$this->assertSame(0, $response['data']['size']);
+	}
+
+	public function testAjaxLogStatusForbiddenWhenNoCapability(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+
+		try {
+			\GDC_Log_Viewer::ajax_log_status();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse($response['success']);
+	}
+
+	public function testAjaxGenerateErrorNoticeTriggersError(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$_POST['type']        = 'notice';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		$triggered = false;
+		set_error_handler(function () use (&$triggered) {
+			$triggered = true;
+			return true;
+		});
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		} finally {
+			restore_error_handler();
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame('notice', $response['data']['type']);
+		$this->assertTrue($triggered);
+	}
+
+	public function testAjaxGenerateErrorWarningSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'warning';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		set_error_handler(function () { return true; });
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertTrue($GLOBALS['gdc_test_state']['json_response']['success']);
+		$this->assertSame('warning', $GLOBALS['gdc_test_state']['json_response']['data']['type']);
+	}
+
+	public function testAjaxGenerateErrorDeprecatedSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'deprecated';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		set_error_handler(function () { return true; });
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertTrue($GLOBALS['gdc_test_state']['json_response']['success']);
+	}
+
+	public function testAjaxGenerateErrorRejectsInvalidType(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'fatal';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse($response['success']);
+	}
+
+	public function testAjaxGenerateErrorForbiddenWhenNoCapability(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+		$_POST['type']        = 'notice';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse($response['success']);
+	}
 }

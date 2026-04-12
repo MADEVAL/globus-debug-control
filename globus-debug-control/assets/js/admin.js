@@ -75,41 +75,57 @@
 			);
 		}
 
-		// Log Viewer: Live auto-refresh (polls file mtime every 2 s)
+		// Log Viewer: Live auto-refresh (polls file mtime every 2 s; state persists across tab switches)
 		var liveBtn = document.getElementById( 'gdc-live-toggle' );
 		if ( liveBtn && typeof gdcLog !== 'undefined' ) {
 			var liveTimer = null;
 			var liveMtime = gdcLog.mtime;
+			var LIVE_KEY  = 'gdc_live_enabled';
+
+			function startLive() {
+				liveBtn.classList.add( 'gdc-live-active' );
+				sessionStorage.setItem( LIVE_KEY, '1' );
+				liveTimer = setInterval(
+					function () {
+						fetch(
+							gdcLog.ajaxUrl + '?action=gdc_log_status',
+							{ credentials: 'same-origin' }
+						)
+							.then( function ( r ) { return r.json(); } )
+							.then(
+								function ( data ) {
+									if ( data.success && data.data.mtime !== liveMtime ) {
+										window.location.reload();
+									}
+								}
+							);
+					},
+					2000
+				);
+			}
+
+			function stopLive() {
+				clearInterval( liveTimer );
+				liveTimer = null;
+				liveBtn.classList.remove( 'gdc-live-active' );
+				sessionStorage.removeItem( LIVE_KEY );
+			}
 
 			liveBtn.addEventListener(
 				'click',
 				function () {
 					if ( liveTimer ) {
-						clearInterval( liveTimer );
-						liveTimer = null;
-						liveBtn.classList.remove( 'gdc-live-active' );
+						stopLive();
 					} else {
-						liveBtn.classList.add( 'gdc-live-active' );
-						liveTimer = setInterval(
-							function () {
-								fetch(
-									gdcLog.ajaxUrl + '?action=gdc_log_status',
-									{ credentials: 'same-origin' }
-								)
-									.then( function ( r ) { return r.json(); } )
-									.then(
-										function ( data ) {
-											if ( data.success && data.data.mtime !== liveMtime ) {
-												window.location.reload();
-											}
-										}
-									);
-							},
-							2000
-						);
+						startLive();
 					}
 				}
 			);
+
+			// Resume live mode if it was active before a tab switch or page reload.
+			if ( sessionStorage.getItem( LIVE_KEY ) === '1' ) {
+				startLive();
+			}
 		}
 	}()
 );

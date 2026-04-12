@@ -107,6 +107,12 @@ if (! defined('FS_CHMOD_FILE')) {
 	define('FS_CHMOD_FILE', 0644);
 }
 
+if (! function_exists('sanitize_key')) {
+	function sanitize_key(string $key): string {
+		return strtolower(preg_replace('/[^a-zA-Z0-9_\-]/', '', $key));
+	}
+}
+
 if (! function_exists('wp_create_nonce')) {
 	function wp_create_nonce(string $action = ''): string {
 		return 'test_nonce_' . md5($action);
