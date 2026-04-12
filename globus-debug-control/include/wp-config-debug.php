@@ -290,12 +290,12 @@ final class GDC_WpConfig_Debug {
 								>
 								<?php if ( $is_true ) : ?>
 									<span class="gdc-status-badge gdc-status-on">
-										<span class="dashicons dashicons-yes-alt" style="font-size:14px;vertical-align:-2px;"></span>
+										<span class="dashicons dashicons-yes-alt"></span>
 										<?php esc_html_e( 'Enabled', 'globus-debug-control' ); ?>
 									</span>
 								<?php else : ?>
 									<span class="gdc-status-badge gdc-status-off">
-										<span class="dashicons dashicons-no" style="font-size:14px;vertical-align:-2px;"></span>
+										<span class="dashicons dashicons-no"></span>
 										<?php esc_html_e( 'Disabled', 'globus-debug-control' ); ?>
 									</span>
 								<?php endif; ?>
@@ -319,6 +319,7 @@ final class GDC_WpConfig_Debug {
 		</div>
 		<style>
 			.gdc-status-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600; }
+			.gdc-status-badge .dashicons { font-size:16px;width:16px;height:16px; }
 			.gdc-status-on { background:#edfaef;color:#1a7c36;border:1px solid #a7d9aa; }
 			.gdc-status-off { background:#f6f7f7;color:#646970;border:1px solid #dcdcde; }
 			.gdc-toggle-label { cursor:pointer;display:inline-flex;align-items:center;gap:8px; }
@@ -330,10 +331,10 @@ final class GDC_WpConfig_Debug {
 					var badge = this.nextElementSibling;
 					if (this.checked) {
 						badge.className = 'gdc-status-badge gdc-status-on';
-						badge.innerHTML = '<span class="dashicons dashicons-yes-alt" style="font-size:14px;vertical-align:-2px;"></span> <?php echo esc_js( __( 'Enabled', 'globus-debug-control' ) ); ?>';
+						badge.innerHTML = '<span class="dashicons dashicons-yes-alt"></span><?php echo esc_js( __( 'Enabled', 'globus-debug-control' ) ); ?>';
 					} else {
 						badge.className = 'gdc-status-badge gdc-status-off';
-						badge.innerHTML = '<span class="dashicons dashicons-no" style="font-size:14px;vertical-align:-2px;"></span> <?php echo esc_js( __( 'Disabled', 'globus-debug-control' ) ); ?>';
+						badge.innerHTML = '<span class="dashicons dashicons-no"></span><?php echo esc_js( __( 'Disabled', 'globus-debug-control' ) ); ?>';
 					}
 				});
 			});
