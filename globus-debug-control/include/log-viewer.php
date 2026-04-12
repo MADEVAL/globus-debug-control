@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -42,7 +42,11 @@ final class GDC_Log_Viewer {
 
 		wp_safe_redirect(
 			add_query_arg(
-				[ 'page' => 'globus-debug-control', 'tab' => 'log', 'cleared' => '1' ],
+				array(
+					'page'    => 'globus-debug-control',
+					'tab'     => 'log',
+					'cleared' => '1',
+				),
 				admin_url( 'options-general.php' )
 			)
 		);
@@ -71,27 +75,27 @@ final class GDC_Log_Viewer {
 		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
 		header( 'Content-Length: ' . (int) filesize( $path ) );
 		header( 'Pragma: no-cache' );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		echo file_get_contents( $path ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents,WordPress.Security.EscapeOutput.OutputNotEscaped -- Reading a local log file for download; wp_remote_get() is for remote URLs.
+		echo file_get_contents( $path );
 		exit;
 	}
 
 	public static function render(): void {
-		$path  = self::get_log_path();
-		$page  = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$path = self::get_log_path();
+		$page = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		$exists = file_exists( $path );
 		$size   = $exists ? @filesize( $path ) : 0;
-		$lines  = [];
+		$lines  = array();
 		$total  = 0;
 
 		if ( $exists && $size > 0 ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$content  = @file_get_contents( $path );
-			$all      = $content !== false ? array_reverse( explode( "\n", rtrim( $content ) ) ) : [];
-			$total    = count( $all );
-			$offset   = ( $page - 1 ) * self::LINES_PER_PAGE;
-			$lines    = array_slice( $all, $offset, self::LINES_PER_PAGE );
+			$content = @file_get_contents( $path );
+			$all     = false !== $content ? array_reverse( explode( "\n", rtrim( $content ) ) ) : array();
+			$total   = count( $all );
+			$offset  = ( $page - 1 ) * self::LINES_PER_PAGE;
+			$lines   = array_slice( $all, $offset, self::LINES_PER_PAGE );
 		}
 
 		$total_pages = $total > 0 ? (int) ceil( $total / self::LINES_PER_PAGE ) : 1;
@@ -106,14 +110,31 @@ final class GDC_Log_Viewer {
 					<?php if ( $exists ) : ?>
 						<code><?php echo esc_html( $path ); ?></code>
 						<span class="gdc-log-badge"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
-						<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
+						<?php /* translators: %s: number of log lines */ ?>
+				<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
 					<?php else : ?>
 						<span><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
 					<?php endif; ?>
 				</div>
 				<?php if ( $exists && $size > 0 ) : ?>
 				<div class="gdc-log-actions">
-					<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'page' => 'globus-debug-control', 'tab' => 'log', 'gdc_dl' => '1' ], admin_url( 'options-general.php' ) ), 'gdc_log_download' ) ); ?>" class="button button-secondary">
+					<a href="
+					<?php
+					echo esc_url(
+						wp_nonce_url(
+							add_query_arg(
+								array(
+									'page'   => 'globus-debug-control',
+									'tab'    => 'log',
+									'gdc_dl' => '1',
+								),
+								admin_url( 'options-general.php' )
+							),
+							'gdc_log_download'
+						)
+					);
+					?>
+								" class="button button-secondary">
 						<span class="dashicons dashicons-download"></span><?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
 					</a>
 					<form method="post" class="gdc-clear-form">
@@ -128,32 +149,40 @@ final class GDC_Log_Viewer {
 			</div>
 
 			<?php if ( ! empty( $lines ) ) : ?>
-			<?php
-			$line_data  = [];
-			$text_lines = [];
-			foreach ( $lines as $i => $line ) {
-				$text_lines[] = $line;
-				if ( '' !== trim( $line ) ) {
-					$cls = self::classify_line( $line );
-					if ( 'gdc-log-info' !== $cls ) {
-						$line_data[] = [ 'l' => $i, 'c' => $cls ];
+				<?php
+				$line_data  = array();
+				$text_lines = array();
+				foreach ( $lines as $i => $line ) {
+					$text_lines[] = $line;
+					if ( '' !== trim( $line ) ) {
+						$cls = self::classify_line( $line );
+						if ( 'gdc-log-info' !== $cls ) {
+							$line_data[] = array(
+								'l' => $i,
+								'c' => $cls,
+							);
+						}
 					}
 				}
-			}
-			?>
+				?>
 			<div id="gdc-log-wrap">
 				<textarea id="gdc-log-code" readonly><?php echo esc_textarea( implode( "\n", $text_lines ) ); ?></textarea>
 			</div>
 			<script type="application/json" id="gdc-log-line-data"><?php echo wp_json_encode( $line_data ); ?></script>
 
-			<?php if ( $total_pages > 1 ) : ?>
+				<?php if ( $total_pages > 1 ) : ?>
 			<div class="gdc-log-pagination tablenav">
 				<div class="tablenav-pages">
-					<span class="displaying-num">
-						<?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?>
+					<span class="displaying-num">					<?php /* translators: %s: number of log lines */ ?>						<?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?>
 					</span>
 					<?php
-					$base_url = add_query_arg( [ 'page' => 'globus-debug-control', 'tab' => 'log' ], admin_url( 'options-general.php' ) );
+					$base_url = add_query_arg(
+						array(
+							'page' => 'globus-debug-control',
+							'tab'  => 'log',
+						),
+						admin_url( 'options-general.php' )
+					);
 					if ( $page > 1 ) {
 						echo '<a class="prev-page button" href="' . esc_url( add_query_arg( 'logpage', $page - 1, $base_url ) ) . '">‹</a>';
 					}

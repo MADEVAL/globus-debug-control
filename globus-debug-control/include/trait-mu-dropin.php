@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GLOBUS Debug Control - MU-Plugin Dropin Trait
  *
@@ -24,8 +24,14 @@ trait GDC_Mu_Dropin {
 		if ( ! file_exists( $path ) ) {
 			return false;
 		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership.
-		$content = @file_get_contents( $path );
+		global $wp_filesystem;
+		if ( empty( $wp_filesystem ) ) {
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+			WP_Filesystem();
+		}
+		$content = $wp_filesystem->get_contents( $path );
 		return false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' );
 	}
 
@@ -89,8 +95,14 @@ trait GDC_Mu_Dropin {
 		$dir  = dirname( $path );
 
 		if ( file_exists( $path ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership.
-			$existing = @file_get_contents( $path );
+			global $wp_filesystem;
+			if ( empty( $wp_filesystem ) ) {
+				if ( ! function_exists( 'WP_Filesystem' ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+				}
+				WP_Filesystem();
+			}
+			$existing = $wp_filesystem->get_contents( $path );
 			if ( false !== $existing && false === strpos( $existing, 'GLOBUS Debug Control' ) ) {
 				return false;
 			}
@@ -100,14 +112,15 @@ trait GDC_Mu_Dropin {
 			return false;
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing mu-plugin file before WP_Filesystem is available.
-		$result = @file_put_contents( $path, $this->generate_mu_content() );
-		if ( false !== $result ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod
-			@chmod( $path, 0644 );
-			return true;
+		global $wp_filesystem;
+		if ( empty( $wp_filesystem ) ) {
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+			WP_Filesystem();
 		}
-		return false;
+		$result = $wp_filesystem->put_contents( $path, $this->generate_mu_content(), FS_CHMOD_FILE );
+		return (bool) $result;
 	}
 
 	public function remove_mu_dropin(): bool {
@@ -115,8 +128,14 @@ trait GDC_Mu_Dropin {
 		if ( ! file_exists( $path ) ) {
 			return true;
 		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading mu-plugin file to verify ownership before deletion.
-		$content = @file_get_contents( $path );
+		global $wp_filesystem;
+		if ( empty( $wp_filesystem ) ) {
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+			WP_Filesystem();
+		}
+		$content = $wp_filesystem->get_contents( $path );
 		if ( false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' ) ) {
 			wp_delete_file( $path );
 			return ! file_exists( $path );

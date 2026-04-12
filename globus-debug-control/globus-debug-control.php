@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Plugin Name: GLOBUS Debug Control
  * Plugin URI: https://globus.studio
@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GDC_FILE',       __FILE__ );
-define( 'GDC_DIR',        __DIR__ );
-define( 'GDC_INCLUDES',   __DIR__ . '/include' );
+define( 'GDC_FILE', __FILE__ );
+define( 'GDC_DIR', __DIR__ );
+define( 'GDC_INCLUDES', __DIR__ . '/include' );
 define( 'GDC_ASSETS_URL', plugin_dir_url( __FILE__ ) . 'assets/' );
 
 require_once GDC_INCLUDES . '/log-viewer.php';
@@ -58,24 +58,24 @@ final class Globus_Debug_Control {
 	private function __construct() {
 		$this->early_init();
 
-		add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ], 1 );
-		add_action( 'wp_loaded', [ $this, 'on_wp_loaded' ], PHP_INT_MAX );
-		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
-		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
-		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_php_error_assets' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_settings_assets' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_php_error_assets' ] );
-		add_action( 'admin_init', [ $this, 'handle_module_actions' ] );
+		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ), 1 );
+		add_action( 'wp_loaded', array( $this, 'on_wp_loaded' ), PHP_INT_MAX );
+		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_settings_assets' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_enqueue_php_error_assets' ) );
+		add_action( 'admin_init', array( $this, 'handle_module_actions' ) );
 
-		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
-		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
+		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
+		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
 		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
 		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
 
-		register_deactivation_hook( GDC_FILE, [ $this, 'on_deactivation' ] );
+		register_deactivation_hook( GDC_FILE, array( $this, 'on_deactivation' ) );
 
-		add_filter( 'plugin_action_links_' . plugin_basename( GDC_FILE ), [ $this, 'plugin_action_links' ] );
+		add_filter( 'plugin_action_links_' . plugin_basename( GDC_FILE ), array( $this, 'plugin_action_links' ) );
 	}
 
 	public function handle_module_actions(): void {

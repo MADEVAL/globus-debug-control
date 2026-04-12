@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GLOBUS Debug Control - Admin Page Trait
  *
@@ -24,7 +24,7 @@ trait GDC_Admin_Page {
 			'GLOBUS Debug Control',
 			'manage_options',
 			'globus-debug-control',
-			[ $this, 'render_settings_page' ]
+			array( $this, 'render_settings_page' )
 		);
 	}
 
@@ -33,16 +33,16 @@ trait GDC_Admin_Page {
 			return;
 		}
 
-		$tabs = [
+		$tabs = array(
 			'settings' => __( 'Settings', 'globus-debug-control' ),
 			'wpcfg'    => __( 'WP_DEBUG', 'globus-debug-control' ),
 			'log'      => __( 'Error Log', 'globus-debug-control' ),
 			'cron'     => __( 'Cron Tasks', 'globus-debug-control' ),
-		];
+		);
 
-		$active_tab = isset( $_GET['tab'] ) && array_key_exists( $_GET['tab'], $tabs ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			? sanitize_key( $_GET['tab'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			: 'settings';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$raw_tab    = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+		$active_tab = ( '' !== $raw_tab && array_key_exists( $raw_tab, $tabs ) ) ? $raw_tab : 'settings';
 
 		$opts          = $this->get_options();
 		$wp_debug_file = GDC_WpConfig_Debug::get_wp_debug_status();
@@ -68,7 +68,19 @@ trait GDC_Admin_Page {
 			<nav class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
 					<a
-						href="<?php echo esc_url( add_query_arg( [ 'page' => 'globus-debug-control', 'tab' => $tab_key ], admin_url( 'options-general.php' ) ) ); ?>"
+						href="
+						<?php
+						echo esc_url(
+							add_query_arg(
+								array(
+									'page' => 'globus-debug-control',
+									'tab'  => $tab_key,
+								),
+								admin_url( 'options-general.php' )
+							)
+						);
+						?>
+								"
 						class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>"
 					><?php echo esc_html( $tab_label ); ?></a>
 				<?php endforeach; ?>
@@ -178,18 +190,23 @@ trait GDC_Admin_Page {
 	// -------------------------------------------------------------------------
 
 	public function early_body_class_filter() {
-		remove_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
-		remove_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
-		add_filter( 'body_class', [ $this, 'filter_body_class' ], PHP_INT_MAX );
-		add_filter( 'admin_body_class', [ $this, 'filter_admin_body_class' ], PHP_INT_MAX );
+		remove_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
+		remove_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
+		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
+		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
 	}
 
 	public function filter_body_class( array $classes ): array {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
-			$classes = array_values( array_filter( $classes, function( $class ) {
-				return 'php-error' !== $class;
-			} ) );
+			$classes = array_values(
+				array_filter(
+					$classes,
+					function ( $css_class ) {
+						return 'php-error' !== $css_class;
+					}
+				)
+			);
 		}
 		return $classes;
 	}
@@ -197,9 +214,12 @@ trait GDC_Admin_Page {
 	public function filter_admin_body_class( string $classes ): string {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
-			$list = array_filter( preg_split( '/\s+/', trim( $classes ), -1, PREG_SPLIT_NO_EMPTY ), function( $class ) {
-				return 'php-error' !== trim( $class );
-			} );
+			$list = array_filter(
+				preg_split( '/\s+/', trim( $classes ), -1, PREG_SPLIT_NO_EMPTY ),
+				function ( $css_class ) {
+					return 'php-error' !== trim( $css_class );
+				}
+			);
 			return implode( ' ', $list );
 		}
 		return $classes;
@@ -217,14 +237,14 @@ trait GDC_Admin_Page {
 		wp_enqueue_style(
 			'gdc-admin',
 			GDC_ASSETS_URL . 'css/admin.css',
-			[ 'dashicons' ],
+			array( 'dashicons' ),
 			self::VERSION
 		);
 
 		wp_enqueue_script(
 			'gdc-admin',
 			GDC_ASSETS_URL . 'js/admin.js',
-			[ 'jquery' ],
+			array( 'jquery' ),
 			self::VERSION,
 			true
 		);
@@ -232,18 +252,18 @@ trait GDC_Admin_Page {
 		wp_localize_script(
 			'gdc-admin',
 			'gdcAdmin',
-			[
-				'i18n' => [
+			array(
+				'i18n' => array(
 					'enabled'  => esc_html__( 'Enabled', 'globus-debug-control' ),
 					'disabled' => esc_html__( 'Disabled', 'globus-debug-control' ),
-				],
-			]
+				),
+			)
 		);
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
 		if ( 'log' === $tab ) {
-			wp_enqueue_code_editor( [ 'type' => 'text/plain' ] );
+			wp_enqueue_code_editor( array( 'type' => 'text/plain' ) );
 		}
 	}
 
@@ -262,7 +282,7 @@ trait GDC_Admin_Page {
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
 			return;
 		}
-		wp_register_style( 'gdc-php-error', false, [], false ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters -- Inline-only handle.
+		wp_register_style( 'gdc-php-error', false, array(), false ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters -- Inline-only handle.
 		wp_enqueue_style( 'gdc-php-error' );
 		wp_add_inline_style( 'gdc-php-error', 'body.php-error{}' );
 		wp_add_inline_script( 'jquery', $this->get_php_error_class_js() );

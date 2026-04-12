@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GLOBUS Debug Control - Error Control Trait
  *
@@ -59,7 +59,7 @@ trait GDC_Error_Control {
 	// -------------------------------------------------------------------------
 
 	private function defaults(): array {
-		return [
+		return array(
 			'enabled'                    => 1,
 			'suppress_notices'           => 1,
 			'suppress_deprecated'        => 1,
@@ -72,7 +72,7 @@ trait GDC_Error_Control {
 			'remove_php_error_bodyclass' => 1,
 			'force_in_api_contexts'      => 0,
 			'install_mu_dropin'          => 0,
-		];
+		);
 	}
 
 	public function get_options( bool $force_refresh = false ): array {
@@ -92,13 +92,13 @@ trait GDC_Error_Control {
 				delete_option( 'gdc_options' );
 				$saved = $legacy;
 			} else {
-				$saved = [];
+				$saved = array();
 			}
 		}
 
 		$opts = wp_parse_args( $saved, $this->defaults() );
 
-		$bool_keys = [
+		$bool_keys = array(
 			'enabled',
 			'suppress_notices',
 			'suppress_deprecated',
@@ -108,13 +108,13 @@ trait GDC_Error_Control {
 			'remove_php_error_bodyclass',
 			'force_in_api_contexts',
 			'install_mu_dropin',
-		];
+		);
 
 		foreach ( $bool_keys as $key ) {
 			$opts[ $key ] = (int) ! empty( $opts[ $key ] );
 		}
 
-		$allowed_modes = [ 'inherit', 'on', 'off' ];
+		$allowed_modes = array( 'inherit', 'on', 'off' );
 		if ( ! in_array( $opts['display_errors_mode'], $allowed_modes, true ) ) {
 			$opts['display_errors_mode'] = 'inherit';
 		}
@@ -173,17 +173,19 @@ trait GDC_Error_Control {
 		}
 
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- Core debug control functionality.
-		$previous = set_error_handler( function( $errno, $errstr, $errfile, $errline ) use ( $suppress_mask, &$previous ) {
-			if ( $errno & $suppress_mask ) {
-				return true;
-			}
+		$previous = set_error_handler(
+			function ( $errno, $errstr, $errfile, $errline ) use ( $suppress_mask, &$previous ) {
+				if ( $errno & $suppress_mask ) {
+						return true;
+				}
 
-			if ( is_callable( $previous ) ) {
-				return call_user_func( $previous, $errno, $errstr, $errfile, $errline );
-			}
+				if ( is_callable( $previous ) ) {
+					return call_user_func( $previous, $errno, $errstr, $errfile, $errline );
+				}
 
-			return false;
-		} );
+				return false;
+			}
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -197,14 +199,12 @@ trait GDC_Error_Control {
 
 		if ( $is_api_context && empty( $opts['force_in_api_contexts'] ) ) {
 			$display = '0';
-		} else {
-			if ( 'on' === $opts['display_errors_mode'] ) {
+		} elseif ( 'on' === $opts['display_errors_mode'] ) {
 				$display = '1';
-			} elseif ( 'off' === $opts['display_errors_mode'] ) {
-				$display = '0';
-			} else {
-				$display = ( defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ) ? '1' : '0';
-			}
+		} elseif ( 'off' === $opts['display_errors_mode'] ) {
+			$display = '0';
+		} else {
+			$display = ( defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ) ? '1' : '0';
 		}
 
 		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for debug display control.
@@ -272,7 +272,7 @@ trait GDC_Error_Control {
 	}
 
 	private function sanitize_path( string $path ): string {
-		$path = str_replace( [ "\0", "\r", "\n" ], '', $path );
+		$path = str_replace( array( "\0", "\r", "\n" ), '', $path );
 		$path = str_replace( '\\', '/', $path );
 		return preg_replace( '#/+#', '/', $path );
 	}
@@ -333,15 +333,15 @@ trait GDC_Error_Control {
 
 	private function is_api_context(): bool {
 		if ( ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) ||
-		     ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ||
-		     ( defined( 'MS_FILES_REQUEST' ) && MS_FILES_REQUEST ) ||
-		     ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) ||
-		     ( defined( 'DOING_CRON' ) && DOING_CRON ) ||
-		     ( defined( 'WP_CLI' ) && WP_CLI ) ||
-		     ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ||
-		     ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) ||
+			( defined( 'REST_REQUEST' ) && REST_REQUEST ) ||
+			( defined( 'MS_FILES_REQUEST' ) && MS_FILES_REQUEST ) ||
+			( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) ||
+			( defined( 'DOING_CRON' ) && DOING_CRON ) ||
+			( defined( 'WP_CLI' ) && WP_CLI ) ||
+			( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ||
+			( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) ||
 		     // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only context detection, not form processing.
-		     ( isset( $_POST['action'] ) && is_string( $_POST['action'] ) && 'heartbeat' === sanitize_text_field( wp_unslash( $_POST['action'] ) ) ) ) {
+			( isset( $_POST['action'] ) && is_string( $_POST['action'] ) && 'heartbeat' === sanitize_text_field( wp_unslash( $_POST['action'] ) ) ) ) {
 			return true;
 		}
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GLOBUS Debug Control - Admin Settings Trait
  *
@@ -15,20 +15,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 trait GDC_Admin_Settings {
 
 	public function register_settings() {
-		register_setting( 'globus_debug_control', self::OPT, [
-			'type'              => 'array',
-			'sanitize_callback' => [ $this, 'sanitize_options' ],
-		] );
+		register_setting(
+			'globus_debug_control',
+			self::OPT,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( $this, 'sanitize_options' ),
+			)
+		);
 
 		add_settings_section( 'gdc_main', __( 'General Settings', 'globus-debug-control' ), '__return_false', 'globus_debug_control' );
 
-		add_settings_field( 'enabled', __( 'Enable Plugin', 'globus-debug-control' ), [ $this, 'field_enabled' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'suppress', __( 'Error Type Filtering', 'globus-debug-control' ), [ $this, 'field_suppress' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'display_errors_mode', __( 'display_errors Mode', 'globus-debug-control' ), [ $this, 'field_display_mode' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'logging', __( 'Logging Settings', 'globus-debug-control' ), [ $this, 'field_logging' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'remove_php_error_bodyclass', __( 'php-error Class', 'globus-debug-control' ), [ $this, 'field_body_class' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'force_in_api_contexts', __( 'API Contexts', 'globus-debug-control' ), [ $this, 'field_api_contexts' ], 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'install_mu_dropin', __( 'Early Error Interception', 'globus-debug-control' ), [ $this, 'field_mu_dropin' ], 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'enabled', __( 'Enable Plugin', 'globus-debug-control' ), array( $this, 'field_enabled' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'suppress', __( 'Error Type Filtering', 'globus-debug-control' ), array( $this, 'field_suppress' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'display_errors_mode', __( 'display_errors Mode', 'globus-debug-control' ), array( $this, 'field_display_mode' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'logging', __( 'Logging Settings', 'globus-debug-control' ), array( $this, 'field_logging' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'remove_php_error_bodyclass', __( 'php-error Class', 'globus-debug-control' ), array( $this, 'field_body_class' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'force_in_api_contexts', __( 'API Contexts', 'globus-debug-control' ), array( $this, 'field_api_contexts' ), 'globus_debug_control', 'gdc_main' );
+		add_settings_field( 'install_mu_dropin', __( 'Early Error Interception', 'globus-debug-control' ), array( $this, 'field_mu_dropin' ), 'globus_debug_control', 'gdc_main' );
 	}
 
 	public function sanitize_options( $input ): array {
@@ -38,11 +42,17 @@ trait GDC_Admin_Settings {
 			return $output;
 		}
 
-		$bool_fields = [
-			'enabled', 'suppress_notices', 'suppress_deprecated', 'suppress_warnings',
-			'suppress_strict', 'log_enabled', 'remove_php_error_bodyclass', 'force_in_api_contexts',
+		$bool_fields = array(
+			'enabled',
+			'suppress_notices',
+			'suppress_deprecated',
+			'suppress_warnings',
+			'suppress_strict',
+			'log_enabled',
+			'remove_php_error_bodyclass',
+			'force_in_api_contexts',
 			'install_mu_dropin',
-		];
+		);
 
 		foreach ( $bool_fields as $field ) {
 			$output[ $field ] = isset( $input[ $field ] ) ? 1 : 0;
@@ -50,7 +60,7 @@ trait GDC_Admin_Settings {
 
 		if ( isset( $input['display_errors_mode'] ) ) {
 			$mode = sanitize_text_field( wp_unslash( $input['display_errors_mode'] ) );
-			if ( in_array( $mode, [ 'inherit', 'on', 'off' ], true ) ) {
+			if ( in_array( $mode, array( 'inherit', 'on', 'off' ), true ) ) {
 				$output['display_errors_mode'] = $mode;
 			}
 		}
@@ -157,15 +167,17 @@ trait GDC_Admin_Settings {
 		?>
 		<label>
 			<input type="checkbox" name="<?php echo esc_attr( self::OPT ); ?>[remove_php_error_bodyclass]" value="1" <?php checked( $opts['remove_php_error_bodyclass'], 1 ); ?>>
-			<strong><?php
+			<strong>
+			<?php
 				$gdc_body_text = sprintf(
 					/* translators: 1: CSS class name, 2: HTML tag name */
 					__( 'Remove %1$s class from %2$s', 'globus-debug-control' ),
 					'<code>php-error</code>',
 					'<code>&lt;body&gt;</code>'
 				);
-				echo wp_kses( $gdc_body_text, array( 'code' => array() ) );
-			?></strong>
+					echo wp_kses( $gdc_body_text, array( 'code' => array() ) );
+			?>
+			</strong>
 		</label>
 		<p class="description"><?php esc_html_e( 'WordPress adds this class when errors are detected. It can interfere with styling.', 'globus-debug-control' ); ?></p>
 		<?php

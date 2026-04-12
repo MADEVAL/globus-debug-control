@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -7,13 +7,28 @@ final class GDC_WpConfig_Debug {
 
 	private const NONCE_ACTION = 'gdc_wp_config_debug';
 
-	private const CONSTANTS = [
-		'WP_DEBUG'         => [ 'type' => 'bool', 'label' => 'WP_DEBUG' ],
-		'WP_DEBUG_LOG'     => [ 'type' => 'bool_or_string', 'label' => 'WP_DEBUG_LOG' ],
-		'WP_DEBUG_DISPLAY' => [ 'type' => 'bool', 'label' => 'WP_DEBUG_DISPLAY' ],
-		'SCRIPT_DEBUG'     => [ 'type' => 'bool', 'label' => 'SCRIPT_DEBUG' ],
-		'SAVEQUERIES'      => [ 'type' => 'bool', 'label' => 'SAVEQUERIES' ],
-	];
+	private const CONSTANTS = array(
+		'WP_DEBUG'         => array(
+			'type'  => 'bool',
+			'label' => 'WP_DEBUG',
+		),
+		'WP_DEBUG_LOG'     => array(
+			'type'  => 'bool_or_string',
+			'label' => 'WP_DEBUG_LOG',
+		),
+		'WP_DEBUG_DISPLAY' => array(
+			'type'  => 'bool',
+			'label' => 'WP_DEBUG_DISPLAY',
+		),
+		'SCRIPT_DEBUG'     => array(
+			'type'  => 'bool',
+			'label' => 'SCRIPT_DEBUG',
+		),
+		'SAVEQUERIES'      => array(
+			'type'  => 'bool',
+			'label' => 'SAVEQUERIES',
+		),
+	);
 
 	public static function find_wp_config(): string {
 		$path = ABSPATH . 'wp-config.php';
@@ -33,14 +48,14 @@ final class GDC_WpConfig_Debug {
 
 	public static function read_constants( string $config_path ): array {
 		if ( ! file_exists( $config_path ) ) {
-			return [];
+			return array();
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$content = @file_get_contents( $config_path );
 
 		if ( false === $content ) {
-			return [];
+			return array();
 		}
 
 		$active = preg_replace( '#/\*.*?\*/#s', '', $content );
@@ -48,28 +63,28 @@ final class GDC_WpConfig_Debug {
 			$active = $content;
 		}
 
-		$result = [];
+		$result = array();
 
 		foreach ( self::CONSTANTS as $name => $meta ) {
 			$pattern = '/^\s*define\s*\(\s*[\'"\']' . preg_quote( $name, '/' ) . '[\'"\']\s*,\s*(.+?)\s*\)\s*;/m';
 
 			if ( preg_match( $pattern, $active, $m ) ) {
-				$raw = trim( $m[1] );
-				$result[ $name ] = [
+				$raw             = trim( $m[1] );
+				$result[ $name ] = array(
 					'defined' => true,
 					'raw'     => $raw,
 					'value'   => self::parse_raw_value( $raw ),
 					'label'   => $meta['label'],
 					'type'    => $meta['type'],
-				];
+				);
 			} else {
-				$result[ $name ] = [
+				$result[ $name ] = array(
 					'defined' => false,
 					'raw'     => '',
 					'value'   => null,
 					'label'   => $meta['label'],
 					'type'    => $meta['type'],
-				];
+				);
 			}
 		}
 
@@ -97,7 +112,7 @@ final class GDC_WpConfig_Debug {
 		$lines          = explode( "\n", $content );
 		$in_block       = false;
 		$replaced       = false;
-		$out            = [];
+		$out            = array();
 
 		foreach ( $lines as $line ) {
 			if ( $in_block ) {
@@ -110,7 +125,7 @@ final class GDC_WpConfig_Debug {
 
 			$open  = strpos( $line, '/*' );
 			$close = strpos( $line, '*/' );
-			if ( $open !== false && ( $close === false || $close < $open ) ) {
+			if ( false !== $open && ( false === $close || $close < $open ) ) {
 				$in_block = true;
 				$out[]    = $line;
 				continue;
@@ -176,7 +191,11 @@ final class GDC_WpConfig_Debug {
 		if ( empty( $config_path ) || ! is_writable( $config_path ) ) {
 			wp_safe_redirect(
 				add_query_arg(
-					[ 'page' => 'globus-debug-control', 'tab' => 'wpcfg', 'gdc_cfg_error' => 'nowrite' ],
+					array(
+						'page'          => 'globus-debug-control',
+						'tab'           => 'wpcfg',
+						'gdc_cfg_error' => 'nowrite',
+					),
 					admin_url( 'options-general.php' )
 				)
 			);
@@ -185,7 +204,7 @@ final class GDC_WpConfig_Debug {
 
 		$fields = isset( $_POST['gdc_wpcfg'] ) && is_array( $_POST['gdc_wpcfg'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['gdc_wpcfg'] ) )
-			: [];
+			: array();
 
 		$current_constants = self::read_constants( $config_path );
 
@@ -210,7 +229,11 @@ final class GDC_WpConfig_Debug {
 
 		wp_safe_redirect(
 			add_query_arg(
-				[ 'page' => 'globus-debug-control', 'tab' => 'wpcfg', 'gdc_cfg_saved' => '1' ],
+				array(
+					'page'          => 'globus-debug-control',
+					'tab'           => 'wpcfg',
+					'gdc_cfg_saved' => '1',
+				),
 				admin_url( 'options-general.php' )
 			)
 		);
@@ -220,7 +243,7 @@ final class GDC_WpConfig_Debug {
 	public static function render(): void {
 		$config_path = self::find_wp_config();
 		$writable    = ! empty( $config_path ) && is_writable( $config_path );
-		$constants   = ! empty( $config_path ) ? self::read_constants( $config_path ) : [];
+		$constants   = ! empty( $config_path ) ? self::read_constants( $config_path ) : array();
 
 		if ( isset( $_GET['gdc_cfg_saved'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'wp-config.php updated.', 'globus-debug-control' ) . '</p></div>';
@@ -244,7 +267,7 @@ final class GDC_WpConfig_Debug {
 								__( '<strong>%s</strong> is not writable. Changes cannot be saved.', 'globus-debug-control' ),
 								esc_html( $config_path )
 							),
-							[ 'strong' => [] ]
+							array( 'strong' => array() )
 						);
 						?>
 					</p>
@@ -258,7 +281,7 @@ final class GDC_WpConfig_Debug {
 							__( 'Editing: <code>%s</code>', 'globus-debug-control' ),
 							esc_html( $config_path )
 						),
-						[ 'code' => [] ]
+						array( 'code' => array() )
 					);
 					?>
 				</p>
@@ -269,7 +292,8 @@ final class GDC_WpConfig_Debug {
 				<input type="hidden" name="gdc_wpcfg_save" value="1">
 
 				<table class="form-table" role="presentation">
-					<?php foreach ( $constants as $name => $info ) :
+					<?php
+					foreach ( $constants as $name => $info ) :
 						$is_true = $info['defined'] && $info['value'];
 						?>
 					<tr>

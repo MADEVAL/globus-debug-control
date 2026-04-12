@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -78,30 +78,33 @@ final class GDC_Cron_Viewer {
 		$crons = _get_cron_array();
 
 		if ( empty( $crons ) || ! is_array( $crons ) ) {
-			return [];
+			return array();
 		}
 
-		$events = [];
+		$events = array();
 		$now    = time();
 
 		foreach ( $crons as $timestamp => $hooks ) {
 			foreach ( $hooks as $hook => $hook_events ) {
 				foreach ( $hook_events as $event ) {
-					$events[] = [
+					$events[] = array(
 						'timestamp' => (int) $timestamp,
 						'hook'      => (string) $hook,
 						'schedule'  => isset( $event['schedule'] ) ? (string) $event['schedule'] : '',
 						'interval'  => isset( $event['interval'] ) ? (int) $event['interval'] : 0,
-						'args'      => isset( $event['args'] ) && is_array( $event['args'] ) ? array_filter( $event['args'] ) : [],
+						'args'      => isset( $event['args'] ) && is_array( $event['args'] ) ? array_filter( $event['args'] ) : array(),
 						'overdue'   => (int) $timestamp < $now - 60,
-					];
+					);
 				}
 			}
 		}
 
-		usort( $events, static function ( array $a, array $b ): int {
-			return $a['timestamp'] - $b['timestamp'];
-		} );
+		usort(
+			$events,
+			static function ( array $a, array $b ): int {
+				return $a['timestamp'] - $b['timestamp'];
+			}
+		);
 
 		return $events;
 	}

@@ -78,7 +78,8 @@ function gdc_test_default_state(): array {
 }
 
 function gdc_test_reset_state(): void {
-	$GLOBALS['gdc_test_state'] = gdc_test_default_state();
+	$GLOBALS['gdc_test_state']  = gdc_test_default_state();
+	$GLOBALS['wp_filesystem']   = null;
 	$_POST = [];
 	$_GET  = [];
 
@@ -100,6 +101,35 @@ if (! defined('WPMU_PLUGIN_DIR')) {
 
 if (! defined('WP_UNINSTALL_PLUGIN')) {
 	define('WP_UNINSTALL_PLUGIN', true);
+}
+
+if (! defined('FS_CHMOD_FILE')) {
+	define('FS_CHMOD_FILE', 0644);
+}
+
+if (! function_exists('WP_Filesystem')) {
+	function WP_Filesystem(): bool {
+		global $wp_filesystem;
+		if (empty($wp_filesystem)) {
+			$wp_filesystem = new class {
+				public function get_contents(string $path): string|false {
+					return @file_get_contents($path);
+				}
+				public function put_contents(string $path, string $content, int $mode = 0644): bool {
+					$result = @file_put_contents($path, $content);
+					if (false !== $result) {
+						@chmod($path, $mode);
+						return true;
+					}
+					return false;
+				}
+				public function delete(string $path): bool {
+					return @unlink($path);
+				}
+			};
+		}
+		return true;
+	}
 }
 
 if (! function_exists('gdc_test_state')) {
