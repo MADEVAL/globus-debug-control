@@ -65,6 +65,7 @@ final class Globus_Debug_Control {
 	
 	public function handle_module_actions(): void {
 		GDC_Log_Viewer::handle_clear_action();
+		GDC_Log_Viewer::handle_download_action();
 		GDC_WpConfig_Debug::handle_action();
 	}
 

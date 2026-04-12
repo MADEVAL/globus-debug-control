@@ -122,6 +122,33 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString('test notice', $html);
 	}
 
+	public function testHandleDownloadActionSkipsWhenGdcDlNotSet(): void {
+		$_GET = [];
+
+		\GDC_Log_Viewer::handle_download_action();
+
+		$this->assertTrue(true);
+	}
+
+	public function testHandleDownloadActionDiesWhenFileNotExists(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		$_GET['gdc_dl']   = '1';
+		$_GET['_wpnonce'] = 'test_nonce';
+
+		$this->expectException(\GDC_Test_WpDieException::class);
+		\GDC_Log_Viewer::handle_download_action();
+	}
+
 	public function testGetInlineStylesReturnsNonEmptyString(): void {
 		$this->assertNotEmpty(\GDC_Log_Viewer::get_inline_styles());
 	}

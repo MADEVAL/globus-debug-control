@@ -401,6 +401,29 @@ if (! function_exists('human_time_diff')) {
 	}
 }
 
+if (! class_exists('GDC_Test_WpDieException')) {
+	class GDC_Test_WpDieException extends \RuntimeException {}
+}
+
+if (! function_exists('wp_die')) {
+	function wp_die($message = '', $title = '', $args = []): void {
+		throw new \GDC_Test_WpDieException((string) $message);
+	}
+}
+
+if (! function_exists('wp_nonce_url')) {
+	function wp_nonce_url(string $actionurl, string $action): string {
+		$sep = str_contains($actionurl, '?') ? '&' : '?';
+		return $actionurl . $sep . '_wpnonce=test_nonce';
+	}
+}
+
+if (! function_exists('sanitize_file_name')) {
+	function sanitize_file_name(string $name): string {
+		return preg_replace('/[^a-zA-Z0-9_\-.]/', '_', $name) ?? $name;
+	}
+}
+
 if (! class_exists('GDC_Test_RedirectException')) {
 	class GDC_Test_RedirectException extends \RuntimeException {
 		public string $location;

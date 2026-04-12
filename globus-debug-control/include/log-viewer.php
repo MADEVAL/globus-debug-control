@@ -49,6 +49,33 @@ final class GDC_Log_Viewer {
 		exit;
 	}
 
+	public static function handle_download_action(): void {
+		if ( ! isset( $_GET['gdc_dl'] ) || '1' !== $_GET['gdc_dl'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		check_admin_referer( 'gdc_log_download' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'globus-debug-control' ) );
+		}
+
+		$path = self::get_log_path();
+
+		if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
+			wp_die( esc_html__( 'Log file not found.', 'globus-debug-control' ) );
+		}
+
+		$filename = basename( $path );
+		header( 'Content-Type: text/plain; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
+		header( 'Content-Length: ' . (int) filesize( $path ) );
+		header( 'Pragma: no-cache' );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		echo file_get_contents( $path ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		exit;
+	}
+
 	public static function render(): void {
 		$path  = self::get_log_path();
 		$page  = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -75,23 +102,28 @@ final class GDC_Log_Viewer {
 		?>
 		<div class="gdc-log-viewer">
 			<div class="gdc-log-toolbar">
-				<div class="gdc-log-info">
+				<div class="gdc-log-meta">
 					<?php if ( $exists ) : ?>
-						<span class="gdc-log-path"><code><?php echo esc_html( $path ); ?></code></span>
-						<span class="gdc-log-size"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
-						<span class="gdc-log-lines"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
+						<code><?php echo esc_html( $path ); ?></code>
+						<span class="gdc-log-badge"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
+						<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
 					<?php else : ?>
-						<span class="gdc-log-empty"><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
+						<span><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
 					<?php endif; ?>
 				</div>
 				<?php if ( $exists && $size > 0 ) : ?>
-				<form method="post" class="gdc-clear-form">
-					<?php wp_nonce_field( self::NONCE_CLEAR ); ?>
-					<input type="hidden" name="gdc_clear_log" value="1">
-					<button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>')">
-						<?php esc_html_e( 'Clear Log', 'globus-debug-control' ); ?>
-					</button>
-				</form>
+				<div class="gdc-log-actions">
+					<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'page' => 'globus-debug-control', 'tab' => 'log', 'gdc_dl' => '1' ], admin_url( 'options-general.php' ) ), 'gdc_log_download' ) ); ?>" class="button button-secondary">
+						<span class="dashicons dashicons-download"></span><?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
+					</a>
+					<form method="post" class="gdc-clear-form">
+						<?php wp_nonce_field( self::NONCE_CLEAR ); ?>
+						<input type="hidden" name="gdc_clear_log" value="1">
+						<button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>')">
+							<span class="dashicons dashicons-trash"></span><?php esc_html_e( 'Clear Log', 'globus-debug-control' ); ?>
+						</button>
+					</form>
+				</div>
 				<?php endif; ?>
 			</div>
 
@@ -100,7 +132,7 @@ final class GDC_Log_Viewer {
 				<?php foreach ( $lines as $line ) : ?>
 					<?php if ( trim( $line ) === '' ) continue; ?>
 					<div class="gdc-log-line <?php echo esc_attr( self::classify_line( $line ) ); ?>">
-						<span class="gdc-log-text"><?php echo esc_html( $line ); ?></span>
+						<span class="gdc-log-text"><?php echo wp_kses( self::format_line( $line ), [ 'span' => [ 'class' => [] ] ] ); ?></span>
 					</div>
 				<?php endforeach; ?>
 			</div>
@@ -156,28 +188,64 @@ final class GDC_Log_Viewer {
 		return 'gdc-log-info';
 	}
 
+	private static function format_line( string $line ): string {
+		$html = esc_html( $line );
+
+		$html = preg_replace(
+			'/\[(\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2}:\d{2} [A-Z]+)\]/U',
+			'<span class="gdc-log-ts">[$1]</span>',
+			$html
+		) ?? $html;
+
+		$html = preg_replace(
+			'/(PHP (?:Fatal error|Parse error|Warning|Notice|Deprecated|Strict Standards)\s*:)/i',
+			'<span class="gdc-log-type">$1</span>',
+			$html
+		) ?? $html;
+
+		$html = preg_replace(
+			'/ in ((?:\/|[A-Z]:\\\\)[^\s]+\.php) on line (\d+)/i',
+			' in <span class="gdc-log-file">$1</span> on line <span class="gdc-log-lnr">$2</span>',
+			$html
+		) ?? $html;
+
+		return $html;
+	}
+
 	public static function get_inline_styles(): string {
 		return '
-			.gdc-log-viewer { margin-top: 16px; }
-			.gdc-log-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f6f7f7; border: 1px solid #dcdcde; border-bottom: none; border-radius: 2px 2px 0 0; flex-wrap: wrap; gap: 8px; }
-			.gdc-log-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; }
-			.gdc-log-size, .gdc-log-lines { color: #646970; }
-			.gdc-log-empty-state { padding: 24px; text-align: center; background: #fff; border: 1px solid #dcdcde; color: #646970; }
-			.gdc-log-entries { border: 1px solid #dcdcde; background: #1d2327; border-radius: 0 0 2px 2px; max-height: 600px; overflow-y: auto; font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.6; }
-			.gdc-log-line { padding: 2px 12px; border-bottom: 1px solid #2c3338; word-break: break-all; }
-			.gdc-log-line:last-child { border-bottom: none; }
-			.gdc-log-text { color: #c3c4c7; }
-			.gdc-log-fatal { background: #3b1212; }
-			.gdc-log-fatal .gdc-log-text { color: #f86368; }
-			.gdc-log-warning { background: #2a1f00; }
-			.gdc-log-warning .gdc-log-text { color: #f0c33c; }
-			.gdc-log-notice { background: #141e28; }
-			.gdc-log-notice .gdc-log-text { color: #72aee6; }
-			.gdc-log-cron { background: #0b2012; }
-			.gdc-log-cron .gdc-log-text { color: #68de7c; }
-			.gdc-log-pagination { padding: 8px 0; }
-			.gdc-log-pagination .tablenav-pages { display: flex; align-items: center; gap: 8px; }
-			.gdc-clear-form { display: inline; }
+			.gdc-log-viewer { margin-top:16px; }
+			.gdc-log-toolbar { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f6f7f7; border:1px solid #dcdcde; border-bottom:none; border-radius:3px 3px 0 0; flex-wrap:wrap; gap:8px; }
+			.gdc-log-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:#50575e; }
+			.gdc-log-meta code { font-size:11px; }
+			.gdc-log-badge { background:#dcdcde; border-radius:10px; padding:1px 8px; font-size:11px; white-space:nowrap; }
+			.gdc-log-actions { display:flex; align-items:center; gap:6px; }
+			.gdc-log-actions .button .dashicons { font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:3px; }
+			.gdc-log-empty-state { padding:32px; text-align:center; background:#fff; border:1px solid #dcdcde; border-radius:0 0 3px 3px; color:#646970; }
+			.gdc-log-entries { border:1px solid #1d2327; background:#1e1e1e; border-radius:0 0 3px 3px; max-height:620px; overflow-y:auto; font-family:Consolas,"Fira Code","JetBrains Mono","Courier New",monospace; font-size:12px; line-height:1.65; }
+			.gdc-log-line { display:flex; border-bottom:1px solid rgba(255,255,255,.04); }
+			.gdc-log-line:last-child { border-bottom:none; }
+			.gdc-log-text { flex:1; padding:2px 14px; word-break:break-all; color:#abb2bf; }
+			.gdc-log-fatal { background:rgba(248,99,104,.08); }
+			.gdc-log-fatal .gdc-log-text { color:#f8c9cb; }
+			.gdc-log-warning { background:rgba(240,195,60,.07); }
+			.gdc-log-warning .gdc-log-text { color:#f0e0a0; }
+			.gdc-log-notice { background:rgba(114,174,230,.07); }
+			.gdc-log-notice .gdc-log-text { color:#a9c5e8; }
+			.gdc-log-cron { background:rgba(104,222,124,.05); }
+			.gdc-log-cron .gdc-log-text { color:#a8d8b0; }
+			.gdc-log-info .gdc-log-text { color:#8b949e; }
+			.gdc-log-ts { color:#4a5568; font-style:italic; }
+			.gdc-log-type { font-weight:700; }
+			.gdc-log-fatal .gdc-log-type { color:#f86368; }
+			.gdc-log-warning .gdc-log-type { color:#e5b94e; }
+			.gdc-log-notice .gdc-log-type { color:#89b4fa; }
+			.gdc-log-cron .gdc-log-type { color:#68de7c; }
+			.gdc-log-file { color:#4d87c7; }
+			.gdc-log-lnr { color:#e5c07b; }
+			.gdc-log-pagination { padding:8px 0; }
+			.gdc-log-pagination .tablenav-pages { display:flex; align-items:center; gap:8px; }
+			.gdc-clear-form { display:inline; }
 		';
 	}
 }
