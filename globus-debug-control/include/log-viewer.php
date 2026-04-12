@@ -128,14 +128,23 @@ final class GDC_Log_Viewer {
 			</div>
 
 			<?php if ( ! empty( $lines ) ) : ?>
-			<div class="gdc-log-entries">
-				<?php foreach ( $lines as $line ) : ?>
-					<?php if ( trim( $line ) === '' ) continue; ?>
-					<div class="gdc-log-line <?php echo esc_attr( self::classify_line( $line ) ); ?>">
-						<span class="gdc-log-text"><?php echo wp_kses( self::format_line( $line ), [ 'span' => [ 'class' => [] ] ] ); ?></span>
-					</div>
-				<?php endforeach; ?>
+			<?php
+			$line_data  = [];
+			$text_lines = [];
+			foreach ( $lines as $i => $line ) {
+				$text_lines[] = $line;
+				if ( '' !== trim( $line ) ) {
+					$cls = self::classify_line( $line );
+					if ( 'gdc-log-info' !== $cls ) {
+						$line_data[] = [ 'l' => $i, 'c' => $cls ];
+					}
+				}
+			}
+			?>
+			<div id="gdc-log-wrap">
+				<textarea id="gdc-log-code" readonly><?php echo esc_textarea( implode( "\n", $text_lines ) ); ?></textarea>
 			</div>
+			<script type="application/json" id="gdc-log-line-data"><?php echo wp_json_encode( $line_data ); ?></script>
 
 			<?php if ( $total_pages > 1 ) : ?>
 			<div class="gdc-log-pagination tablenav">
@@ -186,30 +195,6 @@ final class GDC_Log_Viewer {
 		}
 
 		return 'gdc-log-info';
-	}
-
-	private static function format_line( string $line ): string {
-		$html = esc_html( $line );
-
-		$html = preg_replace(
-			'/\[(\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2}:\d{2} [A-Z]+)\]/U',
-			'<span class="gdc-log-ts">[$1]</span>',
-			$html
-		) ?? $html;
-
-		$html = preg_replace(
-			'/(PHP (?:Fatal error|Parse error|Warning|Notice|Deprecated|Strict Standards)\s*:)/i',
-			'<span class="gdc-log-type">$1</span>',
-			$html
-		) ?? $html;
-
-		$html = preg_replace(
-			'/ in ((?:\/|[A-Z]:\\\\)[^\s]+\.php) on line (\d+)/i',
-			' in <span class="gdc-log-file">$1</span> on line <span class="gdc-log-lnr">$2</span>',
-			$html
-		) ?? $html;
-
-		return $html;
 	}
 
 	public static function get_inline_styles(): string {

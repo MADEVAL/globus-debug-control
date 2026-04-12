@@ -79,6 +79,7 @@ function gdc_test_default_state(): array {
 function gdc_test_reset_state(): void {
 	$GLOBALS['gdc_test_state'] = gdc_test_default_state();
 	$_POST = [];
+	$_GET  = [];
 
 	gdc_test_remove_tree(WP_CONTENT_DIR);
 	gdc_test_ensure_runtime_dirs();
@@ -339,6 +340,36 @@ if (! function_exists('selected')) {
 if (! function_exists('size_format')) {
 	function size_format($bytes): string {
 		return (string) $bytes . ' B';
+	}
+}
+
+if (! function_exists('wp_enqueue_script')) {
+	function wp_enqueue_script($handle, $src = false, $deps = [], $ver = false, $in_footer = false): void {
+		$GLOBALS['gdc_test_state']['enqueued_scripts'][] = compact('handle', 'src', 'deps', 'ver', 'in_footer');
+	}
+}
+
+if (! function_exists('wp_localize_script')) {
+	function wp_localize_script(string $handle, string $name, array $data): bool {
+		return true;
+	}
+}
+
+if (! function_exists('wp_enqueue_code_editor')) {
+	function wp_enqueue_code_editor(array $args): array {
+		return [];
+	}
+}
+
+if (! function_exists('esc_textarea')) {
+	function esc_textarea(string $text): string {
+		return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+	}
+}
+
+if (! function_exists('plugin_dir_url')) {
+	function plugin_dir_url(string $file): string {
+		return 'https://example.test/wp-content/plugins/' . basename(dirname($file)) . '/';
 	}
 }
 

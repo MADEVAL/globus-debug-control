@@ -127,7 +127,7 @@ final class CronViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString('No scheduled cron events', $html);
 	}
 
-	public function testGetInlineStylesReturnsNonEmptyString(): void {
-		$this->assertNotEmpty(\GDC_Cron_Viewer::get_inline_styles());
+	public function testGetInlineStylesReturnsString(): void {
+		$this->assertIsString(\GDC_Cron_Viewer::get_inline_styles());
 	}
 }

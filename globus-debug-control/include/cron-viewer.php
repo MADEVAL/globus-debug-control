@@ -134,16 +134,6 @@ final class GDC_Cron_Viewer {
 	}
 
 	public static function get_inline_styles(): string {
-		return '
-			.gdc-cron-viewer { margin-top: 16px; }
-			.gdc-cron-table code { font-size: 12px; }
-			.gdc-cron-overdue td { background-color: #fcf0f1 !important; }
-			.gdc-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: 600; line-height: 1.4; }
-			.gdc-badge-warning { background: #fcf0f1; color: #8a2424; border: 1px solid #f8c4c4; }
-			.gdc-badge-info { background: #f0f6fc; color: #135e96; border: 1px solid #b8d3ee; }
-			.gdc-text-muted { color: #646970; }
-			.gdc-text-warning { color: #d63638; font-weight: 600; }
-			.gdc-empty-state { padding: 24px; text-align: center; background: #fff; border: 1px solid #dcdcde; color: #646970; }
-		';
+		return '';
 	}
 }

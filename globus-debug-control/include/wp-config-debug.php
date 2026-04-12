@@ -317,29 +317,6 @@ final class GDC_WpConfig_Debug {
 				<?php endif; ?>
 			</form>
 		</div>
-		<style>
-			.gdc-status-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600; }
-			.gdc-status-badge .dashicons { font-size:16px;width:16px;height:16px; }
-			.gdc-status-on { background:#edfaef;color:#1a7c36;border:1px solid #a7d9aa; }
-			.gdc-status-off { background:#f6f7f7;color:#646970;border:1px solid #dcdcde; }
-			.gdc-toggle-label { cursor:pointer;display:inline-flex;align-items:center;gap:8px; }
-		</style>
-		<script>
-		(function(){
-			document.querySelectorAll('.gdc-wpcfg-checkbox').forEach(function(cb){
-				cb.addEventListener('change', function(){
-					var badge = this.nextElementSibling;
-					if (this.checked) {
-						badge.className = 'gdc-status-badge gdc-status-on';
-						badge.innerHTML = '<span class="dashicons dashicons-yes-alt"></span><?php echo esc_js( __( 'Enabled', 'globus-debug-control' ) ); ?>';
-					} else {
-						badge.className = 'gdc-status-badge gdc-status-off';
-						badge.innerHTML = '<span class="dashicons dashicons-no"></span><?php echo esc_js( __( 'Disabled', 'globus-debug-control' ) ); ?>';
-					}
-				});
-			});
-		})();
-		</script>
 		<?php
 	}
 

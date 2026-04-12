@@ -50,6 +50,7 @@ final class Globus_Debug_Control {
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
 		add_action( 'after_setup_theme', [ $this, 'early_body_class_filter' ], 1 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_php_error_assets' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_settings_assets' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_php_error_assets' ] );
 		add_action( 'admin_init', [ $this, 'handle_module_actions' ] );
 		
@@ -842,24 +843,16 @@ final class Globus_Debug_Control {
 
 			<?php elseif ( 'log' === $active_tab ) : ?>
 
-				<?php wp_add_inline_style( 'common', GDC_Log_Viewer::get_inline_styles() ); ?>
 				<?php GDC_Log_Viewer::render(); ?>
 
 			<?php elseif ( 'cron' === $active_tab ) : ?>
 
-				<?php wp_add_inline_style( 'common', GDC_Cron_Viewer::get_inline_styles() ); ?>
 				<?php GDC_Cron_Viewer::render(); ?>
 
 			<?php endif; ?>
 
 			</div>
 		</div>
-		<style>
-			.gdc-tab-content { margin-top: 16px; }
-			.gdc-debug-badge { display: inline-block; margin-left: 10px; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; vertical-align: middle; }
-			.gdc-debug-on { background: #fcf0f1; color: #8a2424; border: 1px solid #f8c4c4; }
-			.gdc-debug-off { background: #f6f7f7; color: #646970; border: 1px solid #dcdcde; }
-		</style>
 		<?php
 	}
 
@@ -884,6 +877,46 @@ final class Globus_Debug_Control {
 		return $classes;
 	}
 	
+	public function admin_enqueue_settings_assets( string $hook ): void {
+		if ( 'settings_page_globus-debug-control' !== $hook ) {
+			return;
+		}
+
+		$base = plugin_dir_url( __FILE__ );
+
+		wp_enqueue_style(
+			'gdc-admin',
+			$base . 'assets/css/admin.css',
+			[ 'dashicons' ],
+			self::VERSION
+		);
+
+		wp_enqueue_script(
+			'gdc-admin',
+			$base . 'assets/js/admin.js',
+			[ 'jquery' ],
+			self::VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'gdc-admin',
+			'gdcAdmin',
+			[
+				'i18n' => [
+					'enabled'  => esc_html__( 'Enabled', 'globus-debug-control' ),
+					'disabled' => esc_html__( 'Disabled', 'globus-debug-control' ),
+				],
+			]
+		);
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
+		if ( 'log' === $tab ) {
+			wp_enqueue_code_editor( [ 'type' => 'text/plain' ] );
+		}
+	}
+
 	public function admin_enqueue_php_error_assets() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {

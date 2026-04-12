@@ -1,0 +1,272 @@
+/* ── General ─────────────────────────────────────────────────────── */
+
+.gdc-tab-content {
+	margin-top: 16px;
+}
+
+.gdc-debug-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 10px;
+	padding: 2px 10px;
+	border-radius: 20px;
+	font-size: 12px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.gdc-debug-on {
+	background: #fcf0f1;
+	color: #8a2424;
+	border: 1px solid #f8c4c4;
+}
+
+.gdc-debug-off {
+	background: #f6f7f7;
+	color: #646970;
+	border: 1px solid #dcdcde;
+}
+
+/* ── WP Config Debug ─────────────────────────────────────────────── */
+
+.gdc-status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 10px;
+	border-radius: 20px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.gdc-status-badge .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.gdc-status-on {
+	background: #edfaef;
+	color: #1a7c36;
+	border: 1px solid #a7d9aa;
+}
+
+.gdc-status-off {
+	background: #f6f7f7;
+	color: #646970;
+	border: 1px solid #dcdcde;
+}
+
+.gdc-toggle-label {
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* ── Shared badges ───────────────────────────────────────────────── */
+
+.gdc-badge {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.gdc-badge-warning {
+	background: #fcf0f1;
+	color: #8a2424;
+	border: 1px solid #f8c4c4;
+}
+
+.gdc-badge-info {
+	background: #f0f6fc;
+	color: #135e96;
+	border: 1px solid #b8d3ee;
+}
+
+.gdc-text-muted {
+	color: #646970;
+}
+
+.gdc-text-warning {
+	color: #d63638;
+	font-weight: 600;
+}
+
+.gdc-empty-state {
+	padding: 24px;
+	text-align: center;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	color: #646970;
+}
+
+/* ── Cron Viewer ─────────────────────────────────────────────────── */
+
+.gdc-cron-viewer {
+	margin-top: 16px;
+}
+
+.gdc-cron-table code {
+	font-size: 12px;
+}
+
+.gdc-cron-overdue td {
+	background-color: #fcf0f1 !important;
+}
+
+/* ── Log Viewer toolbar ──────────────────────────────────────────── */
+
+.gdc-log-viewer {
+	margin-top: 16px;
+}
+
+.gdc-log-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-bottom: none;
+	border-radius: 3px 3px 0 0;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.gdc-log-meta {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	font-size: 12px;
+	color: #50575e;
+}
+
+.gdc-log-meta code {
+	font-size: 11px;
+}
+
+.gdc-log-badge {
+	background: #dcdcde;
+	border-radius: 10px;
+	padding: 1px 8px;
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.gdc-log-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.gdc-log-actions .button .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
+	margin-right: 3px;
+}
+
+.gdc-clear-form {
+	display: inline;
+}
+
+.gdc-log-empty-state {
+	padding: 32px;
+	text-align: center;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 0 0 3px 3px;
+	color: #646970;
+}
+
+.gdc-log-pagination {
+	padding: 8px 0;
+}
+
+.gdc-log-pagination .tablenav-pages {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* ── Log Viewer: CodeMirror dark theme ───────────────────────────── */
+
+#gdc-log-wrap .CodeMirror {
+	background: #1e1e1e;
+	color: #abb2bf;
+	font-family: Consolas, "Fira Code", "JetBrains Mono", "Courier New", monospace;
+	font-size: 12px;
+	line-height: 1.65;
+	height: 640px;
+	border: 1px solid #1d2327;
+	border-top: none;
+	border-radius: 0 0 3px 3px;
+}
+
+#gdc-log-wrap .CodeMirror-scroll {
+	height: 640px;
+	min-height: 0;
+}
+
+#gdc-log-wrap .CodeMirror-gutters {
+	background: #252526;
+	border-right: 1px solid #3e3e42;
+}
+
+#gdc-log-wrap .CodeMirror-linenumber {
+	color: #495162;
+	padding: 0 8px;
+}
+
+#gdc-log-wrap .CodeMirror-cursor {
+	border-left: 1px solid #528bff;
+}
+
+#gdc-log-wrap .CodeMirror-selected {
+	background: rgba(114, 174, 230, 0.18);
+}
+
+#gdc-log-wrap .CodeMirror-focused .CodeMirror-selected {
+	background: rgba(114, 174, 230, 0.25);
+}
+
+/* ── Line colours (background + text override via wrap class) ────── */
+
+#gdc-log-wrap .gdc-log-fatal {
+	background-color: rgba(248, 99, 104, 0.12) !important;
+}
+
+#gdc-log-wrap .gdc-log-fatal span {
+	color: #f4b8ba !important;
+}
+
+#gdc-log-wrap .gdc-log-warning {
+	background-color: rgba(240, 195, 60, 0.1) !important;
+}
+
+#gdc-log-wrap .gdc-log-warning span {
+	color: #e8d680 !important;
+}
+
+#gdc-log-wrap .gdc-log-notice {
+	background-color: rgba(114, 174, 230, 0.09) !important;
+}
+
+#gdc-log-wrap .gdc-log-notice span {
+	color: #a9c5e8 !important;
+}
+
+#gdc-log-wrap .gdc-log-cron {
+	background-color: rgba(104, 222, 124, 0.07) !important;
+}
+
+#gdc-log-wrap .gdc-log-cron span {
+	color: #a8d8b0 !important;
+}

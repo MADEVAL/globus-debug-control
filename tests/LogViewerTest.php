@@ -149,7 +149,22 @@ final class LogViewerTest extends WordPressTestCase {
 		\GDC_Log_Viewer::handle_download_action();
 	}
 
-	public function testGetInlineStylesReturnsNonEmptyString(): void {
-		$this->assertNotEmpty(\GDC_Log_Viewer::get_inline_styles());
+	public function testRenderOutputsCodeMirrorTextareaWhenFileExists(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		file_put_contents($path, "[12-Apr-2026] PHP Warning: test warning\n[12-Apr-2026] PHP Notice: test notice\n");
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-log-viewer', $html);
+		$this->assertStringContainsString('gdc-log-code', $html);
+		$this->assertStringContainsString('gdc-log-line-data', $html);
 	}
 }

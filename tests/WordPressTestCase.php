@@ -4,9 +4,10 @@ declare(strict_types=1);
 namespace GDC\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Yoast\PHPUnitPolyfills\TestCases\TestCase as PolyfillTestCase;
 use ReflectionMethod;
 
-abstract class WordPressTestCase extends TestCase {
+abstract class WordPressTestCase extends PolyfillTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		gdc_test_reset_state();
