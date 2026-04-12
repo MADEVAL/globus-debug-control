@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * GLOBUS Debug Control - Error Control Trait
  *

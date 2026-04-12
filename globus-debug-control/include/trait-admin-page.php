@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * GLOBUS Debug Control - Admin Page Trait
  *
@@ -214,18 +214,16 @@ trait GDC_Admin_Page {
 			return;
 		}
 
-		$base = plugin_dir_url( __FILE__ );
-
 		wp_enqueue_style(
 			'gdc-admin',
-			$base . 'assets/css/admin.css',
+			GDC_ASSETS_URL . 'css/admin.css',
 			[ 'dashicons' ],
 			self::VERSION
 		);
 
 		wp_enqueue_script(
 			'gdc-admin',
-			$base . 'assets/js/admin.js',
+			GDC_ASSETS_URL . 'js/admin.js',
 			[ 'jquery' ],
 			self::VERSION,
 			true

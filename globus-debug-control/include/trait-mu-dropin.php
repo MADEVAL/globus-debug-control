@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * GLOBUS Debug Control - MU-Plugin Dropin Trait
  *

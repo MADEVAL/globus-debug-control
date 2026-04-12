@@ -19,13 +19,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once __DIR__ . '/include/log-viewer.php';
-require_once __DIR__ . '/include/cron-viewer.php';
-require_once __DIR__ . '/include/wp-config-debug.php';
-require_once __DIR__ . '/include/trait-error-control.php';
-require_once __DIR__ . '/include/trait-mu-dropin.php';
-require_once __DIR__ . '/include/trait-admin-settings.php';
-require_once __DIR__ . '/include/trait-admin-page.php';
+define( 'GDC_FILE',       __FILE__ );
+define( 'GDC_DIR',        __DIR__ );
+define( 'GDC_INCLUDES',   __DIR__ . '/include' );
+define( 'GDC_ASSETS_URL', plugin_dir_url( __FILE__ ) . 'assets/' );
+
+require_once GDC_INCLUDES . '/log-viewer.php';
+require_once GDC_INCLUDES . '/cron-viewer.php';
+require_once GDC_INCLUDES . '/wp-config-debug.php';
+require_once GDC_INCLUDES . '/trait-error-control.php';
+require_once GDC_INCLUDES . '/trait-mu-dropin.php';
+require_once GDC_INCLUDES . '/trait-admin-settings.php';
+require_once GDC_INCLUDES . '/trait-admin-page.php';
 
 final class Globus_Debug_Control {
 
@@ -68,9 +73,9 @@ final class Globus_Debug_Control {
 		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
 		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
 
-		register_deactivation_hook( __FILE__, [ $this, 'on_deactivation' ] );
+		register_deactivation_hook( GDC_FILE, [ $this, 'on_deactivation' ] );
 
-		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), [ $this, 'plugin_action_links' ] );
+		add_filter( 'plugin_action_links_' . plugin_basename( GDC_FILE ), [ $this, 'plugin_action_links' ] );
 	}
 
 	public function handle_module_actions(): void {
