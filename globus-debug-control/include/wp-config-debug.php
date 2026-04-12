@@ -1,8 +1,21 @@
 <?php
+/**
+ * GLOBUS Debug Control - WP-Config Debug
+ *
+ * Reads and writes WP_DEBUG-related constants in the active wp-config.php file.
+ *
+ * @package GlobusDebugControl
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Reads and modifies WP_DEBUG constants in wp-config.php.
+ *
+ * @package GlobusDebugControl
+ */
 final class GDC_WpConfig_Debug {
 
 	private const NONCE_ACTION = 'gdc_wp_config_debug';
@@ -30,6 +43,11 @@ final class GDC_WpConfig_Debug {
 		),
 	);
 
+	/**
+	 * Locates the active wp-config.php file.
+	 *
+	 * @return string Absolute path to the file, or empty string if not found.
+	 */
 	public static function find_wp_config(): string {
 		$path = ABSPATH . 'wp-config.php';
 
@@ -46,6 +64,12 @@ final class GDC_WpConfig_Debug {
 		return '';
 	}
 
+	/**
+	 * Parses WP_DEBUG-related define() calls from the given config file.
+	 *
+	 * @param string $config_path Absolute path to wp-config.php.
+	 * @return array<string, array<string, mixed>> Keyed by constant name.
+	 */
 	public static function read_constants( string $config_path ): array {
 		if ( ! file_exists( $config_path ) ) {
 			return array();
@@ -91,6 +115,14 @@ final class GDC_WpConfig_Debug {
 		return $result;
 	}
 
+	/**
+	 * Updates or inserts a define() call in wp-config.php.
+	 *
+	 * @param string $config_path   Absolute path to wp-config.php.
+	 * @param string $name          Constant name to set.
+	 * @param string $new_raw_value Raw PHP value string (e.g. "true", "'some/path'").
+	 * @return bool True on success.
+	 */
 	public static function set_constant( string $config_path, string $name, string $new_raw_value ): bool {
 		if ( ! array_key_exists( $name, self::CONSTANTS ) ) {
 			return false;
@@ -165,6 +197,12 @@ final class GDC_WpConfig_Debug {
 		return false !== @file_put_contents( $config_path, $output );
 	}
 
+	/**
+	 * Parses a raw define() value string to a boolean.
+	 *
+	 * @param string $raw Raw value from source (e.g. "true", "1", "false").
+	 * @return bool Parsed boolean value.
+	 */
 	public static function parse_raw_value( string $raw ): bool {
 		$lower = strtolower( trim( $raw ) );
 
@@ -175,6 +213,9 @@ final class GDC_WpConfig_Debug {
 		return false;
 	}
 
+	/**
+	 * Handles the settings form POST, validates the nonce, and saves constants.
+	 */
 	public static function handle_action(): void {
 		if ( ! isset( $_POST['gdc_wpcfg_save'] ) ) {
 			return;
@@ -240,6 +281,9 @@ final class GDC_WpConfig_Debug {
 		exit;
 	}
 
+	/**
+	 * Renders the WP-Config Debug settings panel.
+	 */
 	public static function render(): void {
 		$config_path = self::find_wp_config();
 		$writable    = ! empty( $config_path ) && is_writable( $config_path );
@@ -344,6 +388,11 @@ final class GDC_WpConfig_Debug {
 		<?php
 	}
 
+	/**
+	 * Returns the current value of WP_DEBUG as read from wp-config.php.
+	 *
+	 * @return bool|null True/false for the defined value, null if constant is absent.
+	 */
 	public static function get_wp_debug_status(): ?bool {
 		$config_path = self::find_wp_config();
 

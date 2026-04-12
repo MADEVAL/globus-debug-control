@@ -1,10 +1,26 @@
 <?php
+/**
+ * GLOBUS Debug Control - Cron Viewer
+ *
+ * Renders a table of all scheduled WP-Cron events.
+ *
+ * @package GlobusDebugControl
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Renders WordPress cron job schedule information.
+ *
+ * @package GlobusDebugControl
+ */
 final class GDC_Cron_Viewer {
 
+	/**
+	 * Outputs the complete cron-viewer HTML table.
+	 */
 	public static function render(): void {
 		$crons = self::get_cron_events();
 		?>
@@ -74,6 +90,11 @@ final class GDC_Cron_Viewer {
 		<?php
 	}
 
+	/**
+	 * Returns a sorted, normalised list of all scheduled cron events.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
 	public static function get_cron_events(): array {
 		$crons = _get_cron_array();
 
@@ -109,6 +130,12 @@ final class GDC_Cron_Viewer {
 		return $events;
 	}
 
+	/**
+	 * Returns a human-readable relative time string for a cron timestamp.
+	 *
+	 * @param int $timestamp Unix timestamp of the scheduled event.
+	 * @return string E.g. "in 5 minutes" or "3 hours ago".
+	 */
 	public static function human_time_diff( int $timestamp ): string {
 		$now  = time();
 		$diff = $timestamp - $now;
@@ -120,6 +147,12 @@ final class GDC_Cron_Viewer {
 		return __( 'in', 'globus-debug-control' ) . ' ' . human_time_diff( $now, $timestamp );
 	}
 
+	/**
+	 * Returns a compact human-readable label for a cron interval in seconds.
+	 *
+	 * @param int $seconds Interval in seconds.
+	 * @return string E.g. "15m", "1h", "1d".
+	 */
 	public static function interval_label( int $seconds ): string {
 		if ( $seconds < 60 ) {
 			return $seconds . 's';
@@ -136,6 +169,11 @@ final class GDC_Cron_Viewer {
 		return round( $seconds / 86400 ) . 'd';
 	}
 
+	/**
+	 * Returns an empty string (styles are enqueued via the global admin stylesheet).
+	 *
+	 * @return string
+	 */
 	public static function get_inline_styles(): string {
 		return '';
 	}

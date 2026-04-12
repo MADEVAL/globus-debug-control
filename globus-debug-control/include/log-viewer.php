@@ -1,14 +1,32 @@
 <?php
+/**
+ * GLOBUS Debug Control - Log Viewer
+ *
+ * Displays, paginates, clears, and serves the WordPress debug log.
+ *
+ * @package GlobusDebugControl
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Renders and manages the WordPress debug log viewer.
+ *
+ * @package GlobusDebugControl
+ */
 final class GDC_Log_Viewer {
 
 	private const LINES_PER_PAGE = 200;
 	private const NONCE_ACTION   = 'gdc_log_viewer';
 	private const NONCE_CLEAR    = 'gdc_log_clear';
 
+	/**
+	 * Returns the resolved absolute path to the active debug log file.
+	 *
+	 * @return string Absolute path to the log file.
+	 */
 	public static function get_log_path(): string {
 		$plugin  = Globus_Debug_Control::instance();
 		$opts    = $plugin->get_options();
@@ -22,6 +40,9 @@ final class GDC_Log_Viewer {
 		return $path;
 	}
 
+	/**
+	 * Handles the "Clear Log" form submission, truncates the log file, and redirects.
+	 */
 	public static function handle_clear_action(): void {
 		if ( ! isset( $_POST['gdc_clear_log'] ) ) {
 			return;
@@ -53,6 +74,9 @@ final class GDC_Log_Viewer {
 		exit;
 	}
 
+	/**
+	 * Handles the log file download request, streaming the file as a text attachment.
+	 */
 	public static function handle_download_action(): void {
 		if ( ! isset( $_GET['gdc_dl'] ) || '1' !== $_GET['gdc_dl'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return;
@@ -80,6 +104,9 @@ final class GDC_Log_Viewer {
 		exit;
 	}
 
+	/**
+	 * Renders the full log viewer UI with pagination, toolbar, and line list.
+	 */
 	public static function render(): void {
 		$path = self::get_log_path();
 		$page = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -204,6 +231,12 @@ final class GDC_Log_Viewer {
 		<?php
 	}
 
+	/**
+	 * Returns a CSS class name corresponding to the severity of a log line.
+	 *
+	 * @param string $line Single log line text.
+	 * @return string CSS class handle (e.g. "gdc-log-fatal", "gdc-log-warning").
+	 */
 	public static function classify_line( string $line ): string {
 		$lower = strtolower( $line );
 
@@ -226,6 +259,11 @@ final class GDC_Log_Viewer {
 		return 'gdc-log-info';
 	}
 
+	/**
+	 * Returns the inline CSS styles for the log viewer component.
+	 *
+	 * @return string CSS rules string.
+	 */
 	public static function get_inline_styles(): string {
 		return '
 			.gdc-log-viewer { margin-top:16px; }

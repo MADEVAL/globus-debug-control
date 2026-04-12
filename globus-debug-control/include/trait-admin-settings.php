@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 trait GDC_Admin_Settings {
 
+	/**
+	 * Registers the plugin option group, setting, sections, and fields.
+	 */
 	public function register_settings() {
 		register_setting(
 			'globus_debug_control',
@@ -35,6 +38,14 @@ trait GDC_Admin_Settings {
 		add_settings_field( 'install_mu_dropin', __( 'Early Error Interception', 'globus-debug-control' ), array( $this, 'field_mu_dropin' ), 'globus_debug_control', 'gdc_main' );
 	}
 
+	/**
+	 * Sanitises and validates raw settings form input.
+	 *
+	 * Also triggers mu-plugin install or removal based on the checkbox value.
+	 *
+	 * @param mixed $input Raw value from the settings form.
+	 * @return array<string, mixed> Clean, validated options array.
+	 */
 	public function sanitize_options( $input ): array {
 		$output = $this->defaults();
 
@@ -86,6 +97,9 @@ trait GDC_Admin_Settings {
 	// Settings field renderers
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Renders the "Enable Plugin" settings field.
+	 */
 	public function field_enabled() {
 		$opts = $this->get_options();
 		?>
@@ -97,6 +111,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "Error Type Filtering" settings field.
+	 */
 	public function field_suppress() {
 		$opts    = $this->get_options();
 		$is_php8 = version_compare( PHP_VERSION, '8.0.0', '>=' );
@@ -130,6 +147,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "display_errors Mode" settings field.
+	 */
 	public function field_display_mode() {
 		$opts = $this->get_options();
 		?>
@@ -142,6 +162,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "Logging Settings" settings field.
+	 */
 	public function field_logging() {
 		$opts = $this->get_options();
 		?>
@@ -162,6 +185,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "php-error Class" settings field.
+	 */
 	public function field_body_class() {
 		$opts = $this->get_options();
 		?>
@@ -183,6 +209,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "API Contexts" settings field.
+	 */
 	public function field_api_contexts() {
 		$opts = $this->get_options();
 		?>
@@ -194,6 +223,9 @@ trait GDC_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Renders the "Early Error Interception" mu-plugin settings field.
+	 */
 	public function field_mu_dropin() {
 		$opts      = $this->get_options();
 		$installed = $this->is_mu_dropin_installed();

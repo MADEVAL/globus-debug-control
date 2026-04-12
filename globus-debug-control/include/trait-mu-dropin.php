@@ -14,11 +14,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 trait GDC_Mu_Dropin {
 
+	/**
+	 * Returns the expected filesystem path of the mu-plugin dropin file.
+	 *
+	 * @return string Absolute path.
+	 */
 	private function get_mu_plugin_path(): string {
 		$dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' );
 		return $dir . '/' . self::MU_FILE;
 	}
 
+	/**
+	 * Checks whether the early-loader mu-plugin is installed and owned by this plugin.
+	 *
+	 * @return bool True when the dropin exists and contains the GLOBUS marker.
+	 */
 	public function is_mu_dropin_installed(): bool {
 		$path = $this->get_mu_plugin_path();
 		if ( ! file_exists( $path ) ) {
@@ -35,6 +45,11 @@ trait GDC_Mu_Dropin {
 		return false !== $content && false !== strpos( $content, 'GLOBUS Debug Control' );
 	}
 
+	/**
+	 * Generates the PHP source code for the early-loader mu-plugin.
+	 *
+	 * @return string Complete PHP file content.
+	 */
 	private function generate_mu_content(): string {
 		$lines = array(
 			'<?php',
@@ -90,6 +105,13 @@ trait GDC_Mu_Dropin {
 		return implode( "\n", $lines ) . "\n";
 	}
 
+	/**
+	 * Writes the early-loader mu-plugin to the mu-plugins directory.
+	 *
+	 * Aborts without changes if a foreign file already exists at the target path.
+	 *
+	 * @return bool True on success, false on failure.
+	 */
 	public function install_mu_dropin(): bool {
 		$path = $this->get_mu_plugin_path();
 		$dir  = dirname( $path );
@@ -123,6 +145,11 @@ trait GDC_Mu_Dropin {
 		return (bool) $result;
 	}
 
+	/**
+	 * Removes the early-loader mu-plugin if it is owned by this plugin.
+	 *
+	 * @return bool True when the file is absent (never existed or successfully removed).
+	 */
 	public function remove_mu_dropin(): bool {
 		$path = $this->get_mu_plugin_path();
 		if ( ! file_exists( $path ) ) {
@@ -143,6 +170,9 @@ trait GDC_Mu_Dropin {
 		return false;
 	}
 
+	/**
+	 * Fires on plugin deactivation and removes the mu-plugin dropin.
+	 */
 	public function on_deactivation() {
 		$this->remove_mu_dropin();
 	}

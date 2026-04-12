@@ -18,6 +18,9 @@ trait GDC_Admin_Page {
 	// Menu & page rendering
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Registers the plugin settings page under the WordPress Settings menu.
+	 */
 	public function add_settings_page() {
 		add_options_page(
 			'GLOBUS Debug Control',
@@ -28,6 +31,9 @@ trait GDC_Admin_Page {
 		);
 	}
 
+	/**
+	 * Renders the full settings page with tabbed navigation.
+	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -189,6 +195,9 @@ trait GDC_Admin_Page {
 	// Body class filters
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Re-registers body class filters at higher priority after theme setup.
+	 */
 	public function early_body_class_filter() {
 		remove_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
 		remove_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
@@ -196,6 +205,12 @@ trait GDC_Admin_Page {
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
 	}
 
+	/**
+	 * Removes the php-error class from the front-end body classes array.
+	 *
+	 * @param string[] $classes Existing body classes.
+	 * @return string[] Filtered body classes.
+	 */
 	public function filter_body_class( array $classes ): array {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
@@ -211,6 +226,12 @@ trait GDC_Admin_Page {
 		return $classes;
 	}
 
+	/**
+	 * Removes the php-error class from the admin body class string.
+	 *
+	 * @param string $classes Space-separated admin body classes.
+	 * @return string Filtered body class string.
+	 */
 	public function filter_admin_body_class( string $classes ): string {
 		$opts = $this->get_options();
 		if ( ! empty( $opts['remove_php_error_bodyclass'] ) && ! empty( $opts['enabled'] ) ) {
@@ -229,6 +250,11 @@ trait GDC_Admin_Page {
 	// Asset enqueueing
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Enqueues CSS and JS for the plugin settings page.
+	 *
+	 * @param string $hook Current admin page hook suffix.
+	 */
 	public function admin_enqueue_settings_assets( string $hook ): void {
 		if ( 'settings_page_globus-debug-control' !== $hook ) {
 			return;
@@ -267,6 +293,9 @@ trait GDC_Admin_Page {
 		}
 	}
 
+	/**
+	 * Enqueues inline assets required to neutralise the php-error body class in wp-admin.
+	 */
 	public function admin_enqueue_php_error_assets() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
@@ -277,6 +306,9 @@ trait GDC_Admin_Page {
 		wp_add_inline_script( 'common', $this->get_php_error_class_js() );
 	}
 
+	/**
+	 * Enqueues inline assets required to neutralise the php-error body class on the front end.
+	 */
 	public function frontend_enqueue_php_error_assets() {
 		$opts = $this->get_options();
 		if ( empty( $opts['remove_php_error_bodyclass'] ) || empty( $opts['enabled'] ) ) {
@@ -288,6 +320,11 @@ trait GDC_Admin_Page {
 		wp_add_inline_script( 'jquery', $this->get_php_error_class_js() );
 	}
 
+	/**
+	 * Returns the JavaScript snippet that removes the php-error class from the body element.
+	 *
+	 * @return string Minified inline JavaScript.
+	 */
 	private function get_php_error_class_js(): string {
 		return '(function(){function r(){var b=document.body||document.getElementsByTagName("body")[0];if(b&&b.classList.contains("php-error")){b.classList.remove("php-error");}}r();if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",r);}window.addEventListener("load",r);if(window.MutationObserver){var o=new MutationObserver(function(m){m.forEach(function(e){if(e.type==="attributes"&&e.attributeName==="class"){r();}});});var b=document.body||document.getElementsByTagName("body")[0];if(b){o.observe(b,{attributes:true,attributeFilter:["class"]});}}var c=0,i=setInterval(function(){r();c++;if(c>=30){clearInterval(i);}},100);})();';
 	}

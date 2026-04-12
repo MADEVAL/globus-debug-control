@@ -3,6 +3,8 @@
  * GLOBUS Debug Control - Uninstall
  *
  * Removes plugin options and mu-plugin dropin when the plugin is deleted.
+ *
+ * @package GlobusDebugControl
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {

@@ -13,6 +13,8 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: globus-debug-control
  * Domain Path: /languages
+ *
+ * @package GlobusDebugControl
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,6 +34,13 @@ require_once GDC_INCLUDES . '/trait-mu-dropin.php';
 require_once GDC_INCLUDES . '/trait-admin-settings.php';
 require_once GDC_INCLUDES . '/trait-admin-page.php';
 
+/**
+ * Main plugin class.
+ *
+ * Bootstraps all traits, registers WordPress hooks, and manages the singleton lifecycle.
+ *
+ * @package GlobusDebugControl
+ */
 final class Globus_Debug_Control {
 
 	use GDC_Error_Control;
@@ -43,8 +52,18 @@ final class Globus_Debug_Control {
 	private const VERSION = '2.2.5';
 	private const MU_FILE = 'gdc-early-loader.php';
 
+	/**
+	 * Singleton class instance.
+	 *
+	 * @var self|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Returns the singleton instance, creating it on first call.
+	 *
+	 * @return self
+	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -52,9 +71,20 @@ final class Globus_Debug_Control {
 		return self::$instance;
 	}
 
+	/**
+	 * Prevents cloning of the singleton instance.
+	 */
 	private function __clone() {}
+	/**
+	 * Prevents unserializing of the singleton instance.
+	 */
 	public function __wakeup() {}
 
+	/**
+	 * Bootstraps the plugin.
+	 *
+	 * Runs early error-control initialisation and registers all WordPress hooks.
+	 */
 	private function __construct() {
 		$this->early_init();
 
@@ -78,12 +108,21 @@ final class Globus_Debug_Control {
 		add_filter( 'plugin_action_links_' . plugin_basename( GDC_FILE ), array( $this, 'plugin_action_links' ) );
 	}
 
+	/**
+	 * Delegates admin action handling to submodule classes.
+	 */
 	public function handle_module_actions(): void {
 		GDC_Log_Viewer::handle_clear_action();
 		GDC_Log_Viewer::handle_download_action();
 		GDC_WpConfig_Debug::handle_action();
 	}
 
+	/**
+	 * Prepends a Settings link to the plugin row in the Plugins list screen.
+	 *
+	 * @param string[] $links Existing action links.
+	 * @return string[] Modified action links with Settings prepended.
+	 */
 	public function plugin_action_links( array $links ): array {
 		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=globus-debug-control' ) ) . '">' . esc_html__( 'Settings', 'globus-debug-control' ) . '</a>';
 		array_unshift( $links, $settings_link );

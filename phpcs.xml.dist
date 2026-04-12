@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <ruleset name="GLOBUS Debug Control">
 <description>PHPCS rules for GLOBUS Debug Control plugin</description>
 
@@ -21,14 +21,6 @@
 
 <!-- Text domain enforced below via dedicated rule -->
 <exclude name="WordPress.WP.I18n.MissingArgDomain"/>
-
-<!-- Doc comments not required by Plugin Check or wp.org review -->
-<exclude name="Squiz.Commenting.FunctionComment"/>
-<exclude name="Squiz.Commenting.ClassComment"/>
-<exclude name="Squiz.Commenting.FileComment"/>
-<exclude name="Generic.Commenting.DocComment"/>
-<exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
-<exclude name="Squiz.Commenting.VariableComment"/>
 
 <!--
 ini_set / error_reporting / set_error_handler ARE this plugin's core purpose.
@@ -63,5 +55,8 @@ Each call checks the return value immediately after.
 <rule ref="WordPress.Security.NonceVerification"/>
 
 <rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
+
+<!-- Limit PHPCS to PHP files; JS linting is handled by ESLint -->
+<arg name="extensions" value="php"/>
 
 </ruleset>

@@ -18,6 +18,9 @@ trait GDC_Error_Control {
 	// Bootstrap / lifecycle
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Applies error control settings at plugin load time.
+	 */
 	private function early_init() {
 		$opts = $this->get_options();
 
@@ -30,6 +33,9 @@ trait GDC_Error_Control {
 		$this->apply_log_settings( $opts );
 	}
 
+	/**
+	 * Re-applies error control settings after all plugins have loaded.
+	 */
 	public function plugins_loaded() {
 		$opts = $this->get_options();
 
@@ -42,6 +48,11 @@ trait GDC_Error_Control {
 		$this->apply_log_settings( $opts );
 	}
 
+	/**
+	 * Re-applies error reporting once the WP environment is fully loaded.
+	 *
+	 * Also installs a custom error handler to suppress error types set in options.
+	 */
 	public function on_wp_loaded() {
 		$opts = $this->get_options();
 
@@ -58,6 +69,11 @@ trait GDC_Error_Control {
 	// Options
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Returns the default option values.
+	 *
+	 * @return array<string, mixed>
+	 */
 	private function defaults(): array {
 		return array(
 			'enabled'                    => 1,
@@ -75,6 +91,12 @@ trait GDC_Error_Control {
 		);
 	}
 
+	/**
+	 * Returns the merged and sanitised plugin options.
+	 *
+	 * @param bool $force_refresh When true, bypasses the in-memory static cache.
+	 * @return array<string, mixed>
+	 */
 	public function get_options( bool $force_refresh = false ): array {
 		static $cached_options = null;
 
@@ -130,6 +152,12 @@ trait GDC_Error_Control {
 	// Error reporting
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Builds the bitmask of error types to suppress.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 * @return int Bitmask of suppressed PHP error constants.
+	 */
 	private function build_suppress_mask( array $opts ): int {
 		$mask = 0;
 
@@ -152,6 +180,11 @@ trait GDC_Error_Control {
 		return $mask;
 	}
 
+	/**
+	 * Calls error_reporting() with the calculated suppress mask applied.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 */
 	private function apply_error_reporting( array $opts ) {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
 			return;
@@ -161,6 +194,11 @@ trait GDC_Error_Control {
 		error_reporting( E_ALL & ~$this->build_suppress_mask( $opts ) );
 	}
 
+	/**
+	 * Installs a custom error handler that silently swallows suppressed error types.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 */
 	private function install_error_handler( array $opts ) {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
 			return;
@@ -192,6 +230,11 @@ trait GDC_Error_Control {
 	// Display & log settings
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Sets display_errors and display_startup_errors via ini_set.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 */
 	private function apply_display_settings( array $opts ) {
 		$is_api_context = $this->is_api_context();
 
@@ -213,6 +256,11 @@ trait GDC_Error_Control {
 		ini_set( 'display_startup_errors', $display );
 	}
 
+	/**
+	 * Configures log_errors and error_log ini settings.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 */
 	private function apply_log_settings( array $opts ) {
 		if ( empty( $opts['log_enabled'] ) ) {
 			ini_set( 'log_errors', '0' ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
@@ -237,6 +285,12 @@ trait GDC_Error_Control {
 	// Log path helpers
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Determines the active log file path from options or WordPress constants.
+	 *
+	 * @param array<string, mixed> $opts Plugin options.
+	 * @return string Absolute path to the log file, or empty string if not configured.
+	 */
 	private function resolve_log_path( array $opts ): string {
 		if ( ! empty( $opts['log_path'] ) ) {
 			$path = $opts['log_path'];
@@ -267,16 +321,34 @@ trait GDC_Error_Control {
 		return '';
 	}
 
+	/**
+	 * Returns true when the given path is absolute on Unix or Windows.
+	 *
+	 * @param string $path Path to test.
+	 * @return bool
+	 */
 	private function is_absolute_path( string $path ): bool {
 		return ( isset( $path[0] ) && '/' === $path[0] ) || preg_match( '/^[a-zA-Z]:[\\\\\/]/', $path );
 	}
 
+	/**
+	 * Normalises a filesystem path by removing null bytes and standardising slashes.
+	 *
+	 * @param string $path Raw path.
+	 * @return string Sanitised path.
+	 */
 	private function sanitize_path( string $path ): string {
 		$path = str_replace( array( "\0", "\r", "\n" ), '', $path );
 		$path = str_replace( '\\', '/', $path );
 		return preg_replace( '#/+#', '/', $path );
 	}
 
+	/**
+	 * Ensures the log file and its parent directory exist and are writable.
+	 *
+	 * @param string $log_path Absolute path to the log file.
+	 * @return bool True when the log file is ready for writing.
+	 */
 	private function ensure_log_writable( string $log_path ): bool {
 		$dir = dirname( $log_path );
 
@@ -303,6 +375,12 @@ trait GDC_Error_Control {
 		return is_writable( $log_path );
 	}
 
+	/**
+	 * Renames the log file with a date suffix when it exceeds the size limit.
+	 *
+	 * @param string $log_path    Absolute path to the log file.
+	 * @param int    $max_size_mb Maximum allowed size in megabytes.
+	 */
 	private function rotate_log_if_needed( string $log_path, int $max_size_mb ) {
 		if ( ! file_exists( $log_path ) ) {
 			return;
@@ -331,6 +409,13 @@ trait GDC_Error_Control {
 	// API context detection
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Returns true when the current request is an automated or API context.
+	 *
+	 * Includes AJAX, REST API, XML-RPC, WP-Cron, WP-CLI, and heartbeat.
+	 *
+	 * @return bool
+	 */
 	private function is_api_context(): bool {
 		if ( ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) ||
 			( defined( 'REST_REQUEST' ) && REST_REQUEST ) ||
