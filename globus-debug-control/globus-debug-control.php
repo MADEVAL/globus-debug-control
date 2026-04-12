@@ -393,7 +393,7 @@ final class Globus_Debug_Control {
 		return false;
 	}
 	
-	// ── MU-Plugin Dropin ───────────────────────────────────────────────────────
+	// MU-Plugin Dropin
 	
 	private function get_mu_plugin_path(): string {
 		$dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : ( WP_CONTENT_DIR . '/mu-plugins' );

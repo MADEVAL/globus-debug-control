@@ -28,8 +28,8 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString('logs/custom.log', $path);
 	}
 
-	public function testClassifyLineFatalReturnsCorrectClass(): void {
-		$this->assertSame('gdc-log-fatal', \GDC_Log_Viewer::classify_line('[12-Apr-2026 10:00:00 UTC] PHP Fatal error: Uncaught Error'));
+	public function testClassifyLineParseErrorReturnsCorrectClass(): void {
+		$this->assertSame('gdc-log-fatal', \GDC_Log_Viewer::classify_line('[12-Apr-2026 10:00:00 UTC] PHP Parse error: syntax error'));
 	}
 
 	public function testClassifyLineWarningReturnsCorrectClass(): void {

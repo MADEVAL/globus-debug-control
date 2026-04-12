@@ -62,7 +62,7 @@ final class GDC_Cron_Viewer {
 								<?php if ( ! empty( $event['args'] ) ) : ?>
 									<code title="<?php echo esc_attr( wp_json_encode( $event['args'] ) ); ?>"><?php esc_html_e( 'yes', 'globus-debug-control' ); ?></code>
 								<?php else : ?>
-									<span class="gdc-text-muted">—</span>
+									<span class="gdc-text-muted">-</span>
 								<?php endif; ?>
 							</td>
 						</tr>

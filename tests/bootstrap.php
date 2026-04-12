@@ -66,6 +66,7 @@ function gdc_test_default_state(): array {
 		'options_pages' => [],
 		'registered_styles' => [],
 		'enqueued_styles' => [],
+		'enqueued_scripts' => [],
 		'inline_styles' => [],
 		'inline_scripts' => [],
 		'deleted_files' => [],

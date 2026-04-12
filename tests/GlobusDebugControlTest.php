@@ -141,4 +141,203 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 
 		$this->assertTrue($this->invokePrivate('is_api_context'));
 	}
+
+	public function testIsApiContextReturnsFalseForNormalRequest(): void {
+		$_POST = [];
+
+		$this->assertFalse($this->invokePrivate('is_api_context'));
+	}
+
+	public function testIsApiContextDetectsAjax(): void {
+		$GLOBALS['gdc_test_state']['doing_ajax'] = true;
+
+		$this->assertTrue($this->invokePrivate('is_api_context'));
+	}
+
+	public function testFilterBodyClassDoesNotRemoveWhenPluginDisabled(): void {
+		$this->refreshOptions([
+			'enabled' => 0,
+			'remove_php_error_bodyclass' => 1,
+		]);
+
+		$classes = $this->plugin()->filter_body_class(['home', 'php-error', 'page']);
+
+		$this->assertContains('php-error', $classes);
+	}
+
+	public function testFilterAdminBodyClassRemovesPhpErrorWhenEnabled(): void {
+		$this->refreshOptions([
+			'enabled' => 1,
+			'remove_php_error_bodyclass' => 1,
+		]);
+
+		$result = $this->plugin()->filter_admin_body_class('wp-admin php-error page-template');
+
+		$this->assertStringNotContainsString('php-error', $result);
+		$this->assertStringContainsString('wp-admin', $result);
+	}
+
+	public function testOnDeactivationRemovesOwnedMuDropin(): void {
+		$this->plugin()->install_mu_dropin();
+		$path = str_replace('\\', '/', WPMU_PLUGIN_DIR . '/gdc-early-loader.php');
+		$this->assertFileExists($path);
+
+		$this->plugin()->on_deactivation();
+
+		$this->assertFileDoesNotExist($path);
+	}
+
+	public function testRegisterSettingsRegistersExpectedFields(): void {
+		$this->plugin()->register_settings();
+
+		$state = $this->state();
+		$registered = array_column($state['registered_settings'], 'name');
+		$this->assertContains('globus_debug_control_options', $registered);
+
+		$fields = array_column($state['settings_fields'], 'id');
+		$this->assertContains('enabled', $fields);
+		$this->assertContains('suppress', $fields);
+		$this->assertContains('logging', $fields);
+	}
+
+	public function testFieldEnabledOutputsCheckbox(): void {
+		$this->refreshOptions(['enabled' => 1]);
+
+		ob_start();
+		$this->plugin()->field_enabled();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('type="checkbox"', $html);
+		$this->assertStringContainsString('[enabled]', $html);
+	}
+
+	public function testFieldSuppressOutputsCheckboxes(): void {
+		$this->refreshOptions(['suppress_notices' => 1]);
+
+		ob_start();
+		$this->plugin()->field_suppress();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('[suppress_notices]', $html);
+		$this->assertStringContainsString('[suppress_deprecated]', $html);
+		$this->assertStringContainsString('[suppress_warnings]', $html);
+	}
+
+	public function testFieldDisplayModeOutputsSelect(): void {
+		$this->refreshOptions(['display_errors_mode' => 'off']);
+
+		ob_start();
+		$this->plugin()->field_display_mode();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('<select', $html);
+		$this->assertStringContainsString('inherit', $html);
+		$this->assertStringContainsString('on', $html);
+		$this->assertStringContainsString('off', $html);
+	}
+
+	public function testFieldLoggingOutputsInputs(): void {
+		$this->refreshOptions(['log_enabled' => 1, 'log_path' => 'logs/debug.log', 'log_max_size_mb' => 10]);
+
+		ob_start();
+		$this->plugin()->field_logging();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('[log_enabled]', $html);
+		$this->assertStringContainsString('[log_path]', $html);
+		$this->assertStringContainsString('[log_max_size_mb]', $html);
+	}
+
+	public function testFieldBodyClassOutputsCheckbox(): void {
+		$this->refreshOptions(['remove_php_error_bodyclass' => 1]);
+
+		ob_start();
+		$this->plugin()->field_body_class();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('[remove_php_error_bodyclass]', $html);
+	}
+
+	public function testFieldApiContextsOutputsCheckbox(): void {
+		ob_start();
+		$this->plugin()->field_api_contexts();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('[force_in_api_contexts]', $html);
+	}
+
+	public function testFieldMuDropinOutputsCheckbox(): void {
+		ob_start();
+		$this->plugin()->field_mu_dropin();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('[install_mu_dropin]', $html);
+	}
+
+	public function testAddSettingsPageRegistersPage(): void {
+		$this->plugin()->add_settings_page();
+
+		$pages = $this->state('options_pages');
+		$slugs = array_column($pages, 'menu_slug');
+		$this->assertContains('globus-debug-control', $slugs);
+	}
+
+	public function testAdminEnqueueSettingsAssetsDoesNothingOnWrongHook(): void {
+		$this->plugin()->admin_enqueue_settings_assets('edit.php');
+
+		$this->assertEmpty($this->state('enqueued_styles'));
+	}
+
+	public function testAdminEnqueueSettingsAssetsEnqueuesOnCorrectHook(): void {
+		$this->plugin()->admin_enqueue_settings_assets('settings_page_globus-debug-control');
+
+		$handles = $this->state('enqueued_styles');
+		$this->assertContains('gdc-admin', $handles);
+	}
+
+	public function testAdminEnqueuePhpErrorAssetsDoesNothingWhenDisabled(): void {
+		$this->refreshOptions(['enabled' => 0, 'remove_php_error_bodyclass' => 1]);
+
+		$this->plugin()->admin_enqueue_php_error_assets();
+
+		$this->assertEmpty($this->state('inline_styles'));
+	}
+
+	public function testAdminEnqueuePhpErrorAssetsAddsStyleWhenEnabled(): void {
+		$this->refreshOptions(['enabled' => 1, 'remove_php_error_bodyclass' => 1]);
+
+		$this->plugin()->admin_enqueue_php_error_assets();
+
+		$this->assertNotEmpty($this->state('inline_styles'));
+	}
+
+	public function testHandleModuleActionsRunsWithoutError(): void {
+		$_POST = [];
+		$_GET  = [];
+
+		$this->plugin()->handle_module_actions();
+
+		$this->assertTrue(true);
+	}
+
+	public function testResolveLogPathReturnsEmptyWhenNoConfig(): void {
+		$path = $this->invokePrivate('resolve_log_path', [['log_path' => '']]);
+
+		$this->assertSame('', $path);
+	}
+
+	public function testSanitizeOptionsMuDropinInstallsDropin(): void {
+		$this->plugin()->sanitize_options(['enabled' => '1', 'install_mu_dropin' => '1']);
+
+		$this->assertTrue($this->plugin()->is_mu_dropin_installed());
+	}
+
+	public function testSanitizeOptionsMuDropinRemovesWhenUnchecked(): void {
+		$this->plugin()->install_mu_dropin();
+		$this->assertTrue($this->plugin()->is_mu_dropin_installed());
+
+		$this->plugin()->sanitize_options(['enabled' => '1']);
+
+		$this->assertFalse($this->plugin()->is_mu_dropin_installed());
+	}
 }

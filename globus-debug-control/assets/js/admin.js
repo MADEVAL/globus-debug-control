@@ -2,7 +2,7 @@
 ( function () {
 	'use strict';
 
-	// ── WP Config Debug: badge toggle on checkbox change ─────────────
+	// WP Config Debug: badge toggle on checkbox change
 
 	document.querySelectorAll( '.gdc-wpcfg-checkbox' ).forEach( function ( cb ) {
 		cb.addEventListener( 'change', function () {
@@ -21,7 +21,7 @@
 		} );
 	} );
 
-	// ── Log Viewer: CodeMirror read-only view ─────────────────────────
+	// Log Viewer: CodeMirror read-only view
 
 	var logArea = document.getElementById( 'gdc-log-code' );
 

@@ -194,6 +194,85 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		$this->assertStringContainsString('not found', $html);
 	}
 
+	public function testSetConstantAppendsWhenNoMarkers(): void {
+		$this->writeConfig("<?php\n// minimal config\n");
+
+		\GDC_WpConfig_Debug::set_constant($this->config_path, 'WP_DEBUG', 'true');
+
+		$content = file_get_contents($this->config_path);
+		$this->assertStringContainsString("define( 'WP_DEBUG', true );", $content);
+	}
+
+	public function testSetConstantIgnoresLineCommentedDefine(): void {
+		$this->writeConfig("<?php\n// define( 'WP_DEBUG', false );\n");
+
+		\GDC_WpConfig_Debug::set_constant($this->config_path, 'WP_DEBUG', 'true');
+
+		$content = file_get_contents($this->config_path);
+		$this->assertStringContainsString("// define( 'WP_DEBUG', false );", $content);
+		$this->assertStringContainsString("define( 'WP_DEBUG', true );", $content);
+	}
+
+	public function testSetConstantIgnoresBlockCommentedDefine(): void {
+		$this->writeConfig("<?php\n/*\ndefine( 'WP_DEBUG', false );\n*/\n");
+
+		\GDC_WpConfig_Debug::set_constant($this->config_path, 'WP_DEBUG', 'true');
+
+		$content = file_get_contents($this->config_path);
+		$this->assertStringContainsString("define( 'WP_DEBUG', false );", $content);
+		$this->assertStringContainsString("define( 'WP_DEBUG', true );", $content);
+		$lineCount = substr_count($content, "define( 'WP_DEBUG', true );");
+		$this->assertSame(1, $lineCount);
+	}
+
+	public function testReadConstantsIgnoresBlockCommentedDefine(): void {
+		$this->writeConfig("<?php\n/*\ndefine( 'WP_DEBUG', true );\n*/\n");
+
+		$constants = \GDC_WpConfig_Debug::read_constants($this->config_path);
+
+		$this->assertFalse($constants['WP_DEBUG']['defined']);
+	}
+
+	public function testReadConstantsIgnoresLineCommentedDefine(): void {
+		$this->writeConfig("<?php\n// define( 'WP_DEBUG', true );\n");
+
+		$constants = \GDC_WpConfig_Debug::read_constants($this->config_path);
+
+		$this->assertFalse($constants['WP_DEBUG']['defined']);
+	}
+
+	public function testHandleActionSetsConstantToFalse(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', true );\n");
+
+		$_POST['gdc_wpcfg_save'] = '1';
+		$_POST['_wpnonce']       = 'test_nonce';
+		$_POST['gdc_wpcfg']     = [];
+
+		try {
+			\GDC_WpConfig_Debug::handle_action();
+		} catch (\GDC_Test_RedirectException $e) {
+			$this->assertStringContainsString('gdc_cfg_saved=1', $e->location);
+		}
+
+		$content = file_get_contents($this->config_path);
+		$this->assertStringContainsString('false', $content);
+	}
+
+	public function testHandleActionRedirectsOnNoWriteConfig(): void {
+		if (file_exists($this->config_path)) {
+			unlink($this->config_path);
+		}
+
+		$_POST['gdc_wpcfg_save'] = '1';
+		$_POST['_wpnonce']       = 'test_nonce';
+
+		try {
+			\GDC_WpConfig_Debug::handle_action();
+		} catch (\GDC_Test_RedirectException $e) {
+			$this->assertStringContainsString('gdc_cfg_error=nowrite', $e->location);
+		}
+	}
+
 	public function testHandleActionSkipsWhenNoPOSTKey(): void {
 		$_POST = [];
 
