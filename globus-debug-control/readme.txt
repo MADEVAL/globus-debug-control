@@ -1,6 +1,6 @@
 === GLOBUS Debug Control ===
 Contributors: globusstudio
-Tags: debug, error-reporting, logging, development, error-handling
+Tags: debug, error-log, cron, wp-config, transients
 Requires at least: 5.2
 Tested up to: 6.9
 Requires PHP: 7.4
@@ -8,7 +8,7 @@ Stable tag: 2.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-All-in-one WordPress debug toolkit - filter PHP errors, toggle WP_DEBUG constants, view the error log, inspect cron tasks, transients, autoloaded options, outgoing HTTP requests, and PHP constants from the admin panel.
+WordPress debug toolkit: filter errors, toggle WP_DEBUG, view error logs, monitor cron, transients, HTTP requests, and more.
 
 == Description ==
 
@@ -51,7 +51,7 @@ When WordPress encounters a PHP error, it adds a `php-error` class to the `<body
 
 **Early error interception (optional)**
 
-WordPress loads plugins in alphabetical order. If another plugin throws an error before GLOBUS Debug Control initialises, those errors will not be filtered. Enabling the **MU-plugin dropin** installs a small helper file into `wp-content/mu-plugins/` that runs before any regular plugin, ensuring your filter settings apply from the very start of the request. The dropin is removed automatically when the plugin is deactivated.
+WordPress loads plugins in alphabetical order. If another plugin throws an error before GLOBUS Debug Control initialises, those errors will not be filtered. Enabling the **MU-plugin dropin** installs a small helper file into `wp-content/mu-plugins/` that runs before any regular plugin, ensuring your filter settings apply from the very start of the request. The dropin is removed automatically when the plugin is deactivated or uninstalled.
 
 = WP_DEBUG tab =
 
@@ -67,7 +67,7 @@ The plugin locates your `wp-config.php` automatically and patches it in place, a
 
 = Error Log tab =
 
-Displays the contents of your `debug.log` file directly in the admin panel with syntax highlighting via CodeMirror. Lines are color-coded by severity (fatal errors, warnings, notices, deprecations). The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low.
+Displays the contents of your `debug.log` file directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low.
 
 = Cron Tasks tab =
 
@@ -75,7 +75,7 @@ Lists all scheduled WordPress cron events with hook name, next run time, recurre
 
 = Transients tab =
 
-Displays all WordPress transients stored in the options table with key name, data size, and expiration time. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click. Summary cards show total count, expired count, and total data size.
+Displays database-stored WordPress transients from the options table with key name, data size, and expiration time. Transients stored in an external object cache (Redis, Memcached) are not shown. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click. Summary cards show total count, expired count, and total data size.
 
 = Autoloaded tab =
 
@@ -107,7 +107,7 @@ Yes. Errors are always suppressed from output during AJAX requests, REST API cal
 
 = What is the MU-plugin dropin and do I need it? =
 
-It is an optional small file installed into `wp-content/mu-plugins/`. It makes GLOBUS Debug Control run earlier than any regular plugin, so errors thrown during early plugin initialisation are also filtered. Enable it if you see errors from plugins that load before this one. The dropin is removed automatically when the plugin is deactivated.
+It is an optional small file installed into `wp-content/mu-plugins/`. It makes GLOBUS Debug Control run earlier than any regular plugin, so errors thrown during early plugin initialisation are also filtered. Enable it if you see errors from plugins that load before this one. The dropin is removed automatically when the plugin is deactivated or uninstalled.
 
 = Where is the log file saved? =
 
@@ -134,7 +134,7 @@ Yes. The recommended setup for a production site is: suppress all error types, d
 = 2.2.5 =
 * Added WP_DEBUG tab: toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, SAVEQUERIES directly from the admin panel
 * WP_DEBUG status indicator badge shown in plugin header
-* Added Error Log viewer with syntax highlighting, pagination, live polling, download, and one-click clear
+* Added Error Log viewer with color-coded lines, pagination, live polling, download, and one-click clear
 * Added Cron Tasks viewer with summary cards, overdue highlighting, immediate run, and orphan cleanup
 * Added Transients viewer with size/expiry info, per-row delete, and bulk purge of expired entries
 * Added Autoloaded Options viewer showing the heaviest autoloaded rows with size warnings
