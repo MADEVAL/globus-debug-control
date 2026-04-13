@@ -290,18 +290,23 @@ final class GDC_Log_Viewer {
 					</div>
 					<?php endif; ?>
 					<div class="gdc-log-generate">
+						<?php
+						$suppressed_types   = self::get_suppressed_types();
+						$error_type_options = array(
+							'notice'     => 'E_USER_NOTICE',
+							'warning'    => 'E_USER_WARNING',
+							'deprecated' => 'E_USER_DEPRECATED',
+							'error'      => 'E_USER_ERROR',
+							'exception'  => 'Uncaught Exception',
+							'fatal'      => 'Fatal Error (sim.)',
+							'parse'      => 'Parse Error (sim.)',
+						);
+						?>
 						<select id="gdc-error-type" class="gdc-select-small">
-							<option value="notice">E_USER_NOTICE</option>
-							<option value="warning">E_USER_WARNING</option>
-						<option value="deprecated">E_USER_DEPRECATED</option>
-						<option value="error">E_USER_ERROR</option>
-						<option value="exception">Uncaught Exception</option>
-						<option value="fatal">Fatal Error (sim.)</option>
-						<option value="parse">Parse Error (sim.)</option>
-					</select>
-					<span id="gdc-suppress-warn" class="gdc-suppress-warn" hidden>
-						<span class="dashicons dashicons-warning"></span><?php esc_html_e( 'suppressed', 'globus-debug-control' ); ?>
-					</span>
+							<?php foreach ( $error_type_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' — suppressed' : $label ); ?></option>
+							<?php endforeach; ?>
+						</select>
 						<button type="button" id="gdc-generate-error" class="button button-secondary">
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>

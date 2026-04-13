@@ -572,12 +572,14 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertMatchesRegularExpression('/"suppressedTypes"\s*:\s*\[/', $html);
 	}
 
-	public function testRenderOutputsSuppressWarnSpanAlways(): void {
+	public function testRenderOptionLabelContainsSuppressedWhenTypeSuppressed(): void {
 		$this->refreshOptions([
 			'enabled'             => 1,
 			'log_enabled'         => 1,
 			'log_path'            => '',
 			'suppress_notices'    => 1,
+			'suppress_warnings'   => 0,
+			'suppress_deprecated' => 0,
 		]);
 
 		$path = $this->runtimePath('wp-content/debug.log');
@@ -589,6 +591,33 @@ final class LogViewerTest extends WordPressTestCase {
 		\GDC_Log_Viewer::render();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString('gdc-suppress-warn', $html);
+		// Notice option should mention suppressed.
+		$this->assertMatchesRegularExpression('/value="notice"[^>]*>[^<]*suppressed/i', $html);
+		// Warning option should NOT mention suppressed.
+		$this->assertDoesNotMatchRegularExpression('/value="warning"[^>]*>[^<]*suppressed/i', $html);
+	}
+
+	public function testRenderOptionLabelNotSuppressedWhenDisabled(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'log_enabled'         => 1,
+			'log_path'            => '',
+			'suppress_notices'    => 0,
+			'suppress_warnings'   => 0,
+			'suppress_deprecated' => 0,
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		// No option label should mention "suppressed".
+		$this->assertDoesNotMatchRegularExpression('/value="\w+"[^>]*>[^<]*suppressed/i', $html);
+		$this->assertStringNotContainsString('gdc-suppress-warn', $html);
 	}
 }
