@@ -83,6 +83,7 @@ function gdc_test_default_state(): array {
 		'wpdb_var_queue' => [],
 		'wpdb_queries'   => [],
 		'wpdb_deleted'   => [],
+		'error_log'      => [],
 	];
 }
 
