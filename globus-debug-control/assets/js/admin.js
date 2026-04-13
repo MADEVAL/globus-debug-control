@@ -381,5 +381,144 @@
 				);
 			}
 		);
-	}()
+	}
+
+	// -------------------------------------------------------------------------
+	// Transient viewer: per-row delete
+	// -------------------------------------------------------------------------
+
+	document.addEventListener(
+		'click',
+		function ( e ) {
+			var btn = e.target.closest( '.gdc-transient-delete' );
+			if ( ! btn || typeof gdcTransient === 'undefined' ) {
+				return;
+			}
+
+			var row = btn.closest( 'tr' );
+			var key = row ? row.dataset.key : '';
+
+			if ( ! key ) {
+				return;
+			}
+
+			btn.disabled = true;
+
+			var body = new FormData();
+			body.append( 'action', 'gdc_transient_delete' );
+			body.append( '_ajax_nonce', gdcTransient.nonceDelete );
+			body.append( 'key', key );
+
+			fetch( gdcTransient.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+				.then( function ( r ) { return r.json(); } )
+				.then(
+					function ( resp ) {
+						if ( resp.success && row ) {
+							row.style.transition = 'opacity 0.3s';
+							row.style.opacity    = '0';
+							setTimeout( function () { row.remove(); }, 320 );
+						} else {
+							btn.disabled = false;
+						}
+					}
+				)
+				.catch( function () { btn.disabled = false; } );
+		}
+	);
+
+	// -------------------------------------------------------------------------
+	// Transient viewer: purge expired
+	// -------------------------------------------------------------------------
+
+	var purgeBtn = document.getElementById( 'gdc-transient-purge' );
+	if ( purgeBtn && typeof gdcTransient !== 'undefined' ) {
+		purgeBtn.addEventListener(
+			'click',
+			function () {
+				purgeBtn.disabled = true;
+
+				var body = new FormData();
+				body.append( 'action', 'gdc_transient_purge' );
+				body.append( '_ajax_nonce', gdcTransient.noncePurge );
+
+				fetch( gdcTransient.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( r ) { return r.json(); } )
+					.then(
+						function ( resp ) {
+							if ( resp.success ) {
+								window.location.reload();
+							} else {
+								purgeBtn.disabled = false;
+							}
+						}
+					)
+					.catch( function () { purgeBtn.disabled = false; } );
+			}
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// HTTP log: toggle capturing
+	// -------------------------------------------------------------------------
+
+	var httpToggle = document.getElementById( 'gdc-http-toggle' );
+	if ( httpToggle && typeof gdcHttp !== 'undefined' ) {
+		httpToggle.addEventListener(
+			'click',
+			function () {
+				httpToggle.disabled = true;
+				var isCapturing     = httpToggle.dataset.capturing === '1';
+
+				var body = new FormData();
+				body.append( 'action', 'gdc_http_log_toggle' );
+				body.append( '_ajax_nonce', gdcHttp.nonceToggle );
+				body.append( 'enabled', isCapturing ? '0' : '1' );
+
+				fetch( gdcHttp.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( r ) { return r.json(); } )
+					.then(
+						function ( resp ) {
+							if ( resp.success ) {
+								window.location.reload();
+							} else {
+								httpToggle.disabled = false;
+							}
+						}
+					)
+					.catch( function () { httpToggle.disabled = false; } );
+			}
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// HTTP log: clear log
+	// -------------------------------------------------------------------------
+
+	var httpClear = document.getElementById( 'gdc-http-clear' );
+	if ( httpClear && typeof gdcHttp !== 'undefined' ) {
+		httpClear.addEventListener(
+			'click',
+			function () {
+				httpClear.disabled = true;
+
+				var body = new FormData();
+				body.append( 'action', 'gdc_http_log_clear' );
+				body.append( '_ajax_nonce', gdcHttp.nonceClear );
+
+				fetch( gdcHttp.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( r ) { return r.json(); } )
+					.then(
+						function ( resp ) {
+							if ( resp.success ) {
+								window.location.reload();
+							} else {
+								httpClear.disabled = false;
+							}
+						}
+					)
+					.catch( function () { httpClear.disabled = false; } );
+			}
+		);
+	}
+
 );

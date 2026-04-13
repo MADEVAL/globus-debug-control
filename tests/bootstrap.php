@@ -79,6 +79,10 @@ function gdc_test_default_state(): array {
 		'did_action'  => [],
 		'unscheduled' => [],
 		'unschedule_result' => true,
+		'wpdb_results'   => [],
+		'wpdb_var_queue' => [],
+		'wpdb_queries'   => [],
+		'wpdb_deleted'   => [],
 	];
 }
 
@@ -86,6 +90,7 @@ function gdc_test_reset_state(): void {
 	$GLOBALS['gdc_test_state']  = gdc_test_default_state();
 	$GLOBALS['wp_filesystem']   = null;
 	$GLOBALS['wp_filter']       = [];
+	$GLOBALS['wpdb']            = new GDC_Test_Wpdb();
 	$_POST = [];
 	$_GET  = [];
 
@@ -112,6 +117,43 @@ if (! defined('WP_PLUGIN_DIR')) {
 if (! defined('WP_UNINSTALL_PLUGIN')) {
 	define('WP_UNINSTALL_PLUGIN', true);
 }
+
+if (! defined('WP_DEBUG')) {
+	define('WP_DEBUG', true);
+}
+
+if (! defined('WP_DEBUG_LOG')) {
+	define('WP_DEBUG_LOG', false);
+}
+
+if (! defined('WP_DEBUG_DISPLAY')) {
+	define('WP_DEBUG_DISPLAY', false);
+}
+
+if (! defined('DB_NAME')) {
+	define('DB_NAME', 'test_db');
+}
+
+if (! defined('DB_USER')) {
+	define('DB_USER', 'test_user');
+}
+
+if (! defined('DB_PASSWORD')) {
+	define('DB_PASSWORD', 'test_password');
+}
+
+if (! defined('DB_HOST')) {
+	define('DB_HOST', 'localhost');
+}
+
+if (! defined('AUTH_KEY')) {
+	define('AUTH_KEY', 'test-auth-key');
+}
+
+if (! defined('AUTH_SALT')) {
+	define('AUTH_SALT', 'test-auth-salt');
+}
+
 
 if (! defined('FS_CHMOD_FILE')) {
 	define('FS_CHMOD_FILE', 0644);
@@ -631,6 +673,87 @@ if (! function_exists('_n')) {
 if (! function_exists('number_format_i18n')) {
 	function number_format_i18n(float $number): string {
 		return number_format($number);
+	}
+}
+
+if (! defined('OBJECT'))          define('OBJECT', 'OBJECT');
+if (! defined('ARRAY_A'))         define('ARRAY_A', 'ARRAY_A');
+if (! defined('DAY_IN_SECONDS'))  define('DAY_IN_SECONDS', 86400);
+if (! defined('HOUR_IN_SECONDS')) define('HOUR_IN_SECONDS', 3600);
+
+if (! class_exists('WP_Error')) {
+	class WP_Error {
+		private string $code;
+		private string $message;
+		public function __construct(string $code = '', string $message = '', $data = '') {
+			$this->code    = $code;
+			$this->message = $message;
+		}
+		public function get_error_message(): string {
+			return $this->message;
+		}
+		public function get_error_code(): string {
+			return $this->code;
+		}
+	}
+}
+
+if (! function_exists('is_wp_error')) {
+	function is_wp_error($thing): bool {
+		return $thing instanceof WP_Error;
+	}
+}
+
+if (! function_exists('delete_transient')) {
+	function delete_transient(string $transient): bool {
+		unset($GLOBALS['gdc_test_state']['transients'][$transient]);
+		return true;
+	}
+}
+
+if (! function_exists('wp_remote_retrieve_response_code')) {
+	function wp_remote_retrieve_response_code($response) {
+		if (is_wp_error($response)) {
+			return '';
+		}
+		return isset($response['response']['code']) ? $response['response']['code'] : '';
+	}
+}
+
+if (! class_exists('GDC_Test_Wpdb')) {
+	class GDC_Test_Wpdb {
+		public string $prefix  = 'wp_';
+		public string $options = 'wp_options';
+
+		public function get_results(string $query, $output = 'OBJECT'): array {
+			return $GLOBALS['gdc_test_state']['wpdb_results'] ?? [];
+		}
+
+		public function prepare(string $query, ...$args): string {
+			return $query; // Not needed – get_results is mocked.
+		}
+
+		public function query(string $sql): int {
+			$GLOBALS['gdc_test_state']['wpdb_queries'][] = $sql;
+			return 1;
+		}
+
+		public function get_var(?string $query = null): ?string {
+			$queue = &$GLOBALS['gdc_test_state']['wpdb_var_queue'];
+			if (! empty($queue)) {
+				return (string) array_shift($queue);
+			}
+			return null;
+		}
+
+		public function delete(string $table, array $where): int {
+			$GLOBALS['gdc_test_state']['wpdb_deleted'][] = compact('table', 'where');
+			return 1;
+		}
+
+		public function esc_like(string $text): string {
+			return addcslashes($text, '_%\\');
+		}
 	}
 }
 

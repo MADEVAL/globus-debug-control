@@ -29,6 +29,10 @@ define( 'GDC_ASSETS_URL', plugin_dir_url( __FILE__ ) . 'assets/' );
 require_once GDC_INCLUDES . '/log-viewer.php';
 require_once GDC_INCLUDES . '/cron-viewer.php';
 require_once GDC_INCLUDES . '/wp-config-debug.php';
+require_once GDC_INCLUDES . '/transient-viewer.php';
+require_once GDC_INCLUDES . '/options-viewer.php';
+require_once GDC_INCLUDES . '/http-log.php';
+require_once GDC_INCLUDES . '/constants-viewer.php';
 require_once GDC_INCLUDES . '/trait-error-control.php';
 require_once GDC_INCLUDES . '/trait-mu-dropin.php';
 require_once GDC_INCLUDES . '/trait-admin-settings.php';
@@ -100,6 +104,12 @@ final class Globus_Debug_Control {
 
 		GDC_Log_Viewer::register_ajax_hooks();
 		GDC_Cron_Viewer::register_ajax_hooks();
+		GDC_Transient_Viewer::register_ajax_hooks();
+		GDC_Http_Log::register_ajax_hooks();
+
+		if ( GDC_Http_Log::is_capturing() ) {
+			add_action( 'http_api_debug', array( 'GDC_Http_Log', 'on_request' ), 10, 5 );
+		}
 
 		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );

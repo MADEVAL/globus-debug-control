@@ -40,10 +40,14 @@ trait GDC_Admin_Page {
 		}
 
 		$tabs = array(
-			'settings' => __( 'Settings', 'globus-debug-control' ),
-			'wpcfg'    => __( 'WP_DEBUG', 'globus-debug-control' ),
-			'log'      => __( 'Error Log', 'globus-debug-control' ),
-			'cron'     => __( 'Cron Tasks', 'globus-debug-control' ),
+			'settings'   => __( 'Settings', 'globus-debug-control' ),
+			'wpcfg'      => __( 'WP_DEBUG', 'globus-debug-control' ),
+			'log'        => __( 'Error Log', 'globus-debug-control' ),
+			'cron'       => __( 'Cron Tasks', 'globus-debug-control' ),
+			'transients' => __( 'Transients', 'globus-debug-control' ),
+			'autoloaded' => __( 'Autoloaded', 'globus-debug-control' ),
+			'http'       => __( 'HTTP Log', 'globus-debug-control' ),
+			'constants'  => __( 'Constants', 'globus-debug-control' ),
 		);
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -176,6 +180,12 @@ trait GDC_Admin_Page {
 
 				<?php GDC_WpConfig_Debug::render(); ?>
 
+				<p style="margin-top:16px;">
+					<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'globus-debug-control', 'tab' => 'constants' ), admin_url( 'options-general.php' ) ) ); ?>" class="button button-secondary">
+						<?php esc_html_e( 'View all WP constants →', 'globus-debug-control' ); ?>
+					</a>
+				</p>
+
 			<?php elseif ( 'log' === $active_tab ) : ?>
 
 				<?php GDC_Log_Viewer::render(); ?>
@@ -183,6 +193,22 @@ trait GDC_Admin_Page {
 			<?php elseif ( 'cron' === $active_tab ) : ?>
 
 				<?php GDC_Cron_Viewer::render(); ?>
+
+			<?php elseif ( 'transients' === $active_tab ) : ?>
+
+				<?php GDC_Transient_Viewer::render(); ?>
+
+			<?php elseif ( 'autoloaded' === $active_tab ) : ?>
+
+				<?php GDC_Options_Viewer::render(); ?>
+
+			<?php elseif ( 'http' === $active_tab ) : ?>
+
+				<?php GDC_Http_Log::render(); ?>
+
+			<?php elseif ( 'constants' === $active_tab ) : ?>
+
+				<?php GDC_Constants_Viewer::render(); ?>
 
 			<?php endif; ?>
 
