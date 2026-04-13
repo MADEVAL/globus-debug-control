@@ -99,6 +99,7 @@ final class Globus_Debug_Control {
 		add_action( 'admin_init', array( $this, 'handle_module_actions' ) );
 
 		GDC_Log_Viewer::register_ajax_hooks();
+		GDC_Cron_Viewer::register_ajax_hooks();
 
 		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );

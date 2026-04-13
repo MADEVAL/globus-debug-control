@@ -18,6 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class GDC_Cron_Viewer {
 
+	private const NONCE_SOURCES = 'gdc_cron_sources';
+
 	/**
 	 * Outputs the complete cron-viewer HTML table.
 	 */
@@ -30,6 +32,16 @@ final class GDC_Cron_Viewer {
 					<p><?php esc_html_e( 'No scheduled cron events found.', 'globus-debug-control' ); ?></p>
 				</div>
 			<?php else : ?>
+				<script>var gdcCron=
+				<?php
+				echo wp_json_encode(
+					array(
+						'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+						'nonce'   => wp_create_nonce( self::NONCE_SOURCES ),
+					)
+				);
+				?>
+									;</script>
 				<p class="description">
 					<?php
 					echo esc_html(
@@ -46,7 +58,9 @@ final class GDC_Cron_Viewer {
 						<tr>
 							<th scope="col" style="width: 160px;"><?php esc_html_e( 'Next Run', 'globus-debug-control' ); ?></th>
 							<th scope="col" style="width: 120px;"><?php esc_html_e( 'In', 'globus-debug-control' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Hook', 'globus-debug-control' ); ?></th>						<th scope="col" style="width: 150px;"><?php esc_html_e( 'Source', 'globus-debug-control' ); ?></th>							<th scope="col" style="width: 140px;"><?php esc_html_e( 'Schedule', 'globus-debug-control' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Hook', 'globus-debug-control' ); ?></th>
+						<th scope="col" style="width: 150px;"><?php esc_html_e( 'Source', 'globus-debug-control' ); ?></th>
+						<th scope="col" style="width: 140px;"><?php esc_html_e( 'Schedule', 'globus-debug-control' ); ?></th>
 							<th scope="col" style="width: 80px;"><?php esc_html_e( 'Args', 'globus-debug-control' ); ?></th>
 						</tr>
 					</thead>
@@ -63,20 +77,9 @@ final class GDC_Cron_Viewer {
 								<?php echo esc_html( self::human_time_diff( $event['timestamp'] ) ); ?>
 							</td>
 							<td><code><?php echo esc_html( $event['hook'] ); ?></code></td>
-					<td>
-							<?php
-							$src = $event['source'];
-							if ( 'core' === $src['type'] ) {
-								echo '<span class="gdc-source-badge gdc-source-core">' . esc_html__( 'WordPress', 'globus-debug-control' ) . '</span>';
-							} elseif ( 'plugin' === $src['type'] ) {
-								echo '<span class="gdc-source-badge gdc-source-plugin" title="' . esc_attr( $src['slug'] ) . '">' . esc_html( $src['name'] ) . '</span>';
-							} elseif ( 'theme' === $src['type'] ) {
-								echo '<span class="gdc-source-badge gdc-source-theme" title="' . esc_attr( $src['slug'] ) . '">' . esc_html( $src['name'] ) . '</span>';
-							} else {
-								echo '<span class="gdc-text-muted">&mdash;</span>';
-							}
-							?>
-					</td>
+						<td class="gdc-cron-source" data-hook="<?php echo esc_attr( $event['hook'] ); ?>">
+							<span class="spinner is-active" style="float:none;margin:0;"></span>
+						</td>
 							<td>
 								<?php if ( ! empty( $event['schedule'] ) ) : ?>
 									<span class="gdc-badge gdc-badge-info"><?php echo esc_html( $event['schedule'] ); ?></span>
@@ -128,7 +131,6 @@ final class GDC_Cron_Viewer {
 						'interval'  => isset( $event['interval'] ) ? (int) $event['interval'] : 0,
 						'args'      => isset( $event['args'] ) && is_array( $event['args'] ) ? array_filter( $event['args'] ) : array(),
 						'overdue'   => (int) $timestamp < $now - 60,
-						'source'    => self::resolve_hook_source( (string) $hook ),
 					);
 				}
 			}
@@ -142,6 +144,42 @@ final class GDC_Cron_Viewer {
 		);
 
 		return $events;
+	}
+
+	/**
+	 * Registers AJAX action hooks for the cron viewer.
+	 */
+	public static function register_ajax_hooks(): void {
+		add_action( 'wp_ajax_gdc_cron_sources', array( self::class, 'ajax_cron_sources' ) );
+	}
+
+	/**
+	 * AJAX handler: resolves source info for a list of cron hook names.
+	 *
+	 * Accepts POST param `hooks[]` — an array of hook name strings.
+	 * Returns a JSON object keyed by hook name, value is the source descriptor.
+	 */
+	public static function ajax_cron_sources(): void {
+		check_ajax_referer( self::NONCE_SOURCES );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Forbidden', 403 );
+		}
+
+		$raw = isset( $_POST['hooks'] ) && is_array( $_POST['hooks'] )
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			? wp_unslash( $_POST['hooks'] )
+			: array();
+
+		$result = array();
+		foreach ( $raw as $hook ) {
+			$hook = preg_replace( '/[^a-zA-Z0-9_\-\/\.]/', '', substr( (string) $hook, 0, 200 ) );
+			if ( '' !== $hook ) {
+				$result[ $hook ] = self::resolve_hook_source( $hook );
+			}
+		}
+
+		wp_send_json_success( $result );
 	}
 
 	/**

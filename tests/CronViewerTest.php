@@ -274,10 +274,7 @@ final class CronViewerTest extends WordPressTestCase {
 
 		$events = \GDC_Cron_Viewer::get_cron_events();
 
-		$this->assertArrayHasKey( 'source', $events[0] );
-		$this->assertArrayHasKey( 'type', $events[0]['source'] );
-		$this->assertArrayHasKey( 'name', $events[0]['source'] );
-		$this->assertArrayHasKey( 'slug', $events[0]['source'] );
+		$this->assertArrayNotHasKey( 'source', $events[0] );
 	}
 
 	public function testRenderIncludesSourceColumnHeader(): void {
@@ -301,11 +298,11 @@ final class CronViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString( 'Source', $html );
 	}
 
-	public function testRenderShowsPluginBadgeForPluginCallback(): void {
+	public function testRenderOutputsSpinnerInSourceCell(): void {
 		$ts = time() + 600;
 		$GLOBALS['gdc_test_state']['cron_array'] = [
 			$ts => [
-				'gdc_plugin_badge_hook' => [
+				'my_cron_hook' => [
 					'40cd750bba9870f18aada2478b24840a' => [
 						'schedule' => 'hourly',
 						'interval' => 3600,
@@ -314,22 +311,38 @@ final class CronViewerTest extends WordPressTestCase {
 				],
 			],
 		];
-		$GLOBALS['wp_filter']['gdc_plugin_badge_hook'] = [
-			10 => [
-				'gdc_test_cron_plugin_cb' => [
-					'function'      => 'gdc_test_cron_plugin_cb',
-					'accepted_args' => 1,
-				],
-			],
-		];
 
 		ob_start();
 		\GDC_Cron_Viewer::render();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( 'gdc-source-badge', $html );
-		$this->assertStringContainsString( 'gdc-source-plugin', $html );
-		$this->assertStringContainsString( 'test-cron-plugin', $html );
+		$this->assertStringContainsString( 'gdc-cron-source', $html );
+		$this->assertStringContainsString( 'data-hook="my_cron_hook"', $html );
+		$this->assertStringContainsString( 'class="spinner is-active"', $html );
+		$this->assertStringContainsString( 'gdcCron', $html );
+		$this->assertStringContainsString( 'ajaxUrl', $html );
+	}
+
+	public function testAjaxCronSourcesReturnsPluginSource(): void {
+		$dir = WP_CONTENT_DIR . '/plugins/acme-plugin';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/acme-plugin.php', "<?php\nadd_action( 'acme_daily_task', 'acme_cb' );\n" );
+
+		$_POST['hooks'] = [ 'acme_daily_task' ];
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_sources();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_success', $e->getMessage() );
+		}
+
+		$resp = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue( $resp['success'] );
+		$this->assertArrayHasKey( 'acme_daily_task', $resp['data'] );
+		$this->assertSame( 'plugin', $resp['data']['acme_daily_task']['type'] );
+		$this->assertSame( 'acme-plugin', $resp['data']['acme_daily_task']['slug'] );
 	}
 
 	// -----------------------------------------------------------------------

@@ -127,5 +127,55 @@
 				startLive();
 			}
 		}
+
+		// Cron Viewer: lazy-load Source column via AJAX
+		var cronCells = document.querySelectorAll( '.gdc-cron-source[data-hook]' );
+		if ( cronCells.length && typeof gdcCron !== 'undefined' ) {
+			var hooks = [];
+			cronCells.forEach(
+				function ( td ) {
+					var h = td.getAttribute( 'data-hook' );
+					if ( h && hooks.indexOf( h ) === -1 ) {
+						hooks.push( h );
+					}
+				}
+			);
+
+			var body = new FormData();
+			body.append( 'action', 'gdc_cron_sources' );
+			body.append( '_ajax_nonce', gdcCron.nonce );
+			hooks.forEach( function ( h ) { body.append( 'hooks[]', h ); } );
+
+			fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+				.then( function ( r ) { return r.json(); } )
+				.then(
+					function ( resp ) {
+						cronCells.forEach(
+							function ( td ) {
+								var hook = td.getAttribute( 'data-hook' );
+								var src  = resp.success && resp.data ? resp.data[ hook ] : null;
+								if ( ! src || 'unknown' === src.type ) {
+									td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>';
+								} else if ( 'core' === src.type ) {
+									td.innerHTML = '<span class="gdc-source-badge gdc-source-core">WordPress</span>';
+								} else if ( 'plugin' === src.type ) {
+									td.innerHTML = '<span class="gdc-source-badge gdc-source-plugin" title="' +
+										src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
+								} else if ( 'theme' === src.type ) {
+									td.innerHTML = '<span class="gdc-source-badge gdc-source-theme" title="' +
+										src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
+								}
+							}
+						);
+					}
+				)
+				.catch(
+					function () {
+						cronCells.forEach(
+							function ( td ) { td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>'; }
+						);
+					}
+				);
+		}
 	}()
 );
