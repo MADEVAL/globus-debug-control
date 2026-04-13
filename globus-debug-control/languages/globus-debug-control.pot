@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the GLOBUS Debug Control plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: GLOBUS Debug Control 2.2.4\n"
+"Project-Id-Version: GLOBUS Debug Control 2.2.5\n"
 "Report-Msgid-Bugs-To: https://globus.studio\n"
-"POT-Creation-Date: 2026-03-24 00:00+0000\n"
+"POT-Creation-Date: 2026-04-13 18:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,237 +12,690 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: globus-debug-control.php
-msgid "General Settings"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Enable Plugin"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Error Type Filtering"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "display_errors Mode"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Logging Settings"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "php-error Class"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "API Contexts"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Early Error Interception"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Enable debug control"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "When disabled, the plugin does not affect PHP or WordPress settings."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Suppress E_NOTICE"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "and E_USER_NOTICE"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Suppress E_DEPRECATED"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "and E_USER_DEPRECATED"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Suppress E_WARNING"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "and E_USER_WARNING (use with caution!)"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Suppress E_STRICT"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "(not available in PHP 8.0+)"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Inherit from WP_DEBUG_DISPLAY"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Always on"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Always off"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Controls error output on screen. In API contexts, display is automatically disabled."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Enable error logging"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Log file path:"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Leave empty for auto-detection"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log)."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "You can specify an absolute or relative (from wp-content) path."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Maximum log size (MB):"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB."
-msgstr ""
-
-#: globus-debug-control.php
-#. translators: 1: CSS class name, 2: HTML tag name
-msgid "Remove %1$s class from %2$s"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "WordPress adds this class when errors are detected. It can interfere with styling."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Show errors in API contexts"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Enable only for API debugging."
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Install mu-plugin for early interception"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Installed"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "Not installed"
-msgstr ""
-
-#: globus-debug-control.php
-msgid "WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes."
-msgstr ""
-
-#: globus-debug-control.php
-#. translators: 1: mu-plugin filename, 2: directory path
-msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
-msgstr ""
-
-#: globus-debug-control.php
+#: globus-debug-control.php:140
+#: include/trait-admin-page.php:43
 msgid "Settings"
 msgstr ""
 
-#: globus-debug-control.php
-msgid "Save Settings"
+#: include/constants-viewer.php:178
+msgid "WP_DEBUG settings"
 msgstr ""
 
-#: globus-debug-control.php
-msgid "System Information"
+#: include/constants-viewer.php:184
+msgid "No WP constants found."
 msgstr ""
 
-#: globus-debug-control.php
-msgid "Plugin version:"
+#: include/constants-viewer.php:192
+msgid "Constant"
 msgstr ""
 
-#: globus-debug-control.php
-msgid "PHP version:"
+#: include/constants-viewer.php:193
+msgid "Value"
 msgstr ""
 
-#: globus-debug-control.php
-msgid "Enabled"
+#: include/constants-viewer.php:202
+msgid "*** (masked)"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/cron-viewer.php:57
+msgid "No scheduled cron events found."
+msgstr ""
+
+#: include/cron-viewer.php:69
+msgid "Running…"
+msgstr ""
+
+#: include/cron-viewer.php:70
+msgid "Deleting…"
+msgstr ""
+
+#: include/cron-viewer.php:71
+msgid "Deleted"
+msgstr ""
+
+#: include/cron-viewer.php:72
+msgid "Triggered"
+msgstr ""
+
+#: include/cron-viewer.php:73
+#: include/http-log.php:214
+msgid "Error"
+msgstr ""
+
+#: include/cron-viewer.php:74
+msgid "Delete this scheduled event?"
+msgstr ""
+
+#: include/cron-viewer.php:84
+msgid "Next Run"
+msgstr ""
+
+#: include/cron-viewer.php:85
+msgid "In"
+msgstr ""
+
+#: include/cron-viewer.php:86
+msgid "Hook / Callback"
+msgstr ""
+
+#: include/cron-viewer.php:87
+msgid "Source"
+msgstr ""
+
+#: include/cron-viewer.php:88
+msgid "Schedule"
+msgstr ""
+
+#: include/cron-viewer.php:89
+msgid "Args"
+msgstr ""
+
+#: include/cron-viewer.php:90
+msgid "Actions"
+msgstr ""
+
+#: include/cron-viewer.php:108
+msgid "overdue"
+msgstr ""
+
+#: include/cron-viewer.php:118
+msgid "No callback registered and hook not found in plugin files"
+msgstr ""
+
+#: include/cron-viewer.php:119
+msgid "orphan"
+msgstr ""
+
+#: include/cron-viewer.php:133
+msgid "Multiple scheduled instances of this hook"
+msgstr ""
+
+#: include/cron-viewer.php:148
+msgid "one-time"
+msgstr ""
+
+#: include/cron-viewer.php:153
+msgid "yes"
+msgstr ""
+
+#: include/cron-viewer.php:161
+msgid "Trigger now"
+msgstr ""
+
+#: include/cron-viewer.php:168
+msgid "Delete event"
+msgstr ""
+
+#: include/cron-viewer.php:200
+#: include/trait-admin-page.php:125
+#: include/trait-admin-page.php:129
+#: include/trait-admin-page.php:133
+#: include/trait-admin-page.php:322
+#: include/wp-config-debug.php:367
 msgid "Disabled"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/cron-viewer.php:202
+msgid "Alternate"
+msgstr ""
+
+#: include/cron-viewer.php:204
+#: include/trait-admin-page.php:125
+#: include/trait-admin-page.php:129
+#: include/trait-admin-page.php:133
+#: include/trait-admin-page.php:321
+#: include/wp-config-debug.php:362
+msgid "Enabled"
+msgstr ""
+
+#: include/cron-viewer.php:214
+msgid "Events"
+msgstr ""
+
+#: include/cron-viewer.php:222
+msgid "Unique hooks"
+msgstr ""
+
+#: include/cron-viewer.php:231
+msgid "Overdue"
+msgstr ""
+
+#: include/cron-viewer.php:241
+msgid "Orphaned"
+msgstr ""
+
+#: include/cron-viewer.php:250
+msgid "Stuck"
+msgstr ""
+
+#: include/cron-viewer.php:251
+msgid "Cron lock active"
+msgstr ""
+
+#: include/cron-viewer.php:261
+msgid "Next run"
+msgstr ""
+
+#: include/cron-viewer.php:419
+msgid ""
+"DISABLE_WP_CRON is true - WP-Cron will not fire automatically on page load. Make sure a real system cron job is configured."
+msgstr ""
+
+#: include/cron-viewer.php:427
+msgid ""
+"ALTERNATE_WP_CRON is true - cron runs via a redirect instead of a non-blocking HTTP call."
+msgstr ""
+
+#: include/cron-viewer.php:435
+msgid ""
+"The doing_cron transient is older than 10 minutes - WP-Cron appears to be stuck. Consider clearing it."
+msgstr ""
+
+#. translators: %s: hook name
+#: include/cron-viewer.php:481
+msgid "\"%s\" is scheduled with an interval shorter than 1 minute."
+msgstr ""
+
+#: include/cron-viewer.php:1059
+msgid "ago"
+msgstr ""
+
+#: include/cron-viewer.php:1062
+msgid "in"
+msgstr ""
+
+#. translators: %d: number of orphaned hooks
+#: include/cron-viewer.php:445
+msgid ""
+"%d orphaned cron hook found - its plugin may have been deactivated without cleaning up."
+msgid_plural ""
+"%d orphaned cron hooks found - their plugins may have been deactivated without cleaning up."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of duplicated hooks
+#: include/cron-viewer.php:462
+msgid "%d hook has multiple scheduled instances."
+msgid_plural "%d hooks have multiple scheduled instances."
+msgstr[0] ""
+msgstr[1] ""
+
+#: include/http-log.php:165
+msgid "Capturing"
+msgstr ""
+
+#: include/http-log.php:165
+msgid "Paused"
+msgstr ""
+
+#: include/http-log.php:166
+msgid "HTTP capture"
+msgstr ""
+
+#: include/http-log.php:173
+msgid "Requests logged"
+msgstr ""
+
+#: include/http-log.php:182
+msgid "Stop capturing"
+msgstr ""
+
+#: include/http-log.php:182
+msgid "Start capturing"
+msgstr ""
+
+#: include/http-log.php:187
+msgid "Clear log"
+msgstr ""
+
+#: include/http-log.php:198
+msgid "No requests captured yet. Browse other pages to record HTTP API calls."
+msgstr ""
+
+#: include/http-log.php:200
+msgid ""
+"Capturing is disabled. Click \"Start capturing\" to begin recording outgoing HTTP requests."
+msgstr ""
+
+#: include/http-log.php:210
+msgid "Time"
+msgstr ""
+
+#: include/http-log.php:211
+msgid "Method"
+msgstr ""
+
+#: include/http-log.php:212
+msgid "URL"
+msgstr ""
+
+#: include/http-log.php:213
+msgid "Status"
+msgstr ""
+
+#: include/log-viewer.php:88
+msgid "Insufficient permissions."
+msgstr ""
+
+#: include/log-viewer.php:94
+msgid "Log file not found."
+msgstr ""
+
+#: include/log-viewer.php:249
+msgid "Log file cleared."
+msgstr ""
+
+#: include/log-viewer.php:274
+msgid "Log file does not exist."
+msgstr ""
+
+#: include/log-viewer.php:282
+msgid "Word wrap"
+msgstr ""
+
+#: include/log-viewer.php:301
+msgid "Download"
+msgstr ""
+
+#: include/log-viewer.php:306
+msgid "Clear the log file?"
+msgstr ""
+
+#: include/log-viewer.php:307
+msgid "Clear Log"
+msgstr ""
+
+#: include/log-viewer.php:331
+msgid "Generate"
+msgstr ""
+
+#: include/log-viewer.php:333
+msgid "Auto-refresh when log file changes"
+msgstr ""
+
+#: include/log-viewer.php:390
+msgid "Log file is empty."
+msgstr ""
+
+#. translators: %s: number of log lines
+#: include/log-viewer.php:272
+#: include/log-viewer.php:366
+msgid "%s line"
+msgid_plural "%s lines"
+msgstr[0] ""
+msgstr[1] ""
+
+#: include/options-viewer.php:94
+msgid "Autoloaded rows"
+msgstr ""
+
+#: include/options-viewer.php:101
+msgid "Total autoloaded"
+msgstr ""
+
+#. translators: %d: row limit
+#: include/options-viewer.php:111
+msgid "Showing top %d rows by size."
+msgstr ""
+
+#: include/options-viewer.php:122
+msgid "No autoloaded options found."
+msgstr ""
+
+#: include/options-viewer.php:128
+msgid "Option name"
+msgstr ""
+
+#: include/options-viewer.php:129
+#: include/transient-viewer.php:208
+msgid "Size"
+msgstr ""
+
+#: include/options-viewer.php:130
+msgid "Relative size"
+msgstr ""
+
+#: include/trait-admin-page.php:44
+msgid "WP_DEBUG"
+msgstr ""
+
+#: include/trait-admin-page.php:45
+msgid "Error Log"
+msgstr ""
+
+#: include/trait-admin-page.php:46
+msgid "Cron Tasks"
+msgstr ""
+
+#: include/trait-admin-page.php:47
+msgid "Transients"
+msgstr ""
+
+#: include/trait-admin-page.php:48
+msgid "Autoloaded"
+msgstr ""
+
+#: include/trait-admin-page.php:49
+msgid "HTTP Log"
+msgstr ""
+
+#: include/trait-admin-page.php:50
+msgid "Constants"
+msgstr ""
+
+#: include/trait-admin-page.php:67
+msgid "ON"
+msgstr ""
+
+#: include/trait-admin-page.php:71
+msgid "OFF"
+msgstr ""
+
+#: include/trait-admin-page.php:107
+msgid "Save Settings"
+msgstr ""
+
+#: include/trait-admin-page.php:113
+msgid "System Information"
+msgstr ""
+
+#: include/trait-admin-page.php:116
+msgid "Plugin version:"
+msgstr ""
+
+#: include/trait-admin-page.php:120
+msgid "PHP version:"
+msgstr ""
+
+#: include/trait-admin-page.php:136
 msgid "Current error_reporting:"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:149
+#: include/trait-admin-settings.php:177
 msgid "Log file path:"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:157
 msgid "size:"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:159
 msgid "file does not exist"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:162
 msgid "Not configured"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:168
 msgid "Execution context:"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:169
 msgid "API context"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:169
 msgid "Normal"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:172
 msgid "MU-plugin dropin:"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:173
+#: include/trait-admin-settings.php:238
+msgid "Installed"
+msgstr ""
+
+#: include/trait-admin-page.php:173
 msgid "Not installed - early interception disabled"
 msgstr ""
 
-#: globus-debug-control.php
+#: include/trait-admin-page.php:177
 msgid "Version"
+msgstr ""
+
+#: include/trait-admin-page.php:197
+msgid "View all WP constants →"
+msgstr ""
+
+#: include/trait-admin-settings.php:30
+msgid "General Settings"
+msgstr ""
+
+#: include/trait-admin-settings.php:32
+msgid "Enable Plugin"
+msgstr ""
+
+#: include/trait-admin-settings.php:33
+msgid "Error Type Filtering"
+msgstr ""
+
+#: include/trait-admin-settings.php:34
+msgid "display_errors Mode"
+msgstr ""
+
+#: include/trait-admin-settings.php:35
+msgid "Logging Settings"
+msgstr ""
+
+#: include/trait-admin-settings.php:36
+msgid "php-error Class"
+msgstr ""
+
+#: include/trait-admin-settings.php:37
+msgid "API Contexts"
+msgstr ""
+
+#: include/trait-admin-settings.php:38
+msgid "Early Error Interception"
+msgstr ""
+
+#: include/trait-admin-settings.php:108
+msgid "Enable debug control"
+msgstr ""
+
+#: include/trait-admin-settings.php:110
+msgid "When disabled, the plugin does not affect PHP or WordPress settings."
+msgstr ""
+
+#: include/trait-admin-settings.php:124
+msgid "Suppress E_NOTICE"
+msgstr ""
+
+#: include/trait-admin-settings.php:124
+msgid "and E_USER_NOTICE"
+msgstr ""
+
+#: include/trait-admin-settings.php:128
+msgid "Suppress E_DEPRECATED"
+msgstr ""
+
+#: include/trait-admin-settings.php:128
+msgid "and E_USER_DEPRECATED"
+msgstr ""
+
+#: include/trait-admin-settings.php:132
+msgid "Suppress E_WARNING"
+msgstr ""
+
+#: include/trait-admin-settings.php:132
+msgid "and E_USER_WARNING (use with caution!)"
+msgstr ""
+
+#: include/trait-admin-settings.php:137
+#: include/trait-admin-settings.php:142
+msgid "Suppress E_STRICT"
+msgstr ""
+
+#: include/trait-admin-settings.php:142
+msgid "(not available in PHP 8.0+)"
+msgstr ""
+
+#: include/trait-admin-settings.php:146
+msgid ""
+"Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible."
+msgstr ""
+
+#: include/trait-admin-settings.php:157
+msgid "Inherit from WP_DEBUG_DISPLAY"
+msgstr ""
+
+#: include/trait-admin-settings.php:158
+msgid "Always on"
+msgstr ""
+
+#: include/trait-admin-settings.php:159
+msgid "Always off"
+msgstr ""
+
+#: include/trait-admin-settings.php:161
+msgid ""
+"Controls error output on screen. In API contexts, display is automatically disabled."
+msgstr ""
+
+#: include/trait-admin-settings.php:174
+msgid "Enable error logging"
+msgstr ""
+
+#: include/trait-admin-settings.php:178
+msgid "Leave empty for auto-detection"
+msgstr ""
+
+#: include/trait-admin-settings.php:179
+msgid "If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log)."
+msgstr ""
+
+#: include/trait-admin-settings.php:179
+msgid "You can specify an absolute or relative (from wp-content) path."
+msgstr ""
+
+#: include/trait-admin-settings.php:181
+msgid "Maximum log size (MB):"
+msgstr ""
+
+#: include/trait-admin-settings.php:183
+msgid ""
+"When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB."
+msgstr ""
+
+#. translators: 1: CSS class name, 2: HTML tag name
+#: include/trait-admin-settings.php:200
+msgid "Remove %1$s class from %2$s"
+msgstr ""
+
+#: include/trait-admin-settings.php:208
+msgid ""
+"WordPress adds this class when errors are detected. It can interfere with styling."
+msgstr ""
+
+#: include/trait-admin-settings.php:220
+msgid "Show errors in API contexts"
+msgstr ""
+
+#: include/trait-admin-settings.php:222
+msgid ""
+"By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation."
+msgstr ""
+
+#: include/trait-admin-settings.php:222
+msgid "Enable only for API debugging."
+msgstr ""
+
+#: include/trait-admin-settings.php:235
+msgid "Install mu-plugin for early interception"
+msgstr ""
+
+#: include/trait-admin-settings.php:240
+msgid "Not installed"
+msgstr ""
+
+#: include/trait-admin-settings.php:243
+msgid ""
+"WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes."
+msgstr ""
+
+#. translators: 1: mu-plugin filename, 2: directory path
+#: include/trait-admin-settings.php:247
+msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
+msgstr ""
+
+#: include/transient-viewer.php:173
+msgid "Total"
+msgstr ""
+
+#: include/transient-viewer.php:180
+#: include/transient-viewer.php:223
+msgid "Expired"
+msgstr ""
+
+#: include/transient-viewer.php:187
+msgid "Total size"
+msgstr ""
+
+#: include/transient-viewer.php:194
+msgid "Purge expired"
+msgstr ""
+
+#: include/transient-viewer.php:201
+msgid "No transients found."
+msgstr ""
+
+#: include/transient-viewer.php:207
+msgid "Key"
+msgstr ""
+
+#: include/transient-viewer.php:209
+msgid "Expires"
+msgstr ""
+
+#: include/transient-viewer.php:221
+msgid "No expiry"
+msgstr ""
+
+#. translators: %s: human-readable time difference
+#: include/transient-viewer.php:228
+msgid "in %s"
+msgstr ""
+
+#: include/transient-viewer.php:237
+msgid "Delete"
+msgstr ""
+
+#: include/wp-config-debug.php:293
+msgid "wp-config.php updated."
+msgstr ""
+
+#: include/wp-config-debug.php:297
+msgid "wp-config.php is not writable."
+msgstr ""
+
+#: include/wp-config-debug.php:303
+msgid "wp-config.php not found."
+msgstr ""
+
+#. translators: %s: file path
+#: include/wp-config-debug.php:311
+msgid "<strong>%s</strong> is not writable. Changes cannot be saved."
+msgstr ""
+
+#. translators: %s: file path
+#: include/wp-config-debug.php:325
+msgid "Editing: <code>%s</code>"
+msgstr ""
+
+#: include/wp-config-debug.php:372
+msgid "(not defined, will be added)"
+msgstr ""
+
+#: include/wp-config-debug.php:374
+msgid "Current:"
+msgstr ""
+
+#: include/wp-config-debug.php:383
+msgid "Save to wp-config.php"
 msgstr ""
