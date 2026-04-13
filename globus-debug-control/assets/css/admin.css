@@ -111,12 +111,179 @@
 	margin-top: 16px;
 }
 
+/* Summary cards */
+
+.gdc-cron-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.gdc-cron-summary-card {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 14px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	font-size: 12px;
+	color: #50575e;
+	min-width: 100px;
+}
+
+.gdc-cron-summary-card .dashicons {
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+	color: #646970;
+	flex-shrink: 0;
+}
+
+.gdc-cron-summary-card > div {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.3;
+}
+
+.gdc-cron-summary-card > div strong {
+	font-size: 14px;
+	color: #1d2327;
+}
+
+.gdc-card-ok {
+	border-color: #a7d9aa;
+	background: #edfaef;
+}
+
+.gdc-card-ok .dashicons {
+	color: #1a7c36;
+}
+
+.gdc-card-warning {
+	border-color: #f5c26b;
+	background: #fff4e5;
+}
+
+.gdc-card-warning .dashicons {
+	color: #7c4700;
+}
+
+.gdc-card-error {
+	border-color: #f8c4c4;
+	background: #fcf0f1;
+}
+
+.gdc-card-error .dashicons {
+	color: #8a2424;
+}
+
+/* Notices area */
+
+.gdc-cron-notices {
+	margin-bottom: 12px;
+}
+
+.gdc-cron-notice {
+	margin: 0 0 6px 0;
+}
+
+/* Table */
+
 .gdc-cron-table code {
 	font-size: 12px;
 }
 
 .gdc-cron-overdue td {
 	background-color: #fcf0f1 !important;
+}
+
+.gdc-cron-orphan td {
+	background-color: #fff4e5 !important;
+}
+
+/* Hook name + callback expand */
+
+.gdc-cron-hook-name {
+	font-size: 12px;
+}
+
+.gdc-cron-cb-toggle {
+	cursor: pointer;
+	border: none;
+	background: none;
+	padding: 0;
+	margin-left: 2px;
+	color: #2271b1;
+	line-height: 1;
+	vertical-align: middle;
+}
+
+.gdc-cron-cb-toggle:hover {
+	color: #135e96;
+}
+
+.gdc-cron-callbacks {
+	margin: 4px 0 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.gdc-cron-callbacks li {
+	margin: 2px 0;
+}
+
+.gdc-cron-cb {
+	font-size: 11px;
+	color: #2271b1;
+	background: #f0f6fc;
+	border-radius: 2px;
+	padding: 1px 4px;
+}
+
+/* Badges: extend existing */
+
+.gdc-badge-orphan {
+	background: #fff4e5;
+	color: #7c4700;
+	border: 1px solid #f5c26b;
+}
+
+.gdc-badge-error {
+	background: #fcf0f1;
+	color: #8a2424;
+	border: 1px solid #f8c4c4;
+}
+
+.gdc-badge-critical {
+	background: #8a2424;
+	color: #fff;
+	border: 1px solid #6e1b1b;
+}
+
+/* Actions column */
+
+.gdc-cron-actions {
+	white-space: nowrap;
+}
+
+.gdc-cron-actions .button-small {
+	padding: 0 4px;
+	min-height: 24px;
+	line-height: 22px;
+}
+
+.gdc-cron-actions .button-small + .button-small {
+	margin-left: 3px;
+}
+
+.gdc-cron-run-ok {
+	color: #1a7c36 !important;
+}
+
+.gdc-cron-run-error {
+	color: #d63638 !important;
 }
 
 /* Cron source badges */
@@ -249,6 +416,12 @@
 @keyframes gdc-spin {
 	from { transform: rotate( 0deg ); }
 	to   { transform: rotate( 360deg ); }
+}
+
+/* Reusable spin utility class (cron run/delete buttons) */
+.gdc-spin {
+	animation: gdc-spin 1s linear infinite;
+	display: inline-block;
 }
 
 .gdc-clear-form {

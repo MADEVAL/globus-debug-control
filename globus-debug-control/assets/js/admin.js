@@ -214,5 +214,151 @@
 				)
 				.catch( clearSourceSpinners );
 		}
+
+		// Cron Viewer: callback toggle (expand/collapse).
+		document.querySelectorAll( '.gdc-cron-cb-toggle' ).forEach(
+			function ( btn ) {
+				btn.addEventListener(
+					'click',
+					function () {
+						var list     = btn.parentNode.querySelector( '.gdc-cron-callbacks' );
+						var icon     = btn.querySelector( '.dashicons' );
+						var expanded = btn.getAttribute( 'aria-expanded' ) === 'true';
+						btn.setAttribute( 'aria-expanded', expanded ? 'false' : 'true' );
+						if ( list ) {
+							list.hidden = expanded;
+						}
+						if ( icon ) {
+							icon.className = expanded
+								? 'dashicons dashicons-arrow-down-alt2'
+								: 'dashicons dashicons-arrow-up-alt2';
+							icon.style.cssText = 'font-size:12px;width:12px;height:12px;vertical-align:middle;';
+						}
+					}
+				);
+			}
+		);
+
+		// Cron Viewer: run now.
+		document.querySelectorAll( '.gdc-cron-run' ).forEach(
+			function ( btn ) {
+				btn.addEventListener(
+					'click',
+					function () {
+						if ( btn.disabled ) {
+							return;
+						}
+						var hook = btn.getAttribute( 'data-hook' );
+						var body = new FormData();
+						body.append( 'action', 'gdc_cron_run' );
+						body.append( '_ajax_nonce', gdcCron.nonceRun );
+						body.append( 'hook', hook );
+
+						btn.disabled = true;
+						var icon = btn.querySelector( '.dashicons' );
+						if ( icon ) {
+							icon.className = 'dashicons dashicons-update gdc-spin';
+							icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;display:inline-block;';
+						}
+
+						fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+							.then( function ( r ) { return r.json(); } )
+							.then(
+								function ( resp ) {
+									if ( icon ) {
+										if ( resp.success ) {
+											icon.className = 'dashicons dashicons-yes gdc-cron-run-ok';
+										} else {
+											icon.className = 'dashicons dashicons-no gdc-cron-run-error';
+										}
+										icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;';
+									}
+									setTimeout(
+										function () {
+											btn.disabled = false;
+											if ( icon ) {
+												icon.className = 'dashicons dashicons-controls-play';
+												icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;';
+											}
+										},
+										2000
+									);
+								}
+							)
+							.catch(
+								function () {
+									btn.disabled = false;
+									if ( icon ) {
+										icon.className = 'dashicons dashicons-controls-play';
+										icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;';
+									}
+								}
+							);
+					}
+				);
+			}
+		);
+
+		// Cron Viewer: delete event.
+		document.querySelectorAll( '.gdc-cron-delete' ).forEach(
+			function ( btn ) {
+				btn.addEventListener(
+					'click',
+					function () {
+						if ( btn.disabled ) {
+							return;
+						}
+						// eslint-disable-next-line no-alert
+						if ( ! window.confirm( gdcCron.i18n.confirmDelete ) ) {
+							return;
+						}
+						var hook = btn.getAttribute( 'data-hook' );
+						var ts   = btn.getAttribute( 'data-ts' );
+						var args = btn.getAttribute( 'data-args' );
+						var body = new FormData();
+						body.append( 'action', 'gdc_cron_delete' );
+						body.append( '_ajax_nonce', gdcCron.nonceDelete );
+						body.append( 'hook', hook );
+						body.append( 'timestamp', ts );
+						body.append( 'args', args );
+
+						btn.disabled = true;
+						var row  = btn.closest( 'tr' );
+						var icon = btn.querySelector( '.dashicons' );
+						if ( icon ) {
+							icon.className = 'dashicons dashicons-update gdc-spin';
+							icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;display:inline-block;';
+						}
+
+						fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+							.then( function ( r ) { return r.json(); } )
+							.then(
+								function ( resp ) {
+									if ( resp.success && row ) {
+										row.style.transition = 'opacity 0.3s';
+										row.style.opacity    = '0';
+										setTimeout( function () { row.remove(); }, 320 );
+									} else {
+										btn.disabled = false;
+										if ( icon ) {
+											icon.className = 'dashicons dashicons-trash';
+											icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;';
+										}
+									}
+								}
+							)
+							.catch(
+								function () {
+									btn.disabled = false;
+									if ( icon ) {
+										icon.className = 'dashicons dashicons-trash';
+										icon.style.cssText = 'font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;';
+									}
+								}
+							);
+					}
+				);
+			}
+		);
 	}()
 );

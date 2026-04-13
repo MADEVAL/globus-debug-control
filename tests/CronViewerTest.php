@@ -515,4 +515,652 @@ final class CronViewerTest extends WordPressTestCase {
 		$this->assertSame( 'plugin', $source['type'] );
 		$this->assertSame( 'dir-priority-plugin', $source['slug'] );
 	}
+
+	// -----------------------------------------------------------------------
+	// get_cron_summary() tests
+	// -----------------------------------------------------------------------
+
+	public function testGetCronSummaryReturnsDefaultsWhenEmpty(): void {
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertFalse( $summary['cron_disabled'] );
+		$this->assertSame( 0, $summary['unique_hooks'] );
+		$this->assertSame( 0, $summary['overdue'] );
+		$this->assertSame( 0, $summary['orphans'] );
+		$this->assertSame( 0, $summary['duplicates'] );
+		$this->assertFalse( $summary['stuck_cron'] );
+		$this->assertNull( $summary['next_event'] );
+	}
+
+	public function testGetCronSummaryCountsUniqueHooks(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'hook_a' => [ 'x' => [ 'schedule' => 'daily', 'interval' => 86400, 'args' => [] ] ],
+				'hook_b' => [ 'y' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => [] ] ],
+			],
+		];
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertSame( 2, $summary['unique_hooks'] );
+		$this->assertSame( $ts, $summary['next_event'] );
+	}
+
+	public function testGetCronSummaryCountsOverdue(): void {
+		$past = time() - 7200;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$past => [
+				'overdue_hook' => [
+					'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+					'b' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+				],
+			],
+		];
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertSame( 2, $summary['overdue'] );
+	}
+
+	public function testGetCronSummaryCountsOrphans(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'orphan_hook_xyz_no_cb' => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ],
+			],
+		];
+		// Ensure no filter is registered for it.
+		unset( $GLOBALS['wp_filter']['orphan_hook_xyz_no_cb'] );
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertGreaterThanOrEqual( 1, $summary['orphans'] );
+	}
+
+	public function testGetCronSummaryCountsDuplicates(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'dup_hook' => [
+					'hash1' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => [] ],
+					'hash2' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => ['x'] ],
+				],
+			],
+		];
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertSame( 1, $summary['duplicates'] );
+	}
+
+	public function testGetCronSummaryDetectsStuckCron(): void {
+		$GLOBALS['gdc_test_state']['transients']['doing_cron'] = (string) ( time() - 700 );
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertTrue( $summary['stuck_cron'] );
+
+		$GLOBALS['gdc_test_state']['transients']['doing_cron'] = false;
+	}
+
+	public function testGetCronSummaryNotStuckWhenRecentCron(): void {
+		$GLOBALS['gdc_test_state']['transients']['doing_cron'] = (string) time();
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertFalse( $summary['stuck_cron'] );
+
+		$GLOBALS['gdc_test_state']['transients']['doing_cron'] = false;
+	}
+
+	public function testGetCronSummaryNextEventIsEarliest(): void {
+		$early = time() + 100;
+		$late  = time() + 9999;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$late  => [ 'h1' => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ] ],
+			$early => [ 'h2' => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ] ],
+		];
+
+		$summary = \GDC_Cron_Viewer::get_cron_summary();
+
+		$this->assertSame( $early, $summary['next_event'] );
+	}
+
+	// -----------------------------------------------------------------------
+	// get_cron_notices() tests
+	// -----------------------------------------------------------------------
+
+	public function testGetCronNoticesEmptyWhenClean(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => false,
+			'stuck_cron'     => false,
+			'orphans'        => 0,
+			'duplicates'     => 0,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$this->assertSame( [], $notices );
+	}
+
+	public function testGetCronNoticesDisabledCronAddsWarning(): void {
+		$summary = [
+			'cron_disabled'  => true,
+			'alternate_cron' => false,
+			'stuck_cron'     => false,
+			'orphans'        => 0,
+			'duplicates'     => 0,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'warning', $types );
+	}
+
+	public function testGetCronNoticesStuckCronAddsError(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => false,
+			'stuck_cron'     => true,
+			'orphans'        => 0,
+			'duplicates'     => 0,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'error', $types );
+	}
+
+	public function testGetCronNoticesOrphansAddsWarning(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => false,
+			'stuck_cron'     => false,
+			'orphans'        => 3,
+			'duplicates'     => 0,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'warning', $types );
+		// Message should contain the count.
+		$messages = array_column( $notices, 'message' );
+		$this->assertStringContainsString( '3', implode( ' ', $messages ) );
+	}
+
+	public function testGetCronNoticesDuplicatesAddsWarning(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => false,
+			'stuck_cron'     => false,
+			'orphans'        => 0,
+			'duplicates'     => 2,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'warning', $types );
+	}
+
+	public function testGetCronNoticesHighFrequencyHookAddsInfo(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => false,
+			'stuck_cron'     => false,
+			'orphans'        => 0,
+			'duplicates'     => 0,
+		];
+		$events = [
+			[
+				'hook'      => 'hyper_fast_hook',
+				'interval'  => 30,
+				'timestamp' => time() + 10,
+				'overdue'   => false,
+				'orphan'    => false,
+				'callbacks' => [],
+				'instances' => 1,
+			],
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( $events, $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'info', $types );
+	}
+
+	public function testGetCronNoticesAlternateCronAddsInfo(): void {
+		$summary = [
+			'cron_disabled'  => false,
+			'alternate_cron' => true,
+			'stuck_cron'     => false,
+			'orphans'        => 0,
+			'duplicates'     => 0,
+		];
+
+		$notices = \GDC_Cron_Viewer::get_cron_notices( [], $summary );
+
+		$types = array_column( $notices, 'type' );
+		$this->assertContains( 'info', $types );
+	}
+
+	// -----------------------------------------------------------------------
+	// get_cron_events() enriched fields
+	// -----------------------------------------------------------------------
+
+	public function testGetCronEventsAddsOrphanFlag(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'clearly_orphaned_hook_no_cb' => [
+					'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+				],
+			],
+		];
+		unset( $GLOBALS['wp_filter']['clearly_orphaned_hook_no_cb'] );
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertTrue( $events[0]['orphan'] );
+	}
+
+	public function testGetCronEventsNotOrphanWhenFilterExists(): void {
+		$ts   = time() + 3600;
+		$hook = 'gdc_has_filter_cron_hook';
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				$hook => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ],
+			],
+		];
+		$GLOBALS['wp_filter'][ $hook ] = [
+			10 => [ 'cb' => [ 'function' => 'var_dump', 'accepted_args' => 0 ] ],
+		];
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertFalse( $events[0]['orphan'] );
+		unset( $GLOBALS['wp_filter'][ $hook ] );
+	}
+
+	public function testGetCronEventsCallbacksField(): void {
+		$ts   = time() + 3600;
+		$hook = 'gdc_cb_field_test_hook';
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				$hook => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ],
+			],
+		];
+		$GLOBALS['wp_filter'][ $hook ] = [
+			10 => [ 'my_test_fn' => [ 'function' => 'var_dump', 'accepted_args' => 0 ] ],
+		];
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertIsArray( $events[0]['callbacks'] );
+		$this->assertNotEmpty( $events[0]['callbacks'] );
+		unset( $GLOBALS['wp_filter'][ $hook ] );
+	}
+
+	public function testGetCronEventsInstancesField(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'multi_instance_hook' => [
+					'hash1' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+					'hash2' => [ 'schedule' => '', 'interval' => 0, 'args' => ['x'] ],
+				],
+			],
+		];
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertSame( 2, $events[0]['instances'] );
+	}
+
+	// -----------------------------------------------------------------------
+	// collect_callbacks() and callable_label() tests
+	// -----------------------------------------------------------------------
+
+	public function testCollectCallbacksReturnsEmptyWhenNoFilter(): void {
+		$labels = \GDC_Cron_Viewer::collect_callbacks( 'no_filter_hook_xyz' );
+		$this->assertSame( [], $labels );
+	}
+
+	public function testCollectCallbacksReturnsFunctionLabel(): void {
+		$hook = 'gdc_collect_cb_test';
+		$GLOBALS['wp_filter'][ $hook ] = [
+			10 => [ 'fn' => [ 'function' => 'my_plain_function', 'accepted_args' => 0 ] ],
+		];
+
+		$labels = \GDC_Cron_Viewer::collect_callbacks( $hook );
+
+		$this->assertContains( 'my_plain_function()', $labels );
+		unset( $GLOBALS['wp_filter'][ $hook ] );
+	}
+
+	public function testCollectCallbacksDeduplicatesLabels(): void {
+		$hook = 'gdc_dedup_cb_test';
+		$GLOBALS['wp_filter'][ $hook ] = [
+			10 => [
+				'a' => [ 'function' => 'same_function', 'accepted_args' => 0 ],
+				'b' => [ 'function' => 'same_function', 'accepted_args' => 0 ],
+			],
+		];
+
+		$labels = \GDC_Cron_Viewer::collect_callbacks( $hook );
+
+		$this->assertCount( 1, $labels );
+		unset( $GLOBALS['wp_filter'][ $hook ] );
+	}
+
+	public function testCallableLabelForString(): void {
+		$this->assertSame( 'my_func()', \GDC_Cron_Viewer::callable_label( 'my_func' ) );
+	}
+
+	public function testCallableLabelForClosure(): void {
+		$this->assertSame( '{closure}', \GDC_Cron_Viewer::callable_label( static function () {} ) );
+	}
+
+	public function testCallableLabelForArrayMethod(): void {
+		$label = \GDC_Cron_Viewer::callable_label( [ 'MyClass', 'myMethod' ] );
+		$this->assertSame( 'MyClass::myMethod()', $label );
+	}
+
+	public function testCallableLabelForObjectMethod(): void {
+		$obj   = new \stdClass();
+		$label = \GDC_Cron_Viewer::callable_label( [ $obj, 'someMethod' ] );
+		$this->assertSame( 'stdClass::someMethod()', $label );
+	}
+
+	public function testCallableLabelForNullableUnknown(): void {
+		$this->assertNull( \GDC_Cron_Viewer::callable_label( 42 ) );
+	}
+
+	// -----------------------------------------------------------------------
+	// overdue_urgency() tests
+	// -----------------------------------------------------------------------
+
+	public function testOverdueUrgencyWarningForRecentOverdue(): void {
+		$ts = time() - 1800; // 30 min ago
+		$this->assertSame( 'warning', \GDC_Cron_Viewer::overdue_urgency( $ts ) );
+	}
+
+	public function testOverdueUrgencyErrorForSeveralHours(): void {
+		$ts = time() - 7200; // 2 h ago
+		$this->assertSame( 'error', \GDC_Cron_Viewer::overdue_urgency( $ts ) );
+	}
+
+	public function testOverdueUrgencyCriticalForMoreThanOneDay(): void {
+		$ts = time() - 90000; // >1 day
+		$this->assertSame( 'critical', \GDC_Cron_Viewer::overdue_urgency( $ts ) );
+	}
+
+	// -----------------------------------------------------------------------
+	// render() enriched output tests
+	// -----------------------------------------------------------------------
+
+	public function testRenderOutputsSummaryCards(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'render_summary_hook' => [
+					'a' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => [] ],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'gdc-cron-summary', $html );
+		$this->assertStringContainsString( 'WP-Cron', $html );
+		$this->assertStringContainsString( 'Events', $html );
+	}
+
+	public function testRenderOutputsActionsColumn(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'render_action_hook' => [
+					'a' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => [] ],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'gdc-cron-run', $html );
+		$this->assertStringContainsString( 'gdc-cron-delete', $html );
+		$this->assertStringContainsString( 'Actions', $html );
+	}
+
+	public function testRenderOutputsOrphanBadgeForOrphanedHook(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'render_orphan_hook_xyz_unique' => [
+					'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+				],
+			],
+		];
+		unset( $GLOBALS['wp_filter']['render_orphan_hook_xyz_unique'] );
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'gdc-badge-orphan', $html );
+		$this->assertStringContainsString( 'orphan', $html );
+	}
+
+	public function testRenderOutputsCallbackToggleWhenCallbackExists(): void {
+		$hook = 'render_cb_toggle_hook';
+		$ts   = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				$hook => [ 'a' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ] ],
+			],
+		];
+		$GLOBALS['wp_filter'][ $hook ] = [
+			10 => [ 'fn' => [ 'function' => 'some_cb_fn', 'accepted_args' => 0 ] ],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'gdc-cron-cb-toggle', $html );
+		$this->assertStringContainsString( 'gdc-cron-callbacks', $html );
+		unset( $GLOBALS['wp_filter'][ $hook ] );
+	}
+
+	public function testRenderOutputsInstancesBadgeForDuplicateHooks(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'dup_render_hook' => [
+					'h1' => [ 'schedule' => '', 'interval' => 0, 'args' => [] ],
+					'h2' => [ 'schedule' => '', 'interval' => 0, 'args' => ['y'] ],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( '&times;', $html );
+	}
+
+	public function testRenderIncludesNonceRunAndNonceDeleteInScript(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'nonce_test_hook' => [
+					'a' => [ 'schedule' => 'hourly', 'interval' => 3600, 'args' => [] ],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'nonceRun', $html );
+		$this->assertStringContainsString( 'nonceDelete', $html );
+	}
+
+	// -----------------------------------------------------------------------
+	// AJAX: run
+	// -----------------------------------------------------------------------
+
+	public function testAjaxCronRunTriggersDoAction(): void {
+		$_POST['hook'] = 'my_test_run_hook';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_run();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_success', $e->getMessage() );
+		}
+
+		$this->assertContains( 'my_test_run_hook', $GLOBALS['gdc_test_state']['did_action'] );
+		$resp = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue( $resp['success'] );
+		$this->assertSame( 'my_test_run_hook', $resp['data']['hook'] );
+	}
+
+	public function testAjaxCronRunRejectsEmptyHook(): void {
+		$_POST['hook'] = '!!!';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_run();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_error', $e->getMessage() );
+		}
+
+		$resp = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse( $resp['success'] );
+	}
+
+	public function testAjaxCronRunForbidsUnprivilegedUser(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+		$_POST['hook'] = 'some_hook';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_run();
+			$this->fail( 'Expected GDC_Test_WpDieException' );
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$GLOBALS['gdc_test_state']['current_user_can'] = true;
+			$resp = $GLOBALS['gdc_test_state']['json_response'];
+			$this->assertFalse( $resp['success'] );
+		}
+	}
+
+	public function testAjaxCronRunSanitisesHook(): void {
+		$_POST['hook'] = 'my/valid-hook.name_123';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_run();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_success', $e->getMessage() );
+		}
+
+		$this->assertContains( 'my/valid-hook.name_123', $GLOBALS['gdc_test_state']['did_action'] );
+	}
+
+	// -----------------------------------------------------------------------
+	// AJAX: delete
+	// -----------------------------------------------------------------------
+
+	public function testAjaxCronDeleteCallsWpUnscheduleEvent(): void {
+		$ts = time() + 3600;
+		$_POST['hook']      = 'delete_test_hook';
+		$_POST['timestamp'] = (string) $ts;
+		$_POST['args']      = '[]';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_success', $e->getMessage() );
+		}
+
+		$unscheduled = $GLOBALS['gdc_test_state']['unscheduled'];
+		$this->assertNotEmpty( $unscheduled );
+		$last = end( $unscheduled );
+		$this->assertSame( 'delete_test_hook', $last['hook'] );
+		$this->assertSame( $ts, $last['timestamp'] );
+	}
+
+	public function testAjaxCronDeleteRejectsEmptyHook(): void {
+		$_POST['hook']      = '   ';
+		$_POST['timestamp'] = (string) time();
+		$_POST['args']      = '[]';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_error', $e->getMessage() );
+		}
+
+		$resp = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse( $resp['success'] );
+	}
+
+	public function testAjaxCronDeleteForbidsUnprivilegedUser(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+		$_POST['hook']      = 'some_hook';
+		$_POST['timestamp'] = (string) time();
+		$_POST['args']      = '[]';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+			$this->fail( 'Expected GDC_Test_WpDieException' );
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$GLOBALS['gdc_test_state']['current_user_can'] = true;
+			$resp = $GLOBALS['gdc_test_state']['json_response'];
+			$this->assertFalse( $resp['success'] );
+		}
+	}
+
+	public function testAjaxCronDeleteReturnsErrorWhenUnscheduleFails(): void {
+		$GLOBALS['gdc_test_state']['unschedule_result'] = false;
+		$_POST['hook']      = 'fail_delete_hook';
+		$_POST['timestamp'] = (string) time();
+		$_POST['args']      = '[]';
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_error', $e->getMessage() );
+		}
+
+		$resp = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertFalse( $resp['success'] );
+		$GLOBALS['gdc_test_state']['unschedule_result'] = true;
+	}
+
+	public function testAjaxCronDeletePassesArgsFromPost(): void {
+		$ts   = time() + 3600;
+		$args = [ 'my_param' => 42 ];
+		$_POST['hook']      = 'args_delete_hook';
+		$_POST['timestamp'] = (string) $ts;
+		$_POST['args']      = wp_json_encode( $args );
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$this->assertSame( 'wp_send_json_success', $e->getMessage() );
+		}
+
+		$last = end( $GLOBALS['gdc_test_state']['unscheduled'] );
+		$this->assertSame( $args, $last['args'] );
+	}
 }

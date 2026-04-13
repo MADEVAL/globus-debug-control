@@ -75,6 +75,10 @@ function gdc_test_default_state(): array {
 		'admin_page_title' => 'GLOBUS Debug Control',
 		'doing_ajax' => false,
 		'json_request' => false,
+		'transients'  => [],
+		'did_action'  => [],
+		'unscheduled' => [],
+		'unschedule_result' => true,
 	];
 }
 
@@ -479,6 +483,32 @@ if (! function_exists('wp_doing_ajax')) {
 if (! function_exists('status_header')) {
 	function status_header(int $code, string $description = ''): void {
 		// no-op in tests
+	}
+}
+
+if (! function_exists('get_transient')) {
+	function get_transient(string $transient) {
+		return $GLOBALS['gdc_test_state']['transients'][ $transient ] ?? false;
+	}
+}
+
+if (! function_exists('set_transient')) {
+	function set_transient(string $transient, $value, int $expiration = 0): bool {
+		$GLOBALS['gdc_test_state']['transients'][ $transient ] = $value;
+		return true;
+	}
+}
+
+if (! function_exists('do_action')) {
+	function do_action(string $hook, ...$args): void {
+		$GLOBALS['gdc_test_state']['did_action'][] = $hook;
+	}
+}
+
+if (! function_exists('wp_unschedule_event')) {
+	function wp_unschedule_event(int $timestamp, string $hook, array $args = []): bool {
+		$GLOBALS['gdc_test_state']['unscheduled'][] = compact('timestamp', 'hook', 'args');
+		return $GLOBALS['gdc_test_state']['unschedule_result'] ?? true;
 	}
 }
 
