@@ -57,6 +57,12 @@ final class GDC_Constants_Viewer {
 		if ( null === $value ) {
 			return 'null';
 		}
+		if ( is_array( $value ) ) {
+			return 'array(' . count( $value ) . ')';
+		}
+		if ( is_object( $value ) ) {
+			return 'object(' . get_class( $value ) . ')';
+		}
 		return (string) $value;
 	}
 

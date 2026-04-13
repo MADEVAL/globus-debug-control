@@ -63,6 +63,18 @@ final class ConstantsViewerTest extends WordPressTestCase {
 		$this->assertSame('256', $result);
 	}
 
+	public function testFormatValueArray(): void {
+		$result = \GDC_Constants_Viewer::format_value('SOME_CONST', ['a', 'b', 'c'], []);
+
+		$this->assertSame('array(3)', $result);
+	}
+
+	public function testFormatValueObject(): void {
+		$result = \GDC_Constants_Viewer::format_value('SOME_CONST', new \stdClass(), []);
+
+		$this->assertSame('object(stdClass)', $result);
+	}
+
 	// -------------------------------------------------------------------------
 	// get_wp_constants()
 	// -------------------------------------------------------------------------
