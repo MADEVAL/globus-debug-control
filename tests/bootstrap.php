@@ -38,6 +38,7 @@ function gdc_test_ensure_runtime_dirs(): void {
 		gdc_test_runtime_root(),
 		WP_CONTENT_DIR,
 		WPMU_PLUGIN_DIR,
+		WP_PLUGIN_DIR,
 	];
 
 	foreach ($directories as $directory) {
@@ -80,6 +81,7 @@ function gdc_test_default_state(): array {
 function gdc_test_reset_state(): void {
 	$GLOBALS['gdc_test_state']  = gdc_test_default_state();
 	$GLOBALS['wp_filesystem']   = null;
+	$GLOBALS['wp_filter']       = [];
 	$_POST = [];
 	$_GET  = [];
 
@@ -97,6 +99,10 @@ if (! defined('WP_CONTENT_DIR')) {
 
 if (! defined('WPMU_PLUGIN_DIR')) {
 	define('WPMU_PLUGIN_DIR', WP_CONTENT_DIR . '/mu-plugins');
+}
+
+if (! defined('WP_PLUGIN_DIR')) {
+	define('WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins');
 }
 
 if (! defined('WP_UNINSTALL_PLUGIN')) {

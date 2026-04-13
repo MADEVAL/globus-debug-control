@@ -119,6 +119,39 @@
 	background-color: #fcf0f1 !important;
 }
 
+/* Cron source badges */
+
+.gdc-source-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 500;
+	max-width: 140px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
+.gdc-source-core {
+	background: #f0f6fc;
+	color: #135e96;
+	border: 1px solid #b8d3ee;
+}
+
+.gdc-source-plugin {
+	background: #edfaef;
+	color: #1a7c36;
+	border: 1px solid #a7d9aa;
+}
+
+.gdc-source-theme {
+	background: #fff4e5;
+	color: #7c4700;
+	border: 1px solid #f5c26b;
+}
+
 /* Log Viewer toolbar */
 
 .gdc-log-viewer {

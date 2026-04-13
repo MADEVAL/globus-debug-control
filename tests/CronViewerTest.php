@@ -4,6 +4,55 @@ declare(strict_types=1);
 namespace GDC\Tests;
 
 final class CronViewerTest extends WordPressTestCase {
+
+	/**
+	 * Creates real PHP callback files so ReflectionFunction can resolve their
+	 * paths against WP_PLUGIN_DIR, WP_CONTENT_DIR/themes, and ABSPATH.
+	 * Runs once before all tests in this class.
+	 */
+	public static function setUpBeforeClass(): void {
+		parent::setUpBeforeClass();
+
+		// Plugin callback.
+		$plugin_dir = WP_CONTENT_DIR . '/plugins/test-cron-plugin';
+		if ( ! is_dir( $plugin_dir ) ) {
+			mkdir( $plugin_dir, 0755, true );
+		}
+		$plugin_file = $plugin_dir . '/callbacks.php';
+		if ( ! file_exists( $plugin_file ) ) {
+			file_put_contents( $plugin_file, '<?php function gdc_test_cron_plugin_cb() {}' );
+		}
+		if ( ! function_exists( 'gdc_test_cron_plugin_cb' ) ) {
+			require_once $plugin_file;
+		}
+
+		// Theme callback.
+		$theme_dir = WP_CONTENT_DIR . '/themes/test-cron-theme';
+		if ( ! is_dir( $theme_dir ) ) {
+			mkdir( $theme_dir, 0755, true );
+		}
+		$theme_file = $theme_dir . '/callbacks.php';
+		if ( ! file_exists( $theme_file ) ) {
+			file_put_contents( $theme_file, '<?php function gdc_test_cron_theme_cb() {}' );
+		}
+		if ( ! function_exists( 'gdc_test_cron_theme_cb' ) ) {
+			require_once $theme_file;
+		}
+
+		// Core callback under ABSPATH/wp-includes.
+		$core_dir = rtrim( ABSPATH, '/\\' ) . '/wp-includes';
+		if ( ! is_dir( $core_dir ) ) {
+			mkdir( $core_dir, 0755, true );
+		}
+		$core_file = $core_dir . '/test-cron-core.php';
+		if ( ! file_exists( $core_file ) ) {
+			file_put_contents( $core_file, '<?php function gdc_test_cron_core_cb() {}' );
+		}
+		if ( ! function_exists( 'gdc_test_cron_core_cb' ) ) {
+			require_once $core_file;
+		}
+	}
+
 	public function testGetCronEventsReturnsEmptyArrayWhenNoCrons(): void {
 		$GLOBALS['gdc_test_state']['cron_array'] = [];
 
@@ -129,5 +178,157 @@ final class CronViewerTest extends WordPressTestCase {
 
 	public function testGetInlineStylesReturnsString(): void {
 		$this->assertIsString(\GDC_Cron_Viewer::get_inline_styles());
+	}
+
+	// -----------------------------------------------------------------------
+	// Source detection tests
+	// -----------------------------------------------------------------------
+
+	public function testResolveHookSourceReturnsUnknownWhenNoFilter(): void {
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'nonexistent_hook_xyz' );
+
+		$this->assertSame( 'unknown', $source['type'] );
+		$this->assertSame( '', $source['slug'] );
+	}
+
+	public function testResolveHookSourceDetectsPlugin(): void {
+		$GLOBALS['wp_filter']['gdc_test_plugin_cron'] = [
+			10 => [
+				'gdc_test_cron_plugin_cb' => [
+					'function'      => 'gdc_test_cron_plugin_cb',
+					'accepted_args' => 1,
+				],
+			],
+		];
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_test_plugin_cron' );
+
+		$this->assertSame( 'plugin', $source['type'] );
+		$this->assertSame( 'test-cron-plugin', $source['slug'] );
+		$this->assertSame( 'test-cron-plugin', $source['name'] );
+	}
+
+	public function testResolveHookSourceDetectsTheme(): void {
+		$GLOBALS['wp_filter']['gdc_test_theme_cron'] = [
+			10 => [
+				'gdc_test_cron_theme_cb' => [
+					'function'      => 'gdc_test_cron_theme_cb',
+					'accepted_args' => 1,
+				],
+			],
+		];
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_test_theme_cron' );
+
+		$this->assertSame( 'theme', $source['type'] );
+		$this->assertSame( 'test-cron-theme', $source['slug'] );
+		$this->assertSame( 'test-cron-theme', $source['name'] );
+	}
+
+	public function testResolveHookSourceDetectsCore(): void {
+		$GLOBALS['wp_filter']['gdc_test_core_cron'] = [
+			10 => [
+				'gdc_test_cron_core_cb' => [
+					'function'      => 'gdc_test_cron_core_cb',
+					'accepted_args' => 1,
+				],
+			],
+		];
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_test_core_cron' );
+
+		$this->assertSame( 'core', $source['type'] );
+		$this->assertSame( 'WordPress', $source['name'] );
+		$this->assertSame( 'core', $source['slug'] );
+	}
+
+	public function testResolveHookSourceWithClosureFromTestFileReturnsUnknown(): void {
+		// Closures defined in the test file itself are outside WP dirs → unknown.
+		$GLOBALS['wp_filter']['gdc_closure_cron'] = [
+			10 => [
+				'closure_id' => [
+					'function'      => static function () {},
+					'accepted_args' => 1,
+				],
+			],
+		];
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_closure_cron' );
+
+		$this->assertSame( 'unknown', $source['type'] );
+	}
+
+	public function testGetCronEventsIncludesSourceKey(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'wp_scheduled_delete' => [
+					'40cd750bba9870f18aada2478b24840a' => [
+						'schedule' => 'daily',
+						'interval' => 86400,
+						'args'     => [],
+					],
+				],
+			],
+		];
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertArrayHasKey( 'source', $events[0] );
+		$this->assertArrayHasKey( 'type', $events[0]['source'] );
+		$this->assertArrayHasKey( 'name', $events[0]['source'] );
+		$this->assertArrayHasKey( 'slug', $events[0]['source'] );
+	}
+
+	public function testRenderIncludesSourceColumnHeader(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'my_cron_hook' => [
+					'40cd750bba9870f18aada2478b24840a' => [
+						'schedule' => 'hourly',
+						'interval' => 3600,
+						'args'     => [],
+					],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'Source', $html );
+	}
+
+	public function testRenderShowsPluginBadgeForPluginCallback(): void {
+		$ts = time() + 600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'gdc_plugin_badge_hook' => [
+					'40cd750bba9870f18aada2478b24840a' => [
+						'schedule' => 'hourly',
+						'interval' => 3600,
+						'args'     => [],
+					],
+				],
+			],
+		];
+		$GLOBALS['wp_filter']['gdc_plugin_badge_hook'] = [
+			10 => [
+				'gdc_test_cron_plugin_cb' => [
+					'function'      => 'gdc_test_cron_plugin_cb',
+					'accepted_args' => 1,
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'gdc-source-badge', $html );
+		$this->assertStringContainsString( 'gdc-source-plugin', $html );
+		$this->assertStringContainsString( 'test-cron-plugin', $html );
 	}
 }
