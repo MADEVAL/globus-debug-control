@@ -80,6 +80,18 @@
 		// Log Viewer: Generate test error
 		var genBtn = document.getElementById( 'gdc-generate-error' );
 		if ( genBtn && typeof gdcLog !== 'undefined' ) {
+
+			// Suppress warning: show inline badge when selected type is suppressed by plugin settings.
+			var typeSelectEl   = document.getElementById( 'gdc-error-type' );
+			var suppressWarnEl = document.getElementById( 'gdc-suppress-warn' );
+			if ( typeSelectEl && suppressWarnEl && gdcLog.suppressedTypes ) {
+				function updateSuppressWarn() {
+					suppressWarnEl.hidden = gdcLog.suppressedTypes.indexOf( typeSelectEl.value ) === -1;
+				}
+				typeSelectEl.addEventListener( 'change', updateSuppressWarn );
+				updateSuppressWarn();
+			}
+
 			genBtn.addEventListener(
 				'click',
 				function () {

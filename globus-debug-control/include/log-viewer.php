@@ -106,6 +106,27 @@ final class GDC_Log_Viewer {
 	}
 
 	/**
+	 * Returns the list of error type keys that are currently suppressed by plugin settings.
+	 *
+	 * @return string[] E.g. ['notice', 'deprecated'].
+	 */
+	public static function get_suppressed_types(): array {
+		$opts = Globus_Debug_Control::instance()->get_options();
+		$map  = array(
+			'notice'     => 'suppress_notices',
+			'warning'    => 'suppress_warnings',
+			'deprecated' => 'suppress_deprecated',
+		);
+		$suppressed = array();
+		foreach ( $map as $type => $opt_key ) {
+			if ( ! empty( $opts[ $opt_key ] ) ) {
+				$suppressed[] = $type;
+			}
+		}
+		return $suppressed;
+	}
+
+	/**
 	 * Registers AJAX action hooks for the log viewer.
 	 */
 	public static function register_ajax_hooks(): void {
@@ -213,9 +234,10 @@ final class GDC_Log_Viewer {
 		<?php
 		echo wp_json_encode(
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( self::NONCE_GENERATE ),
-				'mtime'   => $mtime,
+				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+				'nonce'          => wp_create_nonce( self::NONCE_GENERATE ),
+				'mtime'          => $mtime,
+				'suppressedTypes' => self::get_suppressed_types(),
 			)
 		);
 		?>
@@ -277,6 +299,9 @@ final class GDC_Log_Viewer {
 						<option value="fatal">Fatal Error (sim.)</option>
 						<option value="parse">Parse Error (sim.)</option>
 					</select>
+					<span id="gdc-suppress-warn" class="gdc-suppress-warn" hidden>
+						<span class="dashicons dashicons-warning"></span><?php esc_html_e( 'suppressed', 'globus-debug-control' ); ?>
+					</span>
 						<button type="button" id="gdc-generate-error" class="button button-secondary">
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>

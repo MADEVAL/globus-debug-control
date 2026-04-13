@@ -474,4 +474,121 @@ final class LogViewerTest extends WordPressTestCase {
 			$this->assertStringContainsString('value="' . $type . '"', $html, "Missing option for type: $type");
 		}
 	}
+
+	// -------------------------------------------------------------------------
+	// get_suppressed_types()
+	// -------------------------------------------------------------------------
+
+	public function testGetSuppressedTypesDefaultsToNoticesAndDeprecated(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'suppress_notices'    => 1,
+			'suppress_warnings'   => 0,
+			'suppress_deprecated' => 1,
+		]);
+
+		$types = \GDC_Log_Viewer::get_suppressed_types();
+
+		$this->assertContains('notice', $types);
+		$this->assertContains('deprecated', $types);
+		$this->assertNotContains('warning', $types);
+	}
+
+	public function testGetSuppressedTypesIncludesWarningWhenEnabled(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'suppress_notices'    => 0,
+			'suppress_warnings'   => 1,
+			'suppress_deprecated' => 0,
+		]);
+
+		$types = \GDC_Log_Viewer::get_suppressed_types();
+
+		$this->assertSame(['warning'], $types);
+	}
+
+	public function testGetSuppressedTypesReturnsEmptyWhenNothingSuppressed(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'suppress_notices'    => 0,
+			'suppress_warnings'   => 0,
+			'suppress_deprecated' => 0,
+		]);
+
+		$this->assertSame([], \GDC_Log_Viewer::get_suppressed_types());
+	}
+
+	public function testGetSuppressedTypesAllThreeSuppressed(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'suppress_notices'    => 1,
+			'suppress_warnings'   => 1,
+			'suppress_deprecated' => 1,
+		]);
+
+		$types = \GDC_Log_Viewer::get_suppressed_types();
+
+		$this->assertContains('notice', $types);
+		$this->assertContains('warning', $types);
+		$this->assertContains('deprecated', $types);
+		$this->assertCount(3, $types);
+	}
+
+	public function testGetSuppressedTypesNeverIncludesNonTriggerTypes(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'suppress_notices'    => 1,
+			'suppress_warnings'   => 1,
+			'suppress_deprecated' => 1,
+		]);
+
+		$types = \GDC_Log_Viewer::get_suppressed_types();
+
+		foreach (['error', 'exception', 'fatal', 'parse'] as $type) {
+			$this->assertNotContains($type, $types, "Type '$type' must never appear in suppressed list");
+		}
+	}
+
+	public function testRenderEmbedsSuppressedTypesInScript(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'log_enabled'         => 1,
+			'log_path'            => '',
+			'suppress_notices'    => 1,
+			'suppress_warnings'   => 0,
+			'suppress_deprecated' => 1,
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('"suppressedTypes"', $html);
+		$this->assertMatchesRegularExpression('/"suppressedTypes"\s*:\s*\[/', $html);
+	}
+
+	public function testRenderOutputsSuppressWarnSpanAlways(): void {
+		$this->refreshOptions([
+			'enabled'             => 1,
+			'log_enabled'         => 1,
+			'log_path'            => '',
+			'suppress_notices'    => 1,
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-suppress-warn', $html);
+	}
 }
