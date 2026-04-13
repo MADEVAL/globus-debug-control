@@ -498,7 +498,7 @@ final class CronViewerTest extends WordPressTestCase {
 	}
 
 	public function testResolveHookSourcePrefersDirPluginOverRootFile(): void {
-		// Both a subdirectory plugin and a root file contain the hook — the
+		// Both a subdirectory plugin and a root file contain the hook - the
 		// subdirectory (higher priority in scan order) must win.
 		$dir = WP_CONTENT_DIR . '/plugins/dir-priority-plugin';
 		if ( ! is_dir( $dir ) ) {

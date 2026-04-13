@@ -276,10 +276,10 @@ final class GDC_Cron_Viewer {
 	 *
 	 * Each event array includes:
 	 *   - timestamp, hook, schedule, interval, args (standard)
-	 *   - overdue    bool  — event is more than 60 s past its scheduled time
-	 *   - orphan     bool  — no registered callback AND hook not found in files
-	 *   - callbacks  string[] — human-readable callable labels from $wp_filter
-	 *   - instances  int   — number of scheduled instances of this hook (deduped key = hook+args)
+	 *   - overdue    bool  - event is more than 60 s past its scheduled time
+	 *   - orphan     bool  - no registered callback AND hook not found in files
+	 *   - callbacks  string[] - human-readable callable labels from $wp_filter
+	 *   - instances  int   - number of scheduled instances of this hook (deduped key = hook+args)
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -416,7 +416,7 @@ final class GDC_Cron_Viewer {
 			$notices[] = array(
 				'type'    => 'warning',
 				'icon'    => 'warning',
-				'message' => __( 'DISABLE_WP_CRON is true — WP-Cron will not fire automatically on page load. Make sure a real system cron job is configured.', 'globus-debug-control' ),
+				'message' => __( 'DISABLE_WP_CRON is true - WP-Cron will not fire automatically on page load. Make sure a real system cron job is configured.', 'globus-debug-control' ),
 			);
 		}
 
@@ -424,7 +424,7 @@ final class GDC_Cron_Viewer {
 			$notices[] = array(
 				'type'    => 'info',
 				'icon'    => 'info',
-				'message' => __( 'ALTERNATE_WP_CRON is true — cron runs via a redirect instead of a non-blocking HTTP call.', 'globus-debug-control' ),
+				'message' => __( 'ALTERNATE_WP_CRON is true - cron runs via a redirect instead of a non-blocking HTTP call.', 'globus-debug-control' ),
 			);
 		}
 
@@ -432,7 +432,7 @@ final class GDC_Cron_Viewer {
 			$notices[] = array(
 				'type'    => 'error',
 				'icon'    => 'lock',
-				'message' => __( 'The doing_cron transient is older than 10 minutes — WP-Cron appears to be stuck. Consider clearing it.', 'globus-debug-control' ),
+				'message' => __( 'The doing_cron transient is older than 10 minutes - WP-Cron appears to be stuck. Consider clearing it.', 'globus-debug-control' ),
 			);
 		}
 
@@ -443,8 +443,8 @@ final class GDC_Cron_Viewer {
 				/* translators: %d: number of orphaned hooks */
 				'message' => sprintf(
 					_n(
-						'%d orphaned cron hook found — its plugin may have been deactivated without cleaning up.',
-						'%d orphaned cron hooks found — their plugins may have been deactivated without cleaning up.',
+						'%d orphaned cron hook found - its plugin may have been deactivated without cleaning up.',
+						'%d orphaned cron hooks found - their plugins may have been deactivated without cleaning up.',
 						$summary['orphans'],
 						'globus-debug-control'
 					),
@@ -482,7 +482,7 @@ final class GDC_Cron_Viewer {
 						$event['hook']
 					),
 				);
-				break; // one notice is enough — let the table show the rest.
+				break; // one notice is enough - let the table show the rest.
 			}
 		}
 
@@ -657,7 +657,7 @@ final class GDC_Cron_Viewer {
 	/**
 	 * AJAX handler: resolves source info for a list of cron hook names.
 	 *
-	 * Accepts POST param `hooks[]` — an array of hook name strings.
+	 * Accepts POST param `hooks[]` - an array of hook name strings.
 	 * Returns a JSON object keyed by hook name, value is the source descriptor.
 	 */
 	public static function ajax_cron_sources(): void {
@@ -884,7 +884,7 @@ final class GDC_Cron_Viewer {
 
 		return array(
 			'type' => 'unknown',
-			'name' => '—',
+			'name' => '-',
 			'slug' => '',
 		);
 	}
@@ -937,7 +937,7 @@ final class GDC_Cron_Viewer {
 
 		$result         = $found ?? array(
 			'type' => 'unknown',
-			'name' => '—',
+			'name' => '-',
 			'slug' => '',
 		);
 		$cache[ $hook ] = $result;
