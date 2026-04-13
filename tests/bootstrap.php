@@ -476,6 +476,12 @@ if (! function_exists('wp_doing_ajax')) {
 	}
 }
 
+if (! function_exists('status_header')) {
+	function status_header(int $code, string $description = ''): void {
+		// no-op in tests
+	}
+}
+
 if (! function_exists('wp_is_json_request')) {
 	function wp_is_json_request(): bool {
 		return (bool) $GLOBALS['gdc_test_state']['json_request'];

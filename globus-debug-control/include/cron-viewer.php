@@ -151,6 +151,7 @@ final class GDC_Cron_Viewer {
 	 */
 	public static function register_ajax_hooks(): void {
 		add_action( 'wp_ajax_gdc_cron_sources', array( self::class, 'ajax_cron_sources' ) );
+		add_action( 'wp_ajax_gdc_cron_sources_stream', array( self::class, 'ajax_cron_sources_stream' ) );
 	}
 
 	/**
@@ -180,6 +181,64 @@ final class GDC_Cron_Viewer {
 		}
 
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * AJAX handler: streams source info for cron hook names as NDJSON.
+	 *
+	 * Each resolved hook is written to output immediately so the browser can
+	 * update individual cells as results arrive, without waiting for the full batch.
+	 */
+	public static function ajax_cron_sources_stream(): void {
+		check_ajax_referer( self::NONCE_SOURCES );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			status_header( 403 );
+			wp_die( 'Forbidden' );
+		}
+
+		$raw = isset( $_POST['hooks'] ) && is_array( $_POST['hooks'] )
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			? wp_unslash( $_POST['hooks'] )
+			: array();
+
+		// End any output buffering so each line reaches the client immediately.
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
+		}
+
+		header( 'Content-Type: application/x-ndjson; charset=utf-8' );
+		header( 'X-Accel-Buffering: no' ); // Prevent nginx from buffering.
+		header( 'Cache-Control: no-store, no-cache, must-revalidate' );
+
+		self::output_cron_sources_stream( $raw );
+
+		wp_die();
+	}
+
+	/**
+	 * Outputs resolved hook sources as NDJSON lines, flushing after each.
+	 *
+	 * Extracted as a public method so the streaming logic can be tested
+	 * independently of the HTTP-header and output-buffer handling.
+	 *
+	 * @param array<mixed> $raw_hooks Unsanitised hook name values from the request.
+	 */
+	public static function output_cron_sources_stream( array $raw_hooks ): void {
+		foreach ( $raw_hooks as $hook ) {
+			$hook = preg_replace( '/[^a-zA-Z0-9_\-\/\.]/', '', substr( (string) $hook, 0, 200 ) );
+			if ( '' === $hook ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo wp_json_encode(
+				array(
+					'hook'   => $hook,
+					'source' => self::resolve_hook_source( $hook ),
+				)
+			) . "\n";
+			flush();
+		}
 	}
 
 	/**
@@ -358,7 +417,9 @@ final class GDC_Cron_Viewer {
 		$abspath     = rtrim( str_replace( '\\', '/', ABSPATH ), '/' );
 
 		$found = self::scan_slug_dirs( $hook, $plugins_dir, 'plugin' )
+			?? self::scan_root_php_files( $hook, $plugins_dir, 'plugin' )
 			?? self::scan_slug_dirs( $hook, $mu_dir, 'plugin', true )
+			?? self::scan_root_php_files( $hook, $mu_dir, 'plugin' )
 			?? self::scan_slug_dirs( $hook, $themes_dir, 'theme' );
 
 		if ( null === $found ) {
@@ -410,6 +471,39 @@ final class GDC_Cron_Viewer {
 				return array(
 					'type' => $type,
 					'name' => $mu ? $slug . ' (mu)' : $slug,
+					'slug' => $slug,
+				);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Scans single PHP files at the immediate root of $base_dir (e.g. plugins/*.php)
+	 * for the hook name literal, returning a source descriptor on first match.
+	 *
+	 * Handles plugins distributed as a single file rather than inside a sub-directory.
+	 *
+	 * @param string $hook     Hook name to search for.
+	 * @param string $base_dir Absolute path to the base directory.
+	 * @param string $type     'plugin' or 'theme'.
+	 * @return array{type: string, name: string, slug: string}|null
+	 */
+	private static function scan_root_php_files( string $hook, string $base_dir, string $type ): ?array {
+		if ( ! is_dir( $base_dir ) ) {
+			return null;
+		}
+
+		$php_files = glob( rtrim( $base_dir, '/' ) . '/*.php' ) ?: array();
+		foreach ( $php_files as $file ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$contents = file_get_contents( $file );
+			if ( false !== $contents && false !== strpos( $contents, $hook ) ) {
+				$slug = basename( $file, '.php' );
+				return array(
+					'type' => $type,
+					'name' => $slug,
 					'slug' => $slug,
 				);
 			}

@@ -395,4 +395,124 @@ final class CronViewerTest extends WordPressTestCase {
 
 		$this->assertSame( 'unknown', $source['type'] );
 	}
+
+	// -----------------------------------------------------------------------
+	// Streaming NDJSON output tests
+	// -----------------------------------------------------------------------
+
+	public function testOutputCronSourcesStreamEmitsOneLinePerHook(): void {
+		$dir = WP_CONTENT_DIR . '/plugins/stream-scan-plugin';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/main.php', "<?php\nadd_action( 'stream_scan_cron_hook', 'cb' );\n" );
+
+		ob_start();
+		\GDC_Cron_Viewer::output_cron_sources_stream( array( 'stream_scan_cron_hook', 'stream_unknown_cron_xyz' ) );
+		$output = ob_get_clean();
+
+		$lines = array_values( array_filter( explode( "\n", $output ) ) );
+		$this->assertCount( 2, $lines );
+
+		$first = json_decode( $lines[0], true );
+		$this->assertSame( 'stream_scan_cron_hook', $first['hook'] );
+		$this->assertSame( 'plugin', $first['source']['type'] );
+		$this->assertSame( 'stream-scan-plugin', $first['source']['slug'] );
+
+		$second = json_decode( $lines[1], true );
+		$this->assertSame( 'stream_unknown_cron_xyz', $second['hook'] );
+		$this->assertSame( 'unknown', $second['source']['type'] );
+	}
+
+	public function testOutputCronSourcesStreamSkipsHooksThatSanitiseToEmpty(): void {
+		ob_start();
+		\GDC_Cron_Viewer::output_cron_sources_stream( array( '!!!', '' ) );
+		$output = ob_get_clean();
+
+		$this->assertSame( '', trim( $output ) );
+	}
+
+	public function testOutputCronSourcesStreamEmptyArrayProducesNoOutput(): void {
+		ob_start();
+		\GDC_Cron_Viewer::output_cron_sources_stream( array() );
+		$output = ob_get_clean();
+
+		$this->assertSame( '', $output );
+	}
+
+	public function testAjaxCronSourcesStreamThrowsWpDieOnCompletion(): void {
+		$_POST['hooks'] = array( 'stream_handler_nonexistent_xyz' );
+		$ob_level       = ob_get_level();
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_sources_stream();
+			$this->fail( 'Expected GDC_Test_WpDieException' );
+		} catch ( \GDC_Test_WpDieException $e ) {
+			// Restore any output buffer levels closed by the handler.
+			while ( ob_get_level() < $ob_level ) {
+				ob_start();
+			}
+			$this->assertSame( '', $e->getMessage() );
+		}
+	}
+
+	public function testAjaxCronSourcesStreamForbidsUnprivilegedUser(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+		$_POST['hooks'] = array( 'some_hook' );
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_sources_stream();
+			$this->fail( 'Expected GDC_Test_WpDieException' );
+		} catch ( \GDC_Test_WpDieException $e ) {
+			$GLOBALS['gdc_test_state']['current_user_can'] = true;
+			$this->assertSame( 'Forbidden', $e->getMessage() );
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Single-file plugin / mu-plugin root scan tests
+	// -----------------------------------------------------------------------
+
+	public function testResolveHookSourceFindsSingleFilePlugin(): void {
+		file_put_contents(
+			WP_PLUGIN_DIR . '/singlefile-cron-plugin.php',
+			"<?php\n// wp_schedule_event( time(), 'hourly', 'singlefile_cronjob_hook' );\n"
+		);
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'singlefile_cronjob_hook' );
+
+		$this->assertSame( 'plugin', $source['type'] );
+		$this->assertSame( 'singlefile-cron-plugin', $source['slug'] );
+	}
+
+	public function testResolveHookSourceFindsSingleFileMuPlugin(): void {
+		file_put_contents(
+			WPMU_PLUGIN_DIR . '/mu-singlefile-cron.php',
+			"<?php\nwp_schedule_event( time(), 'daily', 'mu_singlefile_cron_task' );\n"
+		);
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'mu_singlefile_cron_task' );
+
+		$this->assertSame( 'plugin', $source['type'] );
+		$this->assertSame( 'mu-singlefile-cron', $source['slug'] );
+	}
+
+	public function testResolveHookSourcePrefersDirPluginOverRootFile(): void {
+		// Both a subdirectory plugin and a root file contain the hook — the
+		// subdirectory (higher priority in scan order) must win.
+		$dir = WP_CONTENT_DIR . '/plugins/dir-priority-plugin';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/main.php', "<?php\nadd_action( 'priority_test_cron_hook', 'cb' );\n" );
+		file_put_contents(
+			WP_PLUGIN_DIR . '/root-priority-plugin.php',
+			"<?php\nadd_action( 'priority_test_cron_hook', 'cb2' );\n"
+		);
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'priority_test_cron_hook' );
+
+		$this->assertSame( 'plugin', $source['type'] );
+		$this->assertSame( 'dir-priority-plugin', $source['slug'] );
+	}
 }

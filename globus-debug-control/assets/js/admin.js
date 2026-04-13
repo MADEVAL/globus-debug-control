@@ -128,7 +128,9 @@
 			}
 		}
 
-		// Cron Viewer: lazy-load Source column via AJAX
+		// Cron Viewer: lazy-load Source column via streaming NDJSON.
+		// Each hook result is rendered as soon as the server resolves it, so
+		// only slow hooks keep their spinner while fast ones update immediately.
 		var cronCells = document.querySelectorAll( '.gdc-cron-source[data-hook]' );
 		if ( cronCells.length && typeof gdcCron !== 'undefined' ) {
 			var hooks = [];
@@ -141,41 +143,76 @@
 				}
 			);
 
-			var body = new FormData();
-			body.append( 'action', 'gdc_cron_sources' );
-			body.append( '_ajax_nonce', gdcCron.nonce );
-			hooks.forEach( function ( h ) { body.append( 'hooks[]', h ); } );
-
-			fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
-				.then( function ( r ) { return r.json(); } )
-				.then(
-					function ( resp ) {
-						cronCells.forEach(
-							function ( td ) {
-								var hook = td.getAttribute( 'data-hook' );
-								var src  = resp.success && resp.data ? resp.data[ hook ] : null;
-								if ( ! src || 'unknown' === src.type ) {
-									td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>';
-								} else if ( 'core' === src.type ) {
-									td.innerHTML = '<span class="gdc-source-badge gdc-source-core">WordPress</span>';
-								} else if ( 'plugin' === src.type ) {
-									td.innerHTML = '<span class="gdc-source-badge gdc-source-plugin" title="' +
-										src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
-								} else if ( 'theme' === src.type ) {
-									td.innerHTML = '<span class="gdc-source-badge gdc-source-theme" title="' +
-										src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
-								}
-							}
-						);
-					}
-				)
-				.catch(
-					function () {
-						cronCells.forEach(
-							function ( td ) { td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>'; }
-						);
+			function renderCronSource( hook, src ) {
+				cronCells.forEach(
+					function ( td ) {
+						if ( td.getAttribute( 'data-hook' ) !== hook ) {
+							return;
+						}
+						if ( ! src || 'unknown' === src.type ) {
+							td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>';
+						} else if ( 'core' === src.type ) {
+							td.innerHTML = '<span class="gdc-source-badge gdc-source-core">WordPress</span>';
+						} else if ( 'plugin' === src.type ) {
+							td.innerHTML = '<span class="gdc-source-badge gdc-source-plugin" title="' +
+								src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
+						} else if ( 'theme' === src.type ) {
+							td.innerHTML = '<span class="gdc-source-badge gdc-source-theme" title="' +
+								src.slug.replace( /"/g, '&quot;' ) + '">' + src.name + '</span>';
+						}
 					}
 				);
+			}
+
+			function clearSourceSpinners() {
+				cronCells.forEach(
+					function ( td ) { td.innerHTML = '<span class="gdc-text-muted">&mdash;</span>'; }
+				);
+			}
+
+			var cronBody = new FormData();
+			cronBody.append( 'action', 'gdc_cron_sources_stream' );
+			cronBody.append( '_ajax_nonce', gdcCron.nonce );
+			hooks.forEach( function ( h ) { cronBody.append( 'hooks[]', h ); } );
+
+			fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: cronBody } )
+				.then(
+					function ( response ) {
+						var reader  = response.body.getReader();
+						var decoder = new TextDecoder();
+						var buf     = '';
+
+						function pump() {
+							return reader.read().then(
+								function ( chunk ) {
+									if ( chunk.done ) {
+										return;
+									}
+									buf += decoder.decode( chunk.value, { stream: true } );
+									var lines = buf.split( '\n' );
+									buf = lines.pop();
+									lines.forEach(
+										function ( line ) {
+											line = line.trim();
+											if ( ! line ) {
+												return;
+											}
+											try {
+												var item = JSON.parse( line );
+												if ( item.hook ) {
+													renderCronSource( item.hook, item.source );
+												}
+											} catch ( e ) {}
+										}
+									);
+									return pump();
+								}
+							);
+						}
+						return pump();
+					}
+				)
+				.catch( clearSourceSpinners );
 		}
 	}()
 );
