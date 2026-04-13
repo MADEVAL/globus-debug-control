@@ -157,11 +157,7 @@ final class GDC_Cron_Viewer {
 		global $wp_filter;
 
 		if ( empty( $wp_filter[ $hook ] ) ) {
-			return array(
-				'type' => 'unknown',
-				'name' => '—',
-				'slug' => '',
-			);
+			return self::find_hook_in_files( $hook );
 		}
 
 		$filter_entry  = $wp_filter[ $hook ];
@@ -192,11 +188,7 @@ final class GDC_Cron_Viewer {
 		}
 
 		if ( empty( $sources ) ) {
-			return array(
-				'type' => 'unknown',
-				'name' => '—',
-				'slug' => '',
-			);
+			return self::find_hook_in_files( $hook );
 		}
 
 		uasort(
@@ -298,6 +290,124 @@ final class GDC_Cron_Viewer {
 			'name' => '—',
 			'slug' => '',
 		);
+	}
+
+	/**
+	 * Fallback source detection when no callbacks are registered in $wp_filter.
+	 *
+	 * Scans PHP files in plugin, theme, and WordPress core directories for the
+	 * hook name string. Results are cached per request via a static variable to
+	 * avoid repeated disk scans for the same hook.
+	 *
+	 * @param string $hook Hook name to search for in file contents.
+	 * @return array{type: string, name: string, slug: string}
+	 */
+	private static function find_hook_in_files( string $hook ): array {
+		static $cache = array();
+
+		if ( array_key_exists( $hook, $cache ) ) {
+			return $cache[ $hook ];
+		}
+
+		$content_dir = rtrim( str_replace( '\\', '/', WP_CONTENT_DIR ), '/' );
+		$plugins_dir = defined( 'WP_PLUGIN_DIR' )
+			? rtrim( str_replace( '\\', '/', WP_PLUGIN_DIR ), '/' )
+			: $content_dir . '/plugins';
+		$mu_dir      = defined( 'WPMU_PLUGIN_DIR' )
+			? rtrim( str_replace( '\\', '/', WPMU_PLUGIN_DIR ), '/' )
+			: $content_dir . '/mu-plugins';
+		$themes_dir  = $content_dir . '/themes';
+		$abspath     = rtrim( str_replace( '\\', '/', ABSPATH ), '/' );
+
+		$found = self::scan_slug_dirs( $hook, $plugins_dir, 'plugin' )
+			?? self::scan_slug_dirs( $hook, $mu_dir, 'plugin', true )
+			?? self::scan_slug_dirs( $hook, $themes_dir, 'theme' );
+
+		if ( null === $found ) {
+			foreach ( array( $abspath . '/wp-includes', $abspath . '/wp-admin' ) as $core_dir ) {
+				if ( self::hook_string_in_tree( $hook, $core_dir ) ) {
+					$found = array(
+						'type' => 'core',
+						'name' => 'WordPress',
+						'slug' => 'core',
+					);
+					break;
+				}
+			}
+		}
+
+		$result         = $found ?? array(
+			'type' => 'unknown',
+			'name' => '—',
+			'slug' => '',
+		);
+		$cache[ $hook ] = $result;
+		return $result;
+	}
+
+	/**
+	 * Iterates the immediate subdirectories of $base_dir (plugin or theme slugs),
+	 * returning a source descriptor for the first slug directory whose PHP file
+	 * tree contains the hook name as a literal string.
+	 *
+	 * @param string $hook     Hook name to search for.
+	 * @param string $base_dir Absolute path to the plugins or themes base directory.
+	 * @param string $type     'plugin' or 'theme'.
+	 * @param bool   $mu       Whether the directory is the must-use-plugins directory.
+	 * @return array{type: string, name: string, slug: string}|null
+	 */
+	private static function scan_slug_dirs( string $hook, string $base_dir, string $type, bool $mu = false ): ?array {
+		if ( ! is_dir( $base_dir ) ) {
+			return null;
+		}
+
+		$slug_dirs = glob( rtrim( $base_dir, '/' ) . '/*', GLOB_ONLYDIR );
+		if ( ! $slug_dirs ) {
+			return null;
+		}
+
+		foreach ( $slug_dirs as $slug_dir ) {
+			if ( self::hook_string_in_tree( $hook, $slug_dir ) ) {
+				$slug = basename( $slug_dir );
+				return array(
+					'type' => $type,
+					'name' => $mu ? $slug . ' (mu)' : $slug,
+					'slug' => $slug,
+				);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns true when at least one PHP file in the given directory tree
+	 * contains the hook name as a literal substring.
+	 *
+	 * @param string $hook Hook name string to search for.
+	 * @param string $dir  Absolute path to the directory to scan.
+	 * @return bool
+	 */
+	private static function hook_string_in_tree( string $hook, string $dir ): bool {
+		if ( ! is_dir( $dir ) ) {
+			return false;
+		}
+
+		$it = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator( $dir, \RecursiveDirectoryIterator::SKIP_DOTS )
+		);
+		foreach ( $it as $php_file ) {
+			if ( ! $php_file->isFile() || 'php' !== $php_file->getExtension() ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$contents = file_get_contents( $php_file->getPathname() );
+			if ( false !== $contents && false !== strpos( $contents, $hook ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

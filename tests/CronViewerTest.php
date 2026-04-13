@@ -331,4 +331,55 @@ final class CronViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString( 'gdc-source-plugin', $html );
 		$this->assertStringContainsString( 'test-cron-plugin', $html );
 	}
+
+	// -----------------------------------------------------------------------
+	// File-scan fallback tests (hook not in $wp_filter at runtime)
+	// -----------------------------------------------------------------------
+
+	public function testResolveHookSourceFallsBackToFilesForPlugin(): void {
+		// setUp() purges WP_CONTENT_DIR; recreate the plugin directory and a PHP
+		// file that contains the hook name as a string literal.
+		$dir = WP_CONTENT_DIR . '/plugins/test-cron-plugin';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/main.php', "<?php\nadd_action( 'gdc_scan_plugin_hook', 'gdc_test_cron_plugin_cb' );\n" );
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_scan_plugin_hook' );
+
+		$this->assertSame( 'plugin', $source['type'] );
+		$this->assertSame( 'test-cron-plugin', $source['slug'] );
+	}
+
+	public function testResolveHookSourceFallsBackToFilesForTheme(): void {
+		$dir = WP_CONTENT_DIR . '/themes/test-cron-theme';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/functions.php', "<?php\nadd_action( 'gdc_scan_theme_hook', 'gdc_test_cron_theme_cb' );\n" );
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_scan_theme_hook' );
+
+		$this->assertSame( 'theme', $source['type'] );
+		$this->assertSame( 'test-cron-theme', $source['slug'] );
+	}
+
+	public function testResolveHookSourceFallsBackToFilesForCore(): void {
+		$dir = rtrim( ABSPATH, '/\\' ) . '/wp-includes';
+		if ( ! is_dir( $dir ) ) {
+			mkdir( $dir, 0755, true );
+		}
+		file_put_contents( $dir . '/cron-hooks.php', "<?php\n// gdc_scan_core_hook handler.\nfunction wp_gdc_scan_core_handler() {}\nadd_action( 'gdc_scan_core_hook', 'wp_gdc_scan_core_handler' );\n" );
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_scan_core_hook' );
+
+		$this->assertSame( 'core', $source['type'] );
+		$this->assertSame( 'WordPress', $source['name'] );
+	}
+
+	public function testResolveHookSourceRemainsUnknownWhenNotInFilesEither(): void {
+		$source = \GDC_Cron_Viewer::resolve_hook_source( 'gdc_completely_nonexistent_xyz_abc_cron' );
+
+		$this->assertSame( 'unknown', $source['type'] );
+	}
 }
