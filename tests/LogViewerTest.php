@@ -330,7 +330,7 @@ final class LogViewerTest extends WordPressTestCase {
 
 	public function testAjaxGenerateErrorRejectsInvalidType(): void {
 		$this->refreshOptions(['enabled' => 1]);
-		$_POST['type']        = 'fatal';
+		$_POST['type']        = 'invalid_type';
 		$_POST['_ajax_nonce'] = 'test_nonce';
 
 		try {
@@ -354,5 +354,124 @@ final class LogViewerTest extends WordPressTestCase {
 
 		$response = $GLOBALS['gdc_test_state']['json_response'];
 		$this->assertFalse($response['success']);
+	}
+
+	public function testAjaxGenerateErrorTypeErrorSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'error';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		set_error_handler(function () { return true; });
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		} finally {
+			restore_error_handler();
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame('error', $response['data']['type']);
+	}
+
+	public function testAjaxGenerateErrorExceptionSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'exception';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame('exception', $response['data']['type']);
+	}
+
+	public function testAjaxGenerateErrorFatalSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'fatal';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame('fatal', $response['data']['type']);
+	}
+
+	public function testAjaxGenerateErrorParseSucceeds(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_POST['type']        = 'parse';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame('parse', $response['data']['type']);
+	}
+
+	public function testRenderOutputsWrapCheckboxWhenLogNotEmpty(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		file_put_contents($path, "[12-Apr-2026] PHP Warning: test wrap toggle\n");
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-log-wrap-toggle', $html);
+		$this->assertStringContainsString('gdc-log-wrap-label', $html);
+	}
+
+	public function testRenderDoesNotOutputWrapCheckboxWhenLogEmpty(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		file_put_contents($path, '');
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringNotContainsString('gdc-log-wrap-toggle', $html);
+	}
+
+	public function testRenderSelectContainsAllSevenErrorTypes(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+			'log_path'    => '',
+		]);
+
+		$path = $this->runtimePath('wp-content/debug.log');
+		if (file_exists($path)) {
+			unlink($path);
+		}
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		foreach (['notice', 'warning', 'deprecated', 'error', 'exception', 'fatal', 'parse'] as $type) {
+			$this->assertStringContainsString('value="' . $type . '"', $html, "Missing option for type: $type");
+		}
 	}
 }

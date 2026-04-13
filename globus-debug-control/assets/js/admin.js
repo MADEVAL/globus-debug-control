@@ -55,6 +55,27 @@
 						}
 					);
 			}
+
+			// Log Viewer: Word wrap toggle (only visible when log is not empty).
+			var wrapToggleEl = document.getElementById( 'gdc-log-wrap-toggle' );
+			var WRAP_KEY     = 'gdc_log_wrap';
+			if ( wrapToggleEl ) {
+				if ( sessionStorage.getItem( WRAP_KEY ) === '1' ) {
+					wrapToggleEl.checked = true;
+					cm.setOption( 'lineWrapping', true );
+				}
+				wrapToggleEl.addEventListener(
+					'change',
+					function () {
+						cm.setOption( 'lineWrapping', wrapToggleEl.checked );
+						if ( wrapToggleEl.checked ) {
+							sessionStorage.setItem( WRAP_KEY, '1' );
+						} else {
+							sessionStorage.removeItem( WRAP_KEY );
+						}
+					}
+				);
+			}
 		}
 		// Log Viewer: Generate test error
 		var genBtn = document.getElementById( 'gdc-generate-error' );
