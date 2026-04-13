@@ -137,7 +137,7 @@ final class GDC_Options_Viewer {
 						$pct       = (int) round( ( $opt['value_size'] / $max ) * 100 );
 						$bar_class = $opt['value_size'] > 100000 ? 'gdc-bar-danger'
 							: ( $opt['value_size'] > 10000 ? 'gdc-bar-warning' : 'gdc-bar-ok' );
-					?>
+						?>
 						<tr>
 							<td><code><?php echo esc_html( $opt['name'] ); ?></code></td>
 							<td><?php echo esc_html( size_format( $opt['value_size'] ) ); ?></td>

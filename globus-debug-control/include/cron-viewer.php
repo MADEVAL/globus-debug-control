@@ -61,11 +61,11 @@ final class GDC_Cron_Viewer {
 				<?php
 				echo wp_json_encode(
 					array(
-						'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-						'nonce'        => wp_create_nonce( self::NONCE_SOURCES ),
-						'nonceRun'     => wp_create_nonce( self::NONCE_RUN ),
-						'nonceDelete'  => wp_create_nonce( self::NONCE_DELETE ),
-						'i18n'         => array(
+						'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+						'nonce'       => wp_create_nonce( self::NONCE_SOURCES ),
+						'nonceRun'    => wp_create_nonce( self::NONCE_RUN ),
+						'nonceDelete' => wp_create_nonce( self::NONCE_DELETE ),
+						'i18n'        => array(
 							'running'       => __( 'Running…', 'globus-debug-control' ),
 							'deleting'      => __( 'Deleting…', 'globus-debug-control' ),
 							'deleted'       => __( 'Deleted', 'globus-debug-control' ),
@@ -184,7 +184,7 @@ final class GDC_Cron_Viewer {
 	/**
 	 * Renders the summary cards strip above the table.
 	 *
-	 * @param array<string, mixed>         $summary Output of get_cron_summary().
+	 * @param array<string, mixed>             $summary Output of get_cron_summary().
 	 * @param array<int, array<string, mixed>> $crons   Cron events list.
 	 */
 	private static function render_summary( array $summary, array $crons ): void {
@@ -378,10 +378,10 @@ final class GDC_Cron_Viewer {
 			global $wp_filter;
 			foreach ( array_keys( $unique_hooks ) as $hook ) {
 				if ( empty( $wp_filter[ $hook ] ) ) {
-					$orphans++;
+					++$orphans;
 				}
 				if ( ( $hook_counts[ $hook ] ?? 1 ) > 1 ) {
-					$duplicates++;
+					++$duplicates;
 				}
 			}
 		}
@@ -440,8 +440,8 @@ final class GDC_Cron_Viewer {
 			$notices[] = array(
 				'type'    => 'warning',
 				'icon'    => 'dismiss',
-				/* translators: %d: number of orphaned hooks */
 				'message' => sprintf(
+					/* translators: %d: number of orphaned hooks */
 					_n(
 						'%d orphaned cron hook found - its plugin may have been deactivated without cleaning up.',
 						'%d orphaned cron hooks found - their plugins may have been deactivated without cleaning up.',
@@ -457,8 +457,8 @@ final class GDC_Cron_Viewer {
 			$notices[] = array(
 				'type'    => 'warning',
 				'icon'    => 'warning',
-				/* translators: %d: number of duplicated hooks */
 				'message' => sprintf(
+					/* translators: %d: number of duplicated hooks */
 					_n(
 						'%d hook has multiple scheduled instances.',
 						'%d hooks have multiple scheduled instances.',
@@ -476,8 +476,8 @@ final class GDC_Cron_Viewer {
 				$notices[] = array(
 					'type'    => 'info',
 					'icon'    => 'performance',
-					/* translators: %s: hook name */
 					'message' => sprintf(
+						/* translators: %s: hook name */
 						__( '"%s" is scheduled with an interval shorter than 1 minute.', 'globus-debug-control' ),
 						$event['hook']
 					),
@@ -995,7 +995,10 @@ final class GDC_Cron_Viewer {
 			return null;
 		}
 
-		$php_files = glob( rtrim( $base_dir, '/' ) . '/*.php' ) ?: array();
+		$php_files = glob( rtrim( $base_dir, '/' ) . '/*.php' );
+		if ( ! is_array( $php_files ) ) {
+			$php_files = array();
+		}
 		foreach ( $php_files as $file ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$contents = file_get_contents( $file );

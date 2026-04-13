@@ -21,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class GDC_Http_Log {
 
 	/** Transient key for captured request entries. */
-	private const TRANSIENT_LOG  = 'gdc_http_log';
+	private const TRANSIENT_LOG = 'gdc_http_log';
 
 	/** Option key for the enabled/disabled flag. */
-	private const OPT_CAPTURING  = 'gdc_http_log_capturing';
+	private const OPT_CAPTURING = 'gdc_http_log_capturing';
 
 	/** Maximum entries kept in the transient. */
 	public const MAX_ENTRIES = 100;
@@ -63,13 +63,13 @@ final class GDC_Http_Log {
 	/**
 	 * Callback for the http_api_debug action — captures one request entry.
 	 *
-	 * @param mixed  $response WP HTTP response array or WP_Error.
-	 * @param string $context  'response' or 'redirect'.
-	 * @param string $class    Transport class used.
-	 * @param array  $args     Parsed request arguments.
-	 * @param string $url      Request URL.
+	 * @param mixed  $response        WP HTTP response array or WP_Error.
+	 * @param string $context         'response' or 'redirect'.
+	 * @param string $transport_class  Transport class used.
+	 * @param array  $args            Parsed request arguments.
+	 * @param string $url             Request URL.
 	 */
-	public static function on_request( $response, string $context, string $class, array $args, string $url ): void {
+	public static function on_request( $response, string $context, string $transport_class, array $args, string $url ): void {
 		if ( 'response' !== $context ) {
 			return;
 		}
@@ -133,7 +133,7 @@ final class GDC_Http_Log {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
-		$enable = isset( $_POST['enabled'] ) && '1' === wp_unslash( $_POST['enabled'] );
+		$enable = isset( $_POST['enabled'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['enabled'] ) );
 		self::set_capturing( $enable );
 		wp_send_json_success( array( 'capturing' => $enable ) );
 	}
@@ -145,7 +145,17 @@ final class GDC_Http_Log {
 		$log       = self::get_log();
 		$capturing = self::is_capturing();
 		?>
-		<script>var gdcHttp=<?php echo wp_json_encode( array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonceClear' => wp_create_nonce( self::NONCE_CLEAR ), 'nonceToggle' => wp_create_nonce( self::NONCE_TOGGLE ) ) ); ?>;</script>
+		<script>var gdcHttp=
+		<?php
+		echo wp_json_encode(
+			array(
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'nonceClear'  => wp_create_nonce( self::NONCE_CLEAR ),
+				'nonceToggle' => wp_create_nonce( self::NONCE_TOGGLE ),
+			)
+		);
+		?>
+							;</script>
 
 		<div class="gdc-tool-header">
 			<div class="gdc-cron-summary">

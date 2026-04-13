@@ -109,7 +109,7 @@
 				liveTimer = setInterval(
 					function () {
 						fetch(
-							gdcLog.ajaxUrl + '?action=gdc_log_status',
+							gdcLog.ajaxUrl + '?action=gdc_log_status&_ajax_nonce=' + encodeURIComponent( gdcLog.statusNonce ),
 							{ credentials: 'same-origin' }
 						)
 							.then( function ( r ) { return r.json(); } )

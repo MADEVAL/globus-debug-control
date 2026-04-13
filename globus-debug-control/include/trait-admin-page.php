@@ -181,7 +181,19 @@ trait GDC_Admin_Page {
 				<?php GDC_WpConfig_Debug::render(); ?>
 
 				<p style="margin-top:16px;">
-					<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'globus-debug-control', 'tab' => 'constants' ), admin_url( 'options-general.php' ) ) ); ?>" class="button button-secondary">
+					<a href="
+					<?php
+					echo esc_url(
+						add_query_arg(
+							array(
+								'page' => 'globus-debug-control',
+								'tab'  => 'constants',
+							),
+							admin_url( 'options-general.php' )
+						)
+					);
+					?>
+								" class="button button-secondary">
 						<?php esc_html_e( 'View all WP constants →', 'globus-debug-control' ); ?>
 					</a>
 				</p>

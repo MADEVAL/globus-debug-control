@@ -54,9 +54,9 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 	}
 
 	public function testResolveLogPathConvertsRelativePathIntoWpContentPath(): void {
-		$path = $this->invokePrivate('resolve_log_path', [[
+		$path = $this->plugin()->resolve_log_path([
 			'log_path' => 'logs/debug.log',
-		]]);
+		]);
 
 		$this->assertSame(str_replace('\\', '/', WP_CONTENT_DIR . '/logs/debug.log'), $path);
 	}

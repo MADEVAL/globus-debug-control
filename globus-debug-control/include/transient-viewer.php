@@ -68,8 +68,8 @@ final class GDC_Transient_Viewer {
 		$result = array();
 
 		foreach ( $rows as $row ) {
-			$key     = substr( (string) $row['option_name'], strlen( '_transient_' ) );
-			$timeout = (int) $row['timeout'];
+			$key      = substr( (string) $row['option_name'], strlen( '_transient_' ) );
+			$timeout  = (int) $row['timeout'];
 			$result[] = array(
 				'key'        => $key,
 				'value_size' => (int) $row['value_size'],
@@ -152,7 +152,17 @@ final class GDC_Transient_Viewer {
 		$transients = self::get_transients();
 		$summary    = self::get_summary( $transients );
 		?>
-		<script>var gdcTransient=<?php echo wp_json_encode( array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonceDelete' => wp_create_nonce( self::NONCE_DELETE ), 'noncePurge' => wp_create_nonce( self::NONCE_PURGE ) ) ); ?>;</script>
+		<script>var gdcTransient=
+		<?php
+		echo wp_json_encode(
+			array(
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'nonceDelete' => wp_create_nonce( self::NONCE_DELETE ),
+				'noncePurge'  => wp_create_nonce( self::NONCE_PURGE ),
+			)
+		);
+		?>
+									;</script>
 
 		<div class="gdc-tool-header">
 			<div class="gdc-cron-summary">

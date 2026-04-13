@@ -291,7 +291,7 @@ trait GDC_Error_Control {
 	 * @param array<string, mixed> $opts Plugin options.
 	 * @return string Absolute path to the log file, or empty string if not configured.
 	 */
-	private function resolve_log_path( array $opts ): string {
+	public function resolve_log_path( array $opts ): string {
 		if ( ! empty( $opts['log_path'] ) ) {
 			$path = $opts['log_path'];
 
