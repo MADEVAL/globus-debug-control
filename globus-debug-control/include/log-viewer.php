@@ -304,7 +304,7 @@ final class GDC_Log_Viewer {
 						?>
 						<select id="gdc-error-type" class="gdc-select-small">
 							<?php foreach ( $error_type_options as $val => $label ) : ?>
-								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' — suppressed' : $label ); ?></option>
+								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' - <b>suppressed</b>' : $label ); ?></option>
 							<?php endforeach; ?>
 						</select>
 						<button type="button" id="gdc-generate-error" class="button button-secondary">
