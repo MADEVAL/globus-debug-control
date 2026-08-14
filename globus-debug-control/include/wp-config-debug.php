@@ -223,7 +223,7 @@ final class GDC_WpConfig_Debug {
 
 		check_admin_referer( self::NONCE_ACTION );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			return;
 		}
 
@@ -248,6 +248,14 @@ final class GDC_WpConfig_Debug {
 			: array();
 
 		$current_constants = self::read_constants( $config_path );
+
+		// Keep a timestamped backup copy before the first write so the config
+		// can always be restored if a mistake is made.
+		$backup_path = $config_path . '.gdc-backup-' . gmdate( 'Ymd-His' );
+		if ( ! file_exists( $backup_path ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_copy -- Backup copy of wp-config.php before modification.
+			@copy( $config_path, $backup_path );
+		}
 
 		foreach ( self::CONSTANTS as $name => $meta ) {
 			$is_checked = isset( $fields[ $name ] ) && 'true' === $fields[ $name ];
@@ -372,6 +380,21 @@ final class GDC_WpConfig_Debug {
 								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php esc_html_e( '(not defined, will be added)', 'globus-debug-control' ); ?></span>
 							<?php else : ?>
 								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php echo esc_html__( 'Current:', 'globus-debug-control' ) . ' <code>' . esc_html( $info['raw'] ) . '</code>'; ?></span>
+							<?php endif; ?>
+							<?php if ( 'WP_DEBUG_LOG' === $name && $writable ) : ?>
+								<p class="description" style="margin-top:6px;">
+									<label for="gdc_wpcfg_log_path_value">
+										<?php esc_html_e( 'Custom log file path (relative to wp-content or absolute):', 'globus-debug-control' ); ?>
+									</label>
+									<input
+										type="text"
+										id="gdc_wpcfg_log_path_value"
+										class="regular-text code"
+										name="gdc_wpcfg[WP_DEBUG_LOG_value]"
+										value=""
+										placeholder="<?php esc_attr_e( 'e.g. custom/debug.log - leave empty for true', 'globus-debug-control' ); ?>"
+									>
+								</p>
 							<?php endif; ?>
 						</td>
 					</tr>

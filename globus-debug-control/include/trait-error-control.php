@@ -46,6 +46,40 @@ trait GDC_Error_Control {
 		$this->apply_error_reporting( $opts );
 		$this->apply_display_settings( $opts );
 		$this->apply_log_settings( $opts );
+
+		register_shutdown_function( array( $this, 'capture_fatal_error' ) );
+	}
+
+	/**
+	 * Records the last fatal PHP error at shutdown for display in the log viewer.
+	 *
+	 * @param array{type?: int, message?: string, file?: string, line?: int}|null $last_error Optional payload (defaults to error_get_last()).
+	 */
+	public function capture_fatal_error( ?array $last_error = null ): void {
+		if ( null === $last_error ) {
+			$last_error = error_get_last();
+		}
+
+		if ( ! is_array( $last_error ) || empty( $last_error['type'] ) || empty( $last_error['message'] ) ) {
+			return;
+		}
+
+		$fatal_types = array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR );
+
+		if ( ! in_array( (int) $last_error['type'], $fatal_types, true ) ) {
+			return;
+		}
+
+		update_option(
+			'gdc_last_fatal',
+			array(
+				'ts'      => time(),
+				'message' => (string) $last_error['message'],
+				'file'    => isset( $last_error['file'] ) ? (string) $last_error['file'] : '',
+				'line'    => isset( $last_error['line'] ) ? (int) $last_error['line'] : 0,
+			),
+			false
+		);
 	}
 
 	/**
@@ -252,8 +286,9 @@ trait GDC_Error_Control {
 
 		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for debug display control.
 		ini_set( 'display_errors', $display );
-		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for debug display control.
-		ini_set( 'display_startup_errors', $display );
+		// Note: display_startup_errors is intentionally not set here - it only
+		// affects errors emitted before script start, so ini_set() at runtime
+		// would have no effect.
 	}
 
 	/**
@@ -334,13 +369,25 @@ trait GDC_Error_Control {
 	/**
 	 * Normalises a filesystem path by removing null bytes and standardising slashes.
 	 *
+	 * Returns an empty string when the path contains a parent-traversal ("..")
+	 * component, preventing the log file from being pointed at critical files
+	 * such as wp-config.php.
+	 *
 	 * @param string $path Raw path.
-	 * @return string Sanitised path.
+	 * @return string Sanitised path, or '' when the path is unsafe.
 	 */
 	private function sanitize_path( string $path ): string {
 		$path = str_replace( array( "\0", "\r", "\n" ), '', $path );
 		$path = str_replace( '\\', '/', $path );
-		return preg_replace( '#/+#', '/', $path );
+		$path = preg_replace( '#/+#', '/', $path );
+
+		foreach ( explode( '/', $path ) as $part ) {
+			if ( '..' === $part ) {
+				return '';
+			}
+		}
+
+		return $path;
 	}
 
 	/**

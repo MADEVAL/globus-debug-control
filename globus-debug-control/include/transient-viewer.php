@@ -75,6 +75,66 @@ final class GDC_Transient_Viewer {
 				'value_size' => (int) $row['value_size'],
 				'expires_in' => $timeout > 0 ? $timeout - $now : null,
 				'is_expired' => $timeout > 0 && $timeout < $now,
+				'site'       => false,
+			);
+		}
+
+		// On multisite, network transients live in the sitemeta table.
+		if ( function_exists( 'is_multisite' ) && is_multisite() ) {
+			$result = array_merge( $result, self::get_site_transients() );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns site transients (_site_transient_*) from the sitemeta table.
+	 *
+	 * Keys are returned with the full _site_transient_ prefix so the delete
+	 * route can dispatch them to delete_site_transient().
+	 *
+	 * @return array<int, array{key: string, value_size: int, expires_in: int|null, is_expired: bool, site: bool}>
+	 */
+	private static function get_site_transients(): array {
+		global $wpdb;
+
+		if ( empty( $wpdb->sitemeta ) ) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin diagnostic query.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT t.meta_key AS option_name,
+				        LENGTH(t.meta_value) AS value_size,
+				        CAST(x.meta_value AS UNSIGNED) AS timeout
+				 FROM {$wpdb->sitemeta} t
+				 LEFT JOIN {$wpdb->sitemeta} x
+				        ON x.meta_key = CONCAT('_site_transient_timeout_', SUBSTRING(t.meta_key, 17))
+				 WHERE t.meta_key LIKE %s
+				   AND t.meta_key NOT LIKE %s
+				 ORDER BY t.meta_key",
+				$wpdb->esc_like( '_site_transient_' ) . '%',
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		$now    = time();
+		$result = array();
+
+		foreach ( $rows as $row ) {
+			$timeout  = (int) $row['timeout'];
+			$result[] = array(
+				'key'        => (string) $row['option_name'],
+				'value_size' => (int) $row['value_size'],
+				'expires_in' => $timeout > 0 ? $timeout - $now : null,
+				'is_expired' => $timeout > 0 && $timeout < $now,
+				'site'       => true,
 			);
 		}
 
@@ -106,7 +166,7 @@ final class GDC_Transient_Viewer {
 	public static function ajax_delete(): void {
 		check_ajax_referer( self::NONCE_DELETE );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -114,6 +174,11 @@ final class GDC_Transient_Viewer {
 
 		if ( '' === $key ) {
 			wp_send_json_error( 'Invalid key.' );
+		}
+
+		if ( function_exists( 'delete_site_transient' ) && 0 === strpos( $key, '_site_transient_' ) ) {
+			delete_site_transient( substr( $key, strlen( '_site_transient_' ) ) );
+			wp_send_json_success( array( 'key' => $key ) );
 		}
 
 		delete_transient( $key );
@@ -126,7 +191,7 @@ final class GDC_Transient_Viewer {
 	public static function ajax_purge_expired(): void {
 		check_ajax_referer( self::NONCE_PURGE );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 

@@ -103,6 +103,185 @@ final class CronViewerTest extends WordPressTestCase {
 		$this->assertTrue($events[0]['overdue']);
 	}
 
+	public function testGetCronEventsPreservesFalsyArgs(): void {
+		$ts = time() + 3600;
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			$ts => [
+				'falsy_args_hook' => [
+					'40cd750bba9870f18aada2478b24840a' => [
+						'schedule' => '',
+						'interval' => 0,
+						'args'     => [0, false, '', 'keep'],
+					],
+				],
+			],
+		];
+
+		$events = \GDC_Cron_Viewer::get_cron_events();
+
+		$this->assertSame([0, false, '', 'keep'], $events[0]['args']);
+	}
+
+	public function testAjaxCronDeletePassesOriginalFalsyArgs(): void {
+		$ts = time() + 3600;
+		$_POST['hook']      = 'falsy_args_hook';
+		$_POST['timestamp'] = (string) $ts;
+		$_POST['args']      = json_encode([0, false, '', 'keep']);
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$unscheduled = $this->state('unscheduled');
+		$this->assertSame([0, false, '', 'keep'], $unscheduled[0]['args']);
+	}
+
+	public function testResolveHookSourceUsesTransientCacheWithoutScanning(): void {
+		\GDC_Cron_Viewer::reset_hook_source_cache();
+
+		$cached = ['type' => 'plugin', 'name' => 'cached-plugin', 'slug' => 'cached-plugin'];
+		$GLOBALS['gdc_test_state']['transients']['gdc_cron_src_' . md5('ghost_hook')] = $cached;
+
+		// No plugin/theme files contain 'ghost_hook', so only a cache hit can produce this result.
+		$source = \GDC_Cron_Viewer::resolve_hook_source('ghost_hook');
+
+		$this->assertSame('plugin', $source['type']);
+		$this->assertSame('cached-plugin', $source['slug']);
+	}
+
+	public function testResolveHookSourceStoresScanResultInTransient(): void {
+		\GDC_Cron_Viewer::reset_hook_source_cache();
+
+		// Clean any pre-existing cache entry.
+		unset($GLOBALS['gdc_test_state']['transients']['gdc_cron_src_' . md5('no_such_hook_xyz')]);
+
+		$source = \GDC_Cron_Viewer::resolve_hook_source('no_such_hook_xyz');
+
+		$this->assertSame('unknown', $source['type']);
+		$this->assertArrayHasKey('gdc_cron_src_' . md5('no_such_hook_xyz'), $GLOBALS['gdc_test_state']['transients']);
+		$this->assertSame('unknown', $GLOBALS['gdc_test_state']['transients']['gdc_cron_src_' . md5('no_such_hook_xyz')]['type']);
+	}
+
+	public function testEscapeSourceForHtmlNeutralizesInjection(): void {
+		$source = [
+			'type' => 'plugin',
+			'name' => '<img src=x onerror=alert(1)>',
+			'slug' => '"quoted"<script>',
+		];
+
+		$escaped = \GDC_Cron_Viewer::escape_source_for_html($source);
+
+		$this->assertStringNotContainsString('<img', $escaped['name']);
+		$this->assertStringContainsString('&lt;img', $escaped['name']);
+		$this->assertStringContainsString('&quot;quoted&quot;', $escaped['slug']);
+		$this->assertStringNotContainsString('<script>', $escaped['slug']);
+	}
+
+	public function testOutputCronSourcesStreamEmitsEscapedNames(): void {
+		\GDC_Cron_Viewer::reset_hook_source_cache();
+		$GLOBALS['gdc_test_state']['transients']['gdc_cron_src_' . md5('xss_hook')] = [
+			'type' => 'plugin',
+			'name' => '<b>evil</b>',
+			'slug' => 'evil',
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::output_cron_sources_stream(['xss_hook']);
+		$out = ob_get_clean();
+
+		$this->assertStringContainsString('&lt;b&gt;evil&lt;\\/b&gt;', $out);
+		$this->assertStringNotContainsString('<b>evil</b>', $out);
+	}
+
+	public function testAjaxCronBulkDeleteRemovesAllProvidedEvents(): void {
+		$ts = time() + 3600;
+		$_POST['events'] = [
+			json_encode(['hook' => 'orphan_a', 'timestamp' => $ts, 'args' => []]),
+			json_encode(['hook' => 'orphan_b', 'timestamp' => $ts, 'args' => [1, 2]]),
+		];
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_bulk_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame(2, $response['data']['deleted']);
+		$this->assertSame(0, $response['data']['failed']);
+		$this->assertCount(2, $this->state('unscheduled'));
+	}
+
+	public function testAjaxCronBulkDeleteReportsFailedEvents(): void {
+		$GLOBALS['gdc_test_state']['unschedule_result'] = false;
+		$ts                                              = time() + 3600;
+		$_POST['events']                                 = [
+			json_encode(['hook' => 'orphan_a', 'timestamp' => $ts, 'args' => []]),
+			'not-json',
+			json_encode(['hook' => '', 'timestamp' => $ts, 'args' => []]),
+		];
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_bulk_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$response = $GLOBALS['gdc_test_state']['json_response'];
+		$this->assertTrue($response['success']);
+		$this->assertSame(0, $response['data']['deleted']);
+		$this->assertSame(3, $response['data']['failed']);
+	}
+
+	public function testAjaxCronBulkDeleteForbiddenWithoutCapability(): void {
+		$GLOBALS['gdc_test_state']['current_user_can'] = false;
+		$_POST['events']                                = [];
+
+		try {
+			\GDC_Cron_Viewer::ajax_cron_bulk_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$this->assertFalse($GLOBALS['gdc_test_state']['json_response']['success']);
+	}
+
+	public function testRenderShowsBulkDeleteButtonWhenOrphansExist(): void {
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			time() + 3600 => [
+				'orphan_hook' => [
+					'40cd750bba9870f18aada2478b24840a' => ['schedule' => '', 'interval' => 0, 'args' => []],
+				],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-cron-bulk-delete', $html);
+	}
+
+	public function testRenderHidesBulkDeleteButtonWithoutOrphans(): void {
+		$GLOBALS['gdc_test_state']['cron_array'] = [
+			time() + 3600 => [
+				'gdc_test_cron_plugin_cb_hook' => [
+					'40cd750bba9870f18aada2478b24840a' => ['schedule' => '', 'interval' => 0, 'args' => []],
+				],
+			],
+		];
+		$GLOBALS['wp_filter']['gdc_test_cron_plugin_cb_hook'] = [
+			10 => [
+				['function' => 'gdc_test_cron_plugin_cb'],
+			],
+		];
+
+		ob_start();
+		\GDC_Cron_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringNotContainsString('gdc-cron-bulk-delete', $html);
+	}
+
 	public function testGetCronEventsSortsByTimestampAscending(): void {
 		$now = time();
 		$GLOBALS['gdc_test_state']['cron_array'] = [

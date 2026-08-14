@@ -11,6 +11,9 @@ final class UninstallTest extends WordPressTestCase {
 		$GLOBALS['gdc_test_state']['options']['globus_debug_control_options'] = ['enabled' => 1];
 		$GLOBALS['gdc_test_state']['options']['gdc_options'] = ['enabled' => 1];
 		$GLOBALS['gdc_test_state']['options']['gdc_http_log_capturing'] = 1;
+		$GLOBALS['gdc_test_state']['options']['gdc_last_fatal'] = [
+			'ts' => time(), 'message' => 'boom', 'file' => '/x.php', 'line' => 1,
+		];
 		$GLOBALS['gdc_test_state']['transients']['gdc_http_log'] = [
 			['url' => 'https://example.com', 'status' => 200],
 		];
@@ -20,8 +23,8 @@ final class UninstallTest extends WordPressTestCase {
 		$this->assertContains('globus_debug_control_options', $this->state('deleted_options'));
 		$this->assertContains('gdc_options', $this->state('deleted_options'));
 		$this->assertContains('gdc_http_log_capturing', $this->state('deleted_options'));
+		$this->assertContains('gdc_last_fatal', $this->state('deleted_options'));
 		$this->assertArrayNotHasKey('gdc_http_log', $GLOBALS['gdc_test_state']['transients']);
-		$this->assertContains($path, $this->state('deleted_files'));
 		$this->assertFileDoesNotExist($path);
 	}
 
@@ -33,5 +36,18 @@ final class UninstallTest extends WordPressTestCase {
 
 		$this->assertFileExists($path);
 		$this->assertNotContains($path, $this->state('deleted_files'));
+	}
+
+	public function testUninstallDeletesOwnedMuDropinWithoutWpDeleteFile(): void {
+		$path = WPMU_PLUGIN_DIR . '/gdc-early-loader.php';
+		file_put_contents($path, "<?php\n/* GLOBUS Debug Control */\n");
+
+		include dirname(__DIR__) . '/globus-debug-control/uninstall.php';
+
+		$this->assertFileDoesNotExist($path);
+		$this->assertEmpty(
+			$this->state('deleted_files'),
+			'uninstall must not rely on wp_delete_file(): it is not loaded in the uninstall context'
+		);
 	}
 }

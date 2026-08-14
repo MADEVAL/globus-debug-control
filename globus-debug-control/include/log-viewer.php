@@ -50,7 +50,7 @@ final class GDC_Log_Viewer {
 
 		check_admin_referer( self::NONCE_CLEAR );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			return;
 		}
 
@@ -84,7 +84,7 @@ final class GDC_Log_Viewer {
 
 		check_admin_referer( 'gdc_log_download' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_die( esc_html__( 'Insufficient permissions.', 'globus-debug-control' ) );
 		}
 
@@ -139,7 +139,7 @@ final class GDC_Log_Viewer {
 	public static function ajax_log_status(): void {
 		check_ajax_referer( self::NONCE_ACTION );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 		$path  = self::get_log_path();
@@ -163,7 +163,7 @@ final class GDC_Log_Viewer {
 	public static function ajax_generate_error(): void {
 		check_ajax_referer( self::NONCE_GENERATE );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -219,9 +219,7 @@ final class GDC_Log_Viewer {
 		$total  = 0;
 
 		/** Maximum bytes to read for log rendering (2 MB). Prevents OOM on very large log files. */
-		$max_render_bytes = 2 * 1024 * 1024;
-
-		if ( $exists && $size > 0 ) {
+		$max_render_bytes = 2 * 1024 * 1024;        if ( $exists && $size > 0 ) {
 			if ( $size <= $max_render_bytes ) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				$content = @file_get_contents( $path );
@@ -247,6 +245,25 @@ final class GDC_Log_Viewer {
 
 		if ( isset( $_GET['cleared'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Log file cleared.', 'globus-debug-control' ) . '</p></div>';
+		}
+
+		$last_fatal = get_option( 'gdc_last_fatal', null );
+		if ( is_array( $last_fatal ) && ! empty( $last_fatal['message'] ) ) {
+			$fatal_time = isset( $last_fatal['ts'] ) ? gmdate( 'Y-m-d H:i:s', (int) $last_fatal['ts'] ) : '';
+			$fatal_file = isset( $last_fatal['file'] ) ? $last_fatal['file'] : '';
+			$fatal_line = isset( $last_fatal['line'] ) ? (int) $last_fatal['line'] : 0;
+			?>
+			<div class="notice notice-error gdc-last-fatal">
+				<p>
+					<strong><?php esc_html_e( 'Last fatal error:', 'globus-debug-control' ); ?></strong>
+					<?php echo esc_html( $last_fatal['message'] ); ?>
+					<code><?php echo esc_html( $fatal_file . ':' . $fatal_line ); ?></code>
+					<?php if ( '' !== $fatal_time ) : ?>
+						<span class="gdc-text-muted">(<?php echo esc_html( $fatal_time ); ?>)</span>
+					<?php endif; ?>
+				</p>
+			</div>
+			<?php
 		}
 		?>
 		<script>var gdcLog=
@@ -337,6 +354,15 @@ final class GDC_Log_Viewer {
 					</div>
 				</div>
 			</div><!-- /.gdc-log-toolbar -->
+
+			<?php if ( $exists && $size > $max_render_bytes ) : ?>
+				<div class="notice notice-warning notice-alt gdc-log-tail-notice inline">
+					<p>
+						<span class="dashicons dashicons-download" style="vertical-align:middle;margin-right:4px;"></span>
+						<?php esc_html_e( 'The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything.', 'globus-debug-control' ); ?>
+					</p>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( ! empty( $lines ) ) : ?>
 				<?php

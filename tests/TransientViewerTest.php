@@ -88,6 +88,78 @@ final class TransientViewerTest extends WordPressTestCase {
 	// get_summary()
 	// -------------------------------------------------------------------------
 
+	public function testGetTransientsIncludesSiteTransientsOnMultisite(): void {
+		$GLOBALS['gdc_test_state']['is_multisite']       = true;
+		$GLOBALS['gdc_test_state']['wpdb_results_queue'] = [
+			// First query: options table (regular transients).
+			[
+				[
+					'option_name' => '_transient_my_key',
+					'value_size'  => '512',
+					'timeout'     => (string) (time() + 3600),
+				],
+			],
+			// Second query: sitemeta table (site transients).
+			[
+				[
+					'option_name' => '_site_transient_update_plugins',
+					'value_size'  => '2048',
+					'timeout'     => (string) (time() - 60),
+				],
+			],
+		];
+
+		$result = \GDC_Transient_Viewer::get_transients();
+
+		$this->assertCount(2, $result);
+		$keys = array_column($result, 'key');
+		$this->assertContains('my_key', $keys);
+		$this->assertContains('_site_transient_update_plugins', $keys);
+	}
+
+	public function testGetTransientsSkipsSiteTransientsOnSingleSite(): void {
+		$GLOBALS['gdc_test_state']['is_multisite'] = false;
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [
+			[
+				'option_name' => '_transient_my_key',
+				'value_size'  => '512',
+				'timeout'     => (string) (time() + 3600),
+			],
+		];
+
+		$result = \GDC_Transient_Viewer::get_transients();
+
+		$this->assertCount(1, $result);
+		$this->assertSame('my_key', $result[0]['key']);
+	}
+
+	public function testAjaxDeleteUsesDeleteSiteTransientForSiteKeys(): void {
+		$_POST['key']         = '_site_transient_update_plugins';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Transient_Viewer::ajax_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$this->assertTrue($GLOBALS['gdc_test_state']['json_response']['success']);
+		$this->assertContains('update_plugins', $this->state('deleted_site_transients'));
+	}
+
+	public function testAjaxDeleteUsesDeleteTransientForRegularKeys(): void {
+		$GLOBALS['gdc_test_state']['transients']['my_key'] = 'value';
+		$_POST['key']         = 'my_key';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Transient_Viewer::ajax_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$this->assertArrayNotHasKey('my_key', $GLOBALS['gdc_test_state']['transients']);
+		$this->assertEmpty($this->state('deleted_site_transients'));
+	}
+
 	public function testGetSummaryEmptyArray(): void {
 		$summary = \GDC_Transient_Viewer::get_summary([]);
 
@@ -141,6 +213,20 @@ final class TransientViewerTest extends WordPressTestCase {
 		}
 
 		$this->assertFalse($GLOBALS['gdc_test_state']['json_response']['success']);
+	}
+
+	public function testAjaxDeleteUsesFilteredCapability(): void {
+		$GLOBALS['gdc_test_state']['filter_overrides']['gdc_manage_capability'] = 'edit_posts';
+		$_POST['key']         = 'some_key';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Transient_Viewer::ajax_delete();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$this->assertTrue($GLOBALS['gdc_test_state']['json_response']['success']);
+		$this->assertContains('edit_posts', $this->state('capability_checks'));
 	}
 
 	public function testAjaxDeleteForbiddenWithoutCapability(): void {

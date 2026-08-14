@@ -29,8 +29,33 @@ final class GDC_Http_Log {
 	/** Maximum entries kept in the transient. */
 	public const MAX_ENTRIES = 100;
 
+	/** Query parameter names whose values must be masked in logged URLs. */
+	private const SENSITIVE_PARAMS = array(
+		'key',
+		'token',
+		'secret',
+		'password',
+		'passwd',
+		'auth',
+		'api_key',
+		'apikey',
+		'access_token',
+		'oauth_token',
+		'client_secret',
+		'sig',
+		'signature',
+		'code',
+	);
+
 	private const NONCE_CLEAR  = 'gdc_http_log_clear';
 	private const NONCE_TOGGLE = 'gdc_http_log_toggle';
+
+	/**
+	 * Microtime start values keyed by request URL hash.
+	 *
+	 * @var array<string, float>
+	 */
+	private static array $start_times = array();
 
 	/**
 	 * Returns true when HTTP capturing is currently enabled.
@@ -50,6 +75,75 @@ final class GDC_Http_Log {
 		} else {
 			delete_option( self::OPT_CAPTURING );
 		}
+	}
+
+	/**
+	 * Masks sensitive query parameter values in a URL before it is stored.
+	 *
+	 * @param string $url Raw request URL.
+	 * @return string URL with sensitive parameter values replaced by '***'.
+	 */
+	public static function mask_url( string $url ): string {
+		if ( false === strpos( $url, '?' ) ) {
+			return $url;
+		}
+
+		list( $base, $query ) = array_pad( explode( '?', $url, 2 ), 2, '' );
+
+		if ( '' === $query ) {
+			return $url;
+		}
+
+		parse_str( $query, $params );
+
+		foreach ( $params as $name => $value ) {
+			$lower = strtolower( (string) $name );
+			foreach ( self::SENSITIVE_PARAMS as $needle ) {
+				if ( false !== strpos( $lower, $needle ) ) {
+					$params[ $name ] = '***';
+					break;
+				}
+			}
+		}
+
+		$result = $base . '?' . http_build_query( $params );
+
+		// http_build_query() encodes '***' as %2A%2A%2A - restore the literal marker.
+		return str_replace( '%2A%2A%2A', '***', $result );
+	}
+
+	/**
+	 * Records the start time of an outgoing HTTP request.
+	 *
+	 * Registered on the pre_http_request filter while capturing is enabled so
+	 * the request duration can be reported in the log.
+	 *
+	 * @param mixed  $pre  Short-circuit value (passed through unchanged).
+	 * @param array  $args Request arguments.
+	 * @param string $url  Request URL.
+	 * @return mixed
+	 */
+	public static function record_start_time( $pre, array $args, string $url ) {
+		self::$start_times[ md5( $url ) ] = microtime( true );
+		return $pre;
+	}
+
+	/**
+	 * Returns the elapsed time for a request URL since it started, or 0.0.
+	 *
+	 * @param string $url Request URL.
+	 * @return float Seconds with microsecond precision.
+	 */
+	private static function duration_for( string $url ): float {
+		$key = md5( $url );
+
+		if ( ! isset( self::$start_times[ $key ] ) ) {
+			return 0.0;
+		}
+
+		$duration = microtime( true ) - self::$start_times[ $key ];
+		unset( self::$start_times[ $key ] );
+		return $duration;
 	}
 
 	/**
@@ -83,11 +177,13 @@ final class GDC_Http_Log {
 		}
 
 		$entry = array(
-			'ts'     => time(),
-			'method' => strtoupper( isset( $args['method'] ) ? (string) $args['method'] : 'GET' ),
-			'url'    => $url,
-			'status' => $status,
-			'error'  => $error_msg,
+			'ts'        => time(),
+			'method'    => strtoupper( isset( $args['method'] ) ? (string) $args['method'] : 'GET' ),
+			'url'       => self::mask_url( $url ),
+			'status'    => $status,
+			'error'     => $error_msg,
+			'transport' => $transport_class,
+			'duration'  => self::duration_for( $url ),
 		);
 
 		$log = get_transient( self::TRANSIENT_LOG );
@@ -115,7 +211,7 @@ final class GDC_Http_Log {
 	public static function ajax_clear(): void {
 		check_ajax_referer( self::NONCE_CLEAR );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -129,7 +225,7 @@ final class GDC_Http_Log {
 	public static function ajax_toggle(): void {
 		check_ajax_referer( self::NONCE_TOGGLE );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -211,6 +307,8 @@ final class GDC_Http_Log {
 						<th style="width:60px;"><?php esc_html_e( 'Method', 'globus-debug-control' ); ?></th>
 						<th><?php esc_html_e( 'URL', 'globus-debug-control' ); ?></th>
 						<th style="width:70px;"><?php esc_html_e( 'Status', 'globus-debug-control' ); ?></th>
+						<th style="width:100px;"><?php esc_html_e( 'Transport', 'globus-debug-control' ); ?></th>
+						<th style="width:80px;"><?php esc_html_e( 'Duration', 'globus-debug-control' ); ?></th>
 						<th style="width:200px;"><?php esc_html_e( 'Error', 'globus-debug-control' ); ?></th>
 					</tr>
 				</thead>
@@ -231,6 +329,8 @@ final class GDC_Http_Log {
 								echo '<span class="gdc-http-status ' . esc_attr( $cls ) . '">' . esc_html( $s > 0 ? (string) $s : '—' ) . '</span>';
 								?>
 							</td>
+							<td><code style="font-size:11px;"><?php echo esc_html( isset( $entry['transport'] ) ? (string) $entry['transport'] : '-' ); ?></code></td>
+							<td><?php echo esc_html( number_format_i18n( (float) ( $entry['duration'] ?? 0.0 ), 3 ) . 's' ); ?></td>
 							<td><?php echo esc_html( $entry['error'] ); ?></td>
 						</tr>
 					<?php endforeach; ?>

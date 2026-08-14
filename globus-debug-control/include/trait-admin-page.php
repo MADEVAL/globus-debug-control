@@ -32,10 +32,48 @@ trait GDC_Admin_Page {
 	}
 
 	/**
+	 * Registers the "Recent Errors" dashboard widget.
+	 */
+	public function add_dashboard_widgets() {
+		wp_add_dashboard_widget(
+			'gdc_recent_errors',
+			__( 'GLOBUS: Recent Errors', 'globus-debug-control' ),
+			array( $this, 'render_dashboard_widget' )
+		);
+	}
+
+	/**
+	 * Renders the dashboard widget: the last recorded fatal error, if any.
+	 */
+	public function render_dashboard_widget() {
+		$last_fatal = get_option( 'gdc_last_fatal', null );
+		?>
+		<div class="gdc-dashboard">
+			<?php if ( is_array( $last_fatal ) && ! empty( $last_fatal['message'] ) ) : ?>
+				<div class="gdc-last-fatal">
+					<p>
+						<strong><?php esc_html_e( 'Last fatal error:', 'globus-debug-control' ); ?></strong><br>
+						<?php echo esc_html( $last_fatal['message'] ); ?><br>
+						<code><?php echo esc_html( ( $last_fatal['file'] ?? '' ) . ':' . (int) ( $last_fatal['line'] ?? 0 ) ); ?></code>
+					</p>
+				</div>
+			<?php else : ?>
+				<p><?php esc_html_e( 'No fatal errors recorded.', 'globus-debug-control' ); ?></p>
+			<?php endif; ?>
+			<p>
+				<a href="<?php echo esc_url( admin_url( 'options-general.php?page=globus-debug-control&tab=log' ) ); ?>">
+					<?php esc_html_e( 'Open Error Log', 'globus-debug-control' ); ?>
+				</a>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Renders the full settings page with tabbed navigation.
 	 */
 	public function render_settings_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			return;
 		}
 
@@ -355,7 +393,9 @@ trait GDC_Admin_Page {
 		wp_register_style( 'gdc-php-error', false, array(), false ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters -- Inline-only handle.
 		wp_enqueue_style( 'gdc-php-error' );
 		wp_add_inline_style( 'gdc-php-error', 'body.php-error{}' );
-		wp_add_inline_script( 'jquery', $this->get_php_error_class_js() );
+		wp_register_script( 'gdc-php-error', false, array(), false, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters -- Inline-only handle.
+		wp_enqueue_script( 'gdc-php-error' );
+		wp_add_inline_script( 'gdc-php-error', $this->get_php_error_class_js() );
 	}
 
 	/**

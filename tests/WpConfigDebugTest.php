@@ -21,6 +21,9 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		if (file_exists($this->config_path)) {
 			unlink($this->config_path);
 		}
+		foreach (glob($this->config_path . '.gdc-backup-*') ?: [] as $backup) {
+			@unlink($backup);
+		}
 
 		parent::tearDown();
 	}
@@ -271,6 +274,77 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		} catch (\GDC_Test_RedirectException $e) {
 			$this->assertStringContainsString('gdc_cfg_error=nowrite', $e->location);
 		}
+	}
+
+	public function testHandleActionCreatesBackupBeforeWriting(): void {
+		$original = "<?php\n// my config\ndefine( 'WP_DEBUG', true );\n";
+		$this->writeConfig($original);
+
+		$_POST['gdc_wpcfg_save'] = '1';
+		$_POST['_wpnonce']       = 'test_nonce';
+		$_POST['gdc_wpcfg']     = [];
+
+		try {
+			\GDC_WpConfig_Debug::handle_action();
+		} catch (\GDC_Test_RedirectException $e) {
+		}
+
+		$backups = glob($this->config_path . '.gdc-backup-*');
+		$this->assertNotEmpty($backups, 'a backup copy must be created before wp-config.php is modified');
+		$latest = end($backups);
+		$this->assertSame($original, file_get_contents($latest));
+
+		// The live file must still have been updated.
+		$this->assertStringContainsString('false', (string) file_get_contents($this->config_path));
+	}
+
+	public function testRenderOutputsWpDebugLogPathInput(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG_LOG', true );\n");
+
+		ob_start();
+		\GDC_WpConfig_Debug::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc_wpcfg[WP_DEBUG_LOG_value]', $html);
+		$this->assertStringContainsString('type="text"', $html);
+	}
+
+	public function testHandleActionWritesStringPathForWpDebugLog(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', true );\n");
+
+		$_POST['gdc_wpcfg_save'] = '1';
+		$_POST['_wpnonce']       = 'test_nonce';
+		$_POST['gdc_wpcfg']     = [
+			'WP_DEBUG_LOG'         => 'true',
+			'WP_DEBUG_LOG_value'   => 'custom/debug.log',
+		];
+
+		try {
+			\GDC_WpConfig_Debug::handle_action();
+		} catch (\GDC_Test_RedirectException $e) {
+		}
+
+		$content = (string) file_get_contents($this->config_path);
+		$this->assertStringContainsString("define( 'WP_DEBUG_LOG', 'custom/debug.log' )", $content);
+	}
+
+	public function testHandleActionIgnoresEmptyWpDebugLogPathValue(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', true );\n");
+
+		$_POST['gdc_wpcfg_save'] = '1';
+		$_POST['_wpnonce']       = 'test_nonce';
+		$_POST['gdc_wpcfg']     = [
+			'WP_DEBUG_LOG'       => 'true',
+			'WP_DEBUG_LOG_value' => '',
+		];
+
+		try {
+			\GDC_WpConfig_Debug::handle_action();
+		} catch (\GDC_Test_RedirectException $e) {
+		}
+
+		$content = (string) file_get_contents($this->config_path);
+		$this->assertStringContainsString("define( 'WP_DEBUG_LOG', true )", $content);
 	}
 
 	public function testHandleActionSkipsWhenNoPOSTKey(): void {

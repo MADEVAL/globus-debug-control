@@ -96,6 +96,7 @@ final class Globus_Debug_Control {
 		add_action( 'wp_loaded', array( $this, 'on_wp_loaded' ), PHP_INT_MAX );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
 		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_settings_assets' ) );
@@ -109,16 +110,29 @@ final class Globus_Debug_Control {
 
 		if ( GDC_Http_Log::is_capturing() ) {
 			add_action( 'http_api_debug', array( 'GDC_Http_Log', 'on_request' ), 10, 5 );
+			add_filter( 'pre_http_request', array( 'GDC_Http_Log', 'record_start_time' ), 10, 3 );
 		}
 
 		add_filter( 'body_class', array( $this, 'filter_body_class' ), PHP_INT_MAX );
 		add_filter( 'admin_body_class', array( $this, 'filter_admin_body_class' ), PHP_INT_MAX );
-		// Effective only as mu-plugin; as regular plugin wp_debug_mode() has already executed.
-		add_filter( 'enable_wp_debug_mode_checks', '__return_false', 999 );
+		// Note: enable_wp_debug_mode_checks is intentionally NOT registered here -
+		// wp_debug_mode() runs in wp-settings.php before any plugin or mu-plugin
+		// loads, so a regular-plugin registration can never take effect.
+		// The early-loader mu-plugin keeps its own registration for robustness.
 
 		register_deactivation_hook( GDC_FILE, array( $this, 'on_deactivation' ) );
 
 		add_filter( 'plugin_action_links_' . plugin_basename( GDC_FILE ), array( $this, 'plugin_action_links' ) );
+	}
+
+	/**
+	 * Returns the capability required to manage the plugin, filterable.
+	 *
+	 * @param string $context Optional context label for the filter.
+	 * @return string
+	 */
+	public static function manage_capability( string $context = '' ): string {
+		return (string) apply_filters( 'gdc_manage_capability', 'manage_options', $context );
 	}
 
 	/**

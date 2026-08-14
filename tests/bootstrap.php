@@ -65,25 +65,35 @@ function gdc_test_default_state(): array {
 		'settings_sections' => [],
 		'settings_fields' => [],
 		'options_pages' => [],
+		'dashboard_widgets' => [],
 		'registered_styles' => [],
+		'registered_scripts' => [],
 		'enqueued_styles' => [],
 		'enqueued_scripts' => [],
 		'inline_styles' => [],
 		'inline_scripts' => [],
 		'deleted_files' => [],
 		'current_user_can' => true,
+		'capability_checks' => [],
+		'filter_overrides' => [],
 		'admin_page_title' => 'GLOBUS Debug Control',
 		'doing_ajax' => false,
 		'json_request' => false,
+		'is_multisite' => false,
 		'transients'  => [],
+		'site_transients' => [],
+		'deleted_site_transients' => [],
 		'did_action'  => [],
 		'unscheduled' => [],
 		'unschedule_result' => true,
 		'wpdb_results'   => [],
+		'wpdb_results_queue' => [],
 		'wpdb_var_queue' => [],
 		'wpdb_queries'   => [],
 		'wpdb_deleted'   => [],
 		'error_log'      => [],
+		'wp_filesystem_fail' => false,
+		'wp_filesystem_calls' => 0,
 	];
 }
 
@@ -194,7 +204,12 @@ if (! function_exists('wp_send_json_error')) {
 
 if (! function_exists('WP_Filesystem')) {
 	function WP_Filesystem(): bool {
+		$GLOBALS['gdc_test_state']['wp_filesystem_calls']++;
 		global $wp_filesystem;
+		if (! empty($GLOBALS['gdc_test_state']['wp_filesystem_fail'])) {
+			$wp_filesystem = null;
+			return false;
+		}
 		if (empty($wp_filesystem)) {
 			$wp_filesystem = new class {
 				public function get_contents(string $path): string|false {
@@ -406,9 +421,22 @@ if (! function_exists('add_options_page')) {
 	}
 }
 
+if (! function_exists('wp_add_dashboard_widget')) {
+	function wp_add_dashboard_widget(string $widget_id, string $widget_name, $callback): void {
+		$GLOBALS['gdc_test_state']['dashboard_widgets'][] = compact('widget_id', 'widget_name', 'callback');
+	}
+}
+
 if (! function_exists('current_user_can')) {
 	function current_user_can($capability): bool {
+		$GLOBALS['gdc_test_state']['capability_checks'][] = (string) $capability;
 		return (bool) $GLOBALS['gdc_test_state']['current_user_can'];
+	}
+}
+
+if (! function_exists('apply_filters')) {
+	function apply_filters(string $hook, $value, ...$args) {
+		return $GLOBALS['gdc_test_state']['filter_overrides'][$hook] ?? $value;
 	}
 }
 
@@ -456,6 +484,13 @@ if (! function_exists('selected')) {
 if (! function_exists('size_format')) {
 	function size_format($bytes): string {
 		return (string) $bytes . ' B';
+	}
+}
+
+if (! function_exists('wp_register_script')) {
+	function wp_register_script($handle, $src = false, $deps = [], $ver = false, $in_footer = false): bool {
+		$GLOBALS['gdc_test_state']['registered_scripts'][] = compact('handle', 'src', 'deps', 'ver', 'in_footer');
+		return true;
 	}
 }
 
@@ -558,6 +593,20 @@ if (! function_exists('wp_unschedule_event')) {
 if (! function_exists('wp_is_json_request')) {
 	function wp_is_json_request(): bool {
 		return (bool) $GLOBALS['gdc_test_state']['json_request'];
+	}
+}
+
+if (! function_exists('is_multisite')) {
+	function is_multisite(): bool {
+		return (bool) $GLOBALS['gdc_test_state']['is_multisite'];
+	}
+}
+
+if (! function_exists('delete_site_transient')) {
+	function delete_site_transient(string $transient): bool {
+		$GLOBALS['gdc_test_state']['deleted_site_transients'][] = $transient;
+		unset($GLOBALS['gdc_test_state']['site_transients'][$transient]);
+		return true;
 	}
 }
 
@@ -672,8 +721,8 @@ if (! function_exists('_n')) {
 }
 
 if (! function_exists('number_format_i18n')) {
-	function number_format_i18n(float $number): string {
-		return number_format($number);
+	function number_format_i18n(float $number, int $decimals = 0): string {
+		return number_format($number, $decimals);
 	}
 }
 
@@ -725,8 +774,13 @@ if (! class_exists('GDC_Test_Wpdb')) {
 	class GDC_Test_Wpdb {
 		public string $prefix  = 'wp_';
 		public string $options = 'wp_options';
+		public string $sitemeta = 'wp_sitemeta';
 
 		public function get_results(string $query, $output = 'OBJECT'): array {
+			$queue = &$GLOBALS['gdc_test_state']['wpdb_results_queue'];
+			if (! empty($queue)) {
+				return (array) array_shift($queue);
+			}
 			return $GLOBALS['gdc_test_state']['wpdb_results'] ?? [];
 		}
 

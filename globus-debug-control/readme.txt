@@ -71,12 +71,12 @@ WordPress loads plugins in alphabetical order. If another plugin throws an error
 Normally, toggling `WP_DEBUG` means SSH access, finding wp-config.php, and editing PHP constants by hand. This tab lets you flip the five most important debug constants from the admin panel:
 
 * `WP_DEBUG` - master debug switch
-* `WP_DEBUG_LOG` - write errors to a log file
+* `WP_DEBUG_LOG` - write errors to a log file (supports a custom log path)
 * `WP_DEBUG_DISPLAY` - show errors on screen
 * `SCRIPT_DEBUG` - use unminified core JS/CSS
 * `SAVEQUERIES` - log all database queries
 
-The plugin locates your `wp-config.php` automatically and patches it in place, adding the constant if it is missing or updating the existing value. Commented-out defines and block-comment sections are never touched. The current status of `WP_DEBUG` is always visible as a badge in the plugin header.
+The plugin locates your `wp-config.php` automatically and patches it in place, adding the constant if it is missing or updating the existing value. A timestamped backup copy of `wp-config.php` is created before the first write so the file can always be restored. Commented-out defines and block-comment sections are never touched. The current status of `WP_DEBUG` is always visible as a badge in the plugin header.
 
 = Error Log tab =
 
@@ -96,7 +96,7 @@ Every autoloaded option is fetched on every single page load. When plugins leave
 
 = HTTP Log tab =
 
-Plugins and themes silently make outgoing HTTP calls - license checks, update pings, API syncs - and a slow or failing endpoint can stall your entire page load. This tab captures outgoing WordPress HTTP API requests (`wp_remote_get`, `wp_remote_post`, etc.) via the `http_api_debug` hook. Capturing must be explicitly enabled and stores up to 100 entries (6-hour TTL). Each entry shows the request URL, HTTP method, status code, response time, and transport class.
+Plugins and themes silently make outgoing HTTP calls - license checks, update pings, API syncs - and a slow or failing endpoint can stall your entire page load. This tab captures outgoing WordPress HTTP API requests (`wp_remote_get`, `wp_remote_post`, etc.) via the `http_api_debug` hook. Capturing must be explicitly enabled and stores up to 100 entries (6-hour TTL). Each entry shows the request URL, HTTP method, status code, error message, transport class, and response duration. Sensitive query parameters (`key`, `token`, `secret`, `password`, etc.) are automatically masked before an entry is stored.
 
 = Constants tab =
 
@@ -143,6 +143,22 @@ Check the **Cron Tasks** tab for overdue or orphaned events. Check the **Autoloa
 Yes. The recommended setup: suppress all error types, disable error display, enable logging to a file, and keep the `php-error` class removal active. The diagnostic tabs (Cron Tasks, Transients, Autoloaded, HTTP Log, Constants) are read-only and safe at any time.
 
 == Changelog ==
+
+= 2.2.6 =
+* Fix: WP_Filesystem failures no longer cause fatal errors in the mu-plugin dropin management (direct file fallback added)
+* Fix: cron events with falsy arguments (0, false, empty string) can now be deleted correctly
+* Fix: log path no longer accepts parent-traversal ("..") values that could point at critical files
+* Fix: uninstall no longer relies on wp_delete_file() which is not available in the uninstall context
+* Fix: front-end php-error removal no longer depends on jQuery being loaded
+* Fix: cron source names are HTML-escaped before being rendered in the admin table
+* Fix: removed ineffective enable_wp_debug_mode_checks registration (core runs wp_debug_mode() before any plugin loads)
+* Added: transport class and response duration columns in the HTTP Log, plus automatic masking of sensitive query parameters
+* Added: notice in the Error Log tab when only the last 2 MB of a larger file are shown
+* Added: timestamped backup of wp-config.php before the WP_DEBUG tab writes to it
+* Added: custom log path field for WP_DEBUG_LOG in the WP_DEBUG tab
+* Added: cron source lookups are cached in a 24 h transient to avoid repeated full-tree scans
+* Added: plugin options are no longer autoloaded
+* Added: README and version consistency are enforced by tests
 
 = 2.2.5 =
 * Added WP_DEBUG tab: toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, SAVEQUERIES directly from the admin panel

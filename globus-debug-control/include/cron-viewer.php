@@ -22,6 +22,7 @@ final class GDC_Cron_Viewer {
 	private const NONCE_SOURCES = 'gdc_cron_sources';
 	private const NONCE_RUN     = 'gdc_cron_run';
 	private const NONCE_DELETE  = 'gdc_cron_delete';
+	private const NONCE_BULK    = 'gdc_cron_bulk_delete';
 
 	// -------------------------------------------------------------------------
 	// Render
@@ -65,6 +66,7 @@ final class GDC_Cron_Viewer {
 						'nonce'       => wp_create_nonce( self::NONCE_SOURCES ),
 						'nonceRun'    => wp_create_nonce( self::NONCE_RUN ),
 						'nonceDelete' => wp_create_nonce( self::NONCE_DELETE ),
+						'nonceBulk'   => wp_create_nonce( self::NONCE_BULK ),
 						'i18n'        => array(
 							'running'       => __( 'Running…', 'globus-debug-control' ),
 							'deleting'      => __( 'Deleting…', 'globus-debug-control' ),
@@ -72,11 +74,20 @@ final class GDC_Cron_Viewer {
 							'runOk'         => __( 'Triggered', 'globus-debug-control' ),
 							'error'         => __( 'Error', 'globus-debug-control' ),
 							'confirmDelete' => __( 'Delete this scheduled event?', 'globus-debug-control' ),
+							'confirmBulk'   => __( 'Delete all orphaned scheduled events?', 'globus-debug-control' ),
 						),
 					)
 				);
 				?>
 				;</script>
+
+				<?php if ( $summary['orphans'] > 0 ) : ?>
+					<button type="button" id="gdc-cron-bulk-delete" class="button button-secondary">
+						<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;color:#d63638;"></span>
+						<?php esc_html_e( 'Delete orphaned', 'globus-debug-control' ); ?>
+						<span class="gdc-badge gdc-badge-orphan" style="margin-left:4px;"><?php echo esc_html( (string) $summary['orphans'] ); ?></span>
+					</button>
+				<?php endif; ?>
 
 				<table class="wp-list-table widefat fixed striped gdc-cron-table">
 					<thead>
@@ -314,7 +325,7 @@ final class GDC_Cron_Viewer {
 						'hook'      => (string) $hook,
 						'schedule'  => isset( $event['schedule'] ) ? (string) $event['schedule'] : '',
 						'interval'  => isset( $event['interval'] ) ? (int) $event['interval'] : 0,
-						'args'      => isset( $event['args'] ) && is_array( $event['args'] ) ? array_filter( $event['args'] ) : array(),
+						'args'      => isset( $event['args'] ) && is_array( $event['args'] ) ? array_values( $event['args'] ) : array(),
 						'overdue'   => (int) $timestamp < $now - 60,
 						'orphan'    => ! $has_cb,
 						'callbacks' => $callbacks,
@@ -580,11 +591,70 @@ final class GDC_Cron_Viewer {
 		add_action( 'wp_ajax_gdc_cron_sources_stream', array( self::class, 'ajax_cron_sources_stream' ) );
 		add_action( 'wp_ajax_gdc_cron_run', array( self::class, 'ajax_cron_run' ) );
 		add_action( 'wp_ajax_gdc_cron_delete', array( self::class, 'ajax_cron_delete' ) );
+		add_action( 'wp_ajax_gdc_cron_bulk_delete', array( self::class, 'ajax_cron_bulk_delete' ) );
 	}
 
 	// -------------------------------------------------------------------------
 	// AJAX: run / delete
 	// -------------------------------------------------------------------------
+
+	/**
+	 * AJAX handler: deletes multiple scheduled cron events in one request.
+	 *
+	 * Required POST params: events (array of JSON strings, each with
+	 * hook, timestamp, and optional args), _ajax_nonce.
+	 */
+	public static function ajax_cron_bulk_delete(): void {
+		check_ajax_referer( self::NONCE_BULK );
+
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
+			wp_send_json_error( 'Forbidden', 403 );
+		}
+
+		$raw = isset( $_POST['events'] ) && is_array( $_POST['events'] )
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			? wp_unslash( $_POST['events'] )
+			: array();
+
+		$deleted = 0;
+		$failed  = 0;
+
+		foreach ( $raw as $item ) {
+			$event = json_decode( (string) $item, true );
+
+			if ( ! is_array( $event ) || empty( $event['hook'] ) ) {
+				++$failed;
+				continue;
+			}
+
+			$hook = preg_replace( '/[^a-zA-Z0-9_\-\/\.]/', '', substr( (string) $event['hook'], 0, 200 ) );
+			$args = isset( $event['args'] ) && is_array( $event['args'] ) ? $event['args'] : array();
+
+			if ( '' === $hook ) {
+				++$failed;
+				continue;
+			}
+
+			$result = wp_unschedule_event(
+				isset( $event['timestamp'] ) ? (int) $event['timestamp'] : 0,
+				$hook,
+				$args
+			);
+
+			if ( false === $result ) {
+				++$failed;
+			} else {
+				++$deleted;
+			}
+		}
+
+		wp_send_json_success(
+			array(
+				'deleted' => $deleted,
+				'failed'  => $failed,
+			)
+		);
+	}
 
 	/**
 	 * AJAX handler: triggers a scheduled cron hook immediately via do_action.
@@ -594,7 +664,7 @@ final class GDC_Cron_Viewer {
 	public static function ajax_cron_run(): void {
 		check_ajax_referer( self::NONCE_RUN );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -619,7 +689,7 @@ final class GDC_Cron_Viewer {
 	public static function ajax_cron_delete(): void {
 		check_ajax_referer( self::NONCE_DELETE );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -663,7 +733,7 @@ final class GDC_Cron_Viewer {
 	public static function ajax_cron_sources(): void {
 		check_ajax_referer( self::NONCE_SOURCES );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
@@ -676,7 +746,7 @@ final class GDC_Cron_Viewer {
 		foreach ( $raw as $hook ) {
 			$hook = preg_replace( '/[^a-zA-Z0-9_\-\/\.]/', '', substr( (string) $hook, 0, 200 ) );
 			if ( '' !== $hook ) {
-				$result[ $hook ] = self::resolve_hook_source( $hook );
+				$result[ $hook ] = self::escape_source_for_html( self::resolve_hook_source( $hook ) );
 			}
 		}
 
@@ -692,7 +762,7 @@ final class GDC_Cron_Viewer {
 	public static function ajax_cron_sources_stream(): void {
 		check_ajax_referer( self::NONCE_SOURCES );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			status_header( 403 );
 			wp_die( 'Forbidden' );
 		}
@@ -730,15 +800,31 @@ final class GDC_Cron_Viewer {
 			if ( '' === $hook ) {
 				continue;
 			}
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Names are HTML-escaped by escape_source_for_html() before JSON encoding.
 			echo wp_json_encode(
 				array(
 					'hook'   => $hook,
-					'source' => self::resolve_hook_source( $hook ),
+					'source' => self::escape_source_for_html( self::resolve_hook_source( $hook ) ),
 				)
 			) . "\n";
 			flush();
 		}
+	}
+
+	/**
+	 * HTML-escapes the human-readable fields of a source descriptor.
+	 *
+	 * The descriptors are rendered into the admin table via innerHTML on the
+	 * client, so names derived from plugin/theme directory names must be
+	 * escaped before they leave the server.
+	 *
+	 * @param array{type: string, name: string, slug: string} $source Source descriptor.
+	 * @return array{type: string, name: string, slug: string} Escaped copy.
+	 */
+	public static function escape_source_for_html( array $source ): array {
+		$source['name'] = htmlspecialchars( (string) $source['name'], ENT_QUOTES, 'UTF-8' );
+		$source['slug'] = htmlspecialchars( (string) $source['slug'], ENT_QUOTES, 'UTF-8' );
+		return $source;
 	}
 
 	/**
@@ -890,20 +976,50 @@ final class GDC_Cron_Viewer {
 	}
 
 	/**
+	 * Per-request cache of resolved hook sources.
+	 *
+	 * @var array<string, array{type: string, name: string, slug: string}>
+	 */
+	private static array $hook_source_cache = array();
+
+	/**
+	 * Clears the per-request hook source cache (used by tests).
+	 */
+	public static function reset_hook_source_cache(): void {
+		self::$hook_source_cache = array();
+	}
+
+	/**
+	 * Returns the transient cache key for a hook source lookup.
+	 *
+	 * @param string $hook Hook name.
+	 * @return string
+	 */
+	private static function hook_source_cache_key( string $hook ): string {
+		return 'gdc_cron_src_' . md5( $hook );
+	}
+
+	/**
 	 * Fallback source detection when no callbacks are registered in $wp_filter.
 	 *
 	 * Scans PHP files in plugin, theme, and WordPress core directories for the
-	 * hook name string. Results are cached per request via a static variable to
-	 * avoid repeated disk scans for the same hook.
+	 * hook name string. Results are cached per request via a static variable and
+	 * in a 24 h transient to avoid repeated full-tree disk scans for the same hook.
 	 *
 	 * @param string $hook Hook name to search for in file contents.
 	 * @return array{type: string, name: string, slug: string}
 	 */
 	private static function find_hook_in_files( string $hook ): array {
-		static $cache = array();
+		if ( array_key_exists( $hook, self::$hook_source_cache ) ) {
+			return self::$hook_source_cache[ $hook ];
+		}
 
-		if ( array_key_exists( $hook, $cache ) ) {
-			return $cache[ $hook ];
+		$transient_key = self::hook_source_cache_key( $hook );
+		$cached        = get_transient( $transient_key );
+
+		if ( is_array( $cached ) && isset( $cached['type'] ) ) {
+			self::$hook_source_cache[ $hook ] = $cached;
+			return $cached;
 		}
 
 		$content_dir = rtrim( str_replace( '\\', '/', WP_CONTENT_DIR ), '/' );
@@ -935,12 +1051,13 @@ final class GDC_Cron_Viewer {
 			}
 		}
 
-		$result         = $found ?? array(
+		$result                           = $found ?? array(
 			'type' => 'unknown',
 			'name' => '-',
 			'slug' => '',
 		);
-		$cache[ $hook ] = $result;
+		self::$hook_source_cache[ $hook ] = $result;
+		set_transient( $transient_key, $result, DAY_IN_SECONDS );
 		return $result;
 	}
 

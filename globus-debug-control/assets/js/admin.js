@@ -1,4 +1,4 @@
-﻿(
+(
 	function () {
 		'use strict';
 
@@ -320,7 +320,55 @@
 			}
 		);
 
-		// Cron Viewer: delete event.
+		// Cron Viewer: bulk delete orphaned events.
+	var bulkBtn = document.getElementById( 'gdc-cron-bulk-delete' );
+	if ( bulkBtn && typeof gdcCron !== 'undefined' ) {
+		bulkBtn.addEventListener(
+			'click',
+			function () {
+				// eslint-disable-next-line no-alert
+				if ( ! window.confirm( gdcCron.i18n.confirmBulk ) ) {
+					return;
+				}
+
+				var events = [];
+				document.querySelectorAll( 'tr.gdc-cron-orphan' ).forEach(
+					function ( row ) {
+						var hook = row.getAttribute( 'data-hook' );
+						var ts   = row.getAttribute( 'data-ts' );
+						var btn  = row.querySelector( '.gdc-cron-delete' );
+						var args = btn ? btn.getAttribute( 'data-args' ) : '[]';
+						events.push( JSON.stringify( { hook: hook, timestamp: Number( ts ), args: JSON.parse( args ) } ) );
+					}
+				);
+
+				if ( ! events.length ) {
+					return;
+				}
+
+				bulkBtn.disabled = true;
+				var body = new FormData();
+				body.append( 'action', 'gdc_cron_bulk_delete' );
+				body.append( '_ajax_nonce', gdcCron.nonceBulk );
+				events.forEach( function ( e ) { body.append( 'events[]', e ); } );
+
+				fetch( gdcCron.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( r ) { return r.json(); } )
+					.then(
+						function ( resp ) {
+							if ( resp.success ) {
+								window.location.reload();
+							} else {
+								bulkBtn.disabled = false;
+							}
+						}
+					)
+					.catch( function () { bulkBtn.disabled = false; } );
+			}
+		);
+	}
+
+	// Cron Viewer: delete event.
 		document.querySelectorAll( '.gdc-cron-delete' ).forEach(
 			function ( btn ) {
 				btn.addEventListener(

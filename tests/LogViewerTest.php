@@ -454,6 +454,66 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertStringNotContainsString('gdc-log-wrap-toggle', $html);
 	}
 
+	public function testRenderShowsTailNoticeForLargeLogFile(): void {
+		$path = \GDC_Log_Viewer::get_log_path();
+		$dir  = dirname($path);
+		if (! is_dir($dir)) {
+			mkdir($dir, 0777, true);
+		}
+
+		// File larger than the 2 MB render budget.
+		$handle = fopen($path, 'w');
+		fseek($handle, 2 * 1024 * 1024 + 1024);
+		fwrite($handle, "\n");
+		fclose($handle);
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-log-tail-notice', $html);
+		$this->assertStringContainsString('last', strtolower($html));
+	}
+
+	public function testRenderHasNoTailNoticeForSmallLogFile(): void {
+		$path = \GDC_Log_Viewer::get_log_path();
+		$dir  = dirname($path);
+		if (! is_dir($dir)) {
+			mkdir($dir, 0777, true);
+		}
+		file_put_contents($path, "line one\nline two\n");
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringNotContainsString('gdc-log-tail-notice', $html);
+	}
+
+	public function testRenderShowsLastFatalBannerWhenStored(): void {
+		$GLOBALS['gdc_test_state']['options']['gdc_last_fatal'] = [
+			'ts'      => time(),
+			'message' => 'Call to undefined function broken()',
+			'file'    => '/srv/www/x.php',
+			'line'    => 12,
+		];
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-last-fatal', $html);
+		$this->assertStringContainsString('Call to undefined function broken()', $html);
+	}
+
+	public function testRenderHasNoFatalBannerWhenNothingStored(): void {
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringNotContainsString('gdc-last-fatal', $html);
+	}
+
 	public function testRenderSelectContainsAllSevenErrorTypes(): void {
 		$this->refreshOptions([
 			'enabled'     => 1,

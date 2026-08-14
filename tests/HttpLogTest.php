@@ -136,6 +136,67 @@ final class HttpLogTest extends WordPressTestCase {
 		$this->assertSame('https://first.example.com', $log[1]['url']);
 	}
 
+	public function testOnRequestStoresTransportClass(): void {
+		$response = ['response' => ['code' => 200]];
+		$args     = ['method' => 'GET'];
+
+		\GDC_Http_Log::on_request($response, 'response', 'WP_Http_Curl', $args, 'https://example.com');
+
+		$log = \GDC_Http_Log::get_log();
+		$this->assertSame('WP_Http_Curl', $log[0]['transport']);
+	}
+
+	public function testOnRequestRecordsDurationWhenStarted(): void {
+		$response = ['response' => ['code' => 200]];
+		$args     = ['method' => 'GET'];
+		$url      = 'https://example.com';
+
+		\GDC_Http_Log::record_start_time(false, $args, $url);
+		usleep(1000);
+		\GDC_Http_Log::on_request($response, 'response', 'WP_Http', $args, $url);
+
+		$log = \GDC_Http_Log::get_log();
+		$this->assertArrayHasKey('duration', $log[0]);
+		$this->assertGreaterThan(0.0, $log[0]['duration']);
+	}
+
+	public function testOnRequestDurationIsNullWhenNoStartRecorded(): void {
+		$response = ['response' => ['code' => 200]];
+		$args     = ['method' => 'GET'];
+
+		\GDC_Http_Log::on_request($response, 'response', 'WP_Http', $args, 'https://example.com');
+
+		$log = \GDC_Http_Log::get_log();
+		$this->assertSame(0.0, $log[0]['duration']);
+	}
+
+	public function testMaskUrlMasksSensitiveQueryParams(): void {
+		$url = 'https://api.example.com/v1?key=abc123&token=xyz&plain=visible&access_token=secret';
+
+		$masked = \GDC_Http_Log::mask_url($url);
+
+		$this->assertStringContainsString('key=***', $masked);
+		$this->assertStringContainsString('token=***', $masked);
+		$this->assertStringContainsString('access_token=***', $masked);
+		$this->assertStringContainsString('plain=visible', $masked);
+		$this->assertStringNotContainsString('abc123', $masked);
+	}
+
+	public function testMaskUrlLeavesUrlWithoutQueryUntouched(): void {
+		$this->assertSame('https://example.com/path', \GDC_Http_Log::mask_url('https://example.com/path'));
+	}
+
+	public function testOnRequestStoresMaskedUrl(): void {
+		$response = ['response' => ['code' => 200]];
+		$args     = ['method' => 'GET'];
+
+		\GDC_Http_Log::on_request($response, 'response', 'WP_Http', $args, 'https://api.example.com?api_key=super-secret');
+
+		$log = \GDC_Http_Log::get_log();
+		$this->assertStringNotContainsString('super-secret', $log[0]['url']);
+		$this->assertStringContainsString('api_key=***', $log[0]['url']);
+	}
+
 	// -------------------------------------------------------------------------
 	// ajax_clear()
 	// -------------------------------------------------------------------------
@@ -273,6 +334,19 @@ final class HttpLogTest extends WordPressTestCase {
 
 		$this->assertStringContainsString('Capturing', $html);
 		$this->assertStringContainsString('Stop capturing', $html);
+	}
+
+	public function testRenderShowsTransportAndDurationColumns(): void {
+		$GLOBALS['gdc_test_state']['transients']['gdc_http_log'] = [
+			['ts' => time(), 'method' => 'GET', 'url' => 'https://api.example.com', 'status' => 200, 'error' => '', 'transport' => 'WP_Http_Curl', 'duration' => 0.25],
+		];
+
+		ob_start();
+		\GDC_Http_Log::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('WP_Http_Curl', $html);
+		$this->assertStringContainsString('0.25', $html);
 	}
 
 	public function testRenderStatusCodeClassification(): void {

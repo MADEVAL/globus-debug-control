@@ -24,6 +24,7 @@ trait GDC_Admin_Settings {
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_options' ),
+				'autoload'          => false,
 			)
 		);
 
@@ -77,7 +78,11 @@ trait GDC_Admin_Settings {
 		}
 
 		if ( isset( $input['log_path'] ) ) {
-			$output['log_path'] = sanitize_text_field( wp_unslash( $input['log_path'] ) );
+			$path = sanitize_text_field( wp_unslash( $input['log_path'] ) );
+
+			// Reject parent-traversal paths: a "log" pointing at wp-config.php
+			// could be truncated by the "Clear Log" action.
+			$output['log_path'] = $this->sanitize_path( $path );
 		}
 
 		if ( isset( $input['log_max_size_mb'] ) ) {
