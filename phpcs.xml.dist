@@ -1,0 +1,62 @@
+﻿<?xml version="1.0"?>
+<ruleset name="GLOBUS Debug Control">
+<description>PHPCS rules for GLOBUS Debug Control plugin</description>
+
+<file>globus-debug-control/</file>
+
+<exclude-pattern>*/vendor/*</exclude-pattern>
+<exclude-pattern>*/tests/*</exclude-pattern>
+<exclude-pattern>*/languages/*</exclude-pattern>
+<exclude-pattern>*/index.php</exclude-pattern>
+
+<config name="testVersion" value="7.4-"/>
+
+<rule ref="WordPress">
+<!-- WP core uses tabs -->
+<exclude name="Generic.WhiteSpace.DisallowTabIndent"/>
+
+<!-- File name conventions not required for single-class plugin files -->
+<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+
+<!-- Text domain enforced below via dedicated rule -->
+<exclude name="WordPress.WP.I18n.MissingArgDomain"/>
+
+<!--
+ini_set / error_reporting / set_error_handler ARE this plugin's core purpose.
+There is no WordPress alternative for these PHP built-ins.
+All calls are guarded by WP_DEBUG checks and documented inline.
+-->
+<exclude name="WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_ini_set"/>
+<exclude name="WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_error_reporting"/>
+<exclude name="WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting"/>
+<exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>
+<exclude name="WordPress.PHP.IniSet"/>
+
+<!--
+@ operator used only on low-level filesystem calls (fopen, chmod, rename, filesize)
+that run before WP_Filesystem is available (early_init / apply_log_settings).
+Each call checks the return value immediately after.
+-->
+<exclude name="WordPress.PHP.NoSilencedErrors"/>
+
+<!-- is_writable() called before WP_Filesystem is available in early bootstrap -->
+<exclude name="WordPress.WP.AlternativeFunctions.file_system_operations_is_writable"/>
+</rule>
+
+<rule ref="WordPress.WP.I18n">
+<properties>
+<property name="text_domain" type="array">
+<element value="globus-debug-control"/>
+</property>
+</properties>
+</rule>
+
+<rule ref="WordPress.Security.NonceVerification"/>
+
+<rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
+
+<!-- Limit PHPCS to PHP files; JS linting is handled by ESLint -->
+<arg name="extensions" value="php"/>
+
+</ruleset>

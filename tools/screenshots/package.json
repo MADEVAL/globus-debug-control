@@ -1,0 +1,13 @@
+{
+	"name": "gdc-screenshots",
+	"private": true,
+	"type": "module",
+	"description": "Renders WordPress.org plugin screenshots from HTML templates with Playwright.",
+	"scripts": {
+		"capture": "node capture.mjs",
+		"render": "node capture.mjs --render-only"
+	},
+	"devDependencies": {
+		"playwright": "^1.64.0"
+	}
+}

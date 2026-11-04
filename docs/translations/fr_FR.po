@@ -1,0 +1,819 @@
+# Copyright (C) 2026 Yevhen Leonidov
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: GLOBUS Debug Control 2.2.7\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/globus-debug-control\n"
+"Last-Translator: GLOBUS Studio\n"
+"Language-Team: French <fr@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-04T23:18:34+00:00\n"
+"PO-Revision-Date: 2026-11-05 12:00+0000\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: globus-debug-control\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. Plugin Name of the plugin
+#: globus-debug-control.php:3
+msgid "GLOBUS Debug Control"
+msgstr "GLOBUS Debug Control"
+
+#. Plugin URI of the plugin
+#: globus-debug-control.php:4
+msgid "https://globus.studio"
+msgstr "https://globus.studio"
+
+#. Description of the plugin
+#: globus-debug-control.php:5
+msgid "Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal."
+msgstr "Contrôle complet du mode de débogage de WordPress : filtrage des types d'erreurs, gestion de l'affichage et de la journalisation, suppression de la classe body php-error."
+
+#. Author of the plugin
+#: globus-debug-control.php:7
+msgid "Yevhen Leonidov"
+msgstr "Yevhen Leonidov"
+
+#. Author URI of the plugin
+#: globus-debug-control.php:8
+msgid "https://leonidov.dev"
+msgstr "https://leonidov.dev"
+
+#: globus-debug-control.php:154
+#: include/trait-admin-page.php:81
+msgid "Settings"
+msgstr "Réglages"
+
+#: include/constants-viewer.php:178
+msgid "WP_DEBUG settings"
+msgstr "Réglages de WP_DEBUG"
+
+#: include/constants-viewer.php:185
+msgid "No WP constants found."
+msgstr "Aucune constante WP trouvée."
+
+#: include/constants-viewer.php:192
+msgid "Constant"
+msgstr "Constante"
+
+#: include/constants-viewer.php:193
+msgid "Value"
+msgstr "Valeur"
+
+#: include/constants-viewer.php:206
+msgid "*** (masked)"
+msgstr "*** (masqué)"
+
+#: include/cron-viewer.php:58
+msgid "No scheduled cron events found."
+msgstr "Aucune tâche cron planifiée trouvée."
+
+#: include/cron-viewer.php:71
+msgid "Running…"
+msgstr "Exécution…"
+
+#: include/cron-viewer.php:72
+msgid "Deleting…"
+msgstr "Suppression…"
+
+#: include/cron-viewer.php:73
+msgid "Deleted"
+msgstr "Supprimé"
+
+#: include/cron-viewer.php:74
+msgid "Triggered"
+msgstr "Déclenché"
+
+#: include/cron-viewer.php:75
+#: include/http-log.php:310
+msgid "Error"
+msgstr "Erreur"
+
+#: include/cron-viewer.php:76
+msgid "Delete this scheduled event?"
+msgstr "Supprimer cette tâche planifiée ?"
+
+#: include/cron-viewer.php:77
+msgid "Delete all orphaned scheduled events?"
+msgstr "Supprimer toutes les tâches planifiées orphelines ?"
+
+#: include/cron-viewer.php:88
+msgid "Delete orphaned"
+msgstr "Supprimer les orphelins"
+
+#: include/cron-viewer.php:98
+msgid "Next Run"
+msgstr "Prochaine exécution"
+
+#: include/cron-viewer.php:99
+msgid "Hook / Source"
+msgstr "Hook / Source"
+
+#: include/cron-viewer.php:100
+msgid "Schedule"
+msgstr "Planification"
+
+#: include/cron-viewer.php:101
+msgid "Actions"
+msgstr "Actions"
+
+#: include/cron-viewer.php:122
+msgid "overdue"
+msgstr "en retard"
+
+#: include/cron-viewer.php:130
+msgid "No callback registered and hook not found in plugin files"
+msgstr "Aucun callback enregistré et hook introuvable dans les fichiers du plugin"
+
+#: include/cron-viewer.php:131
+msgid "orphan"
+msgstr "orphelin"
+
+#: include/cron-viewer.php:135
+msgid "Multiple scheduled instances of this hook"
+msgstr "Plusieurs instances planifiées de ce hook"
+
+#: include/cron-viewer.php:142
+msgid "Show callbacks"
+msgstr "Afficher les callbacks"
+
+#: include/cron-viewer.php:157
+msgid "args"
+msgstr "args"
+
+#: include/cron-viewer.php:169
+msgid "one-time"
+msgstr "ponctuel"
+
+#: include/cron-viewer.php:175
+#: include/cron-viewer.php:179
+msgid "Trigger now"
+msgstr "Déclencher maintenant"
+
+#: include/cron-viewer.php:183
+#: include/cron-viewer.php:188
+msgid "Delete event"
+msgstr "Supprimer la tâche"
+
+#: include/cron-viewer.php:217
+#: include/trait-admin-page.php:170
+#: include/trait-admin-page.php:174
+#: include/trait-admin-page.php:178
+#: include/trait-admin-page.php:372
+#: include/wp-config-debug.php:380
+msgid "Disabled"
+msgstr "Désactivé"
+
+#: include/cron-viewer.php:219
+msgid "Alternate"
+msgstr "Alternatif"
+
+#: include/cron-viewer.php:221
+#: include/trait-admin-page.php:170
+#: include/trait-admin-page.php:174
+#: include/trait-admin-page.php:178
+#: include/trait-admin-page.php:371
+#: include/wp-config-debug.php:375
+msgid "Enabled"
+msgstr "Activé"
+
+#: include/cron-viewer.php:231
+msgid "Events"
+msgstr "Événements"
+
+#: include/cron-viewer.php:239
+msgid "Unique hooks"
+msgstr "Hooks uniques"
+
+#: include/cron-viewer.php:248
+msgid "Overdue"
+msgstr "En retard"
+
+#: include/cron-viewer.php:258
+msgid "Orphaned"
+msgstr "Orphelines"
+
+#: include/cron-viewer.php:267
+msgid "Stuck"
+msgstr "Bloqué"
+
+#: include/cron-viewer.php:268
+msgid "Cron lock active"
+msgstr "Verrou cron actif"
+
+#: include/cron-viewer.php:278
+msgid "Next run"
+msgstr "Prochaine exécution"
+
+#: include/cron-viewer.php:436
+msgid "DISABLE_WP_CRON is true - WP-Cron will not fire automatically on page load. Make sure a real system cron job is configured."
+msgstr "DISABLE_WP_CRON est à true - WP-Cron ne se déclenchera pas automatiquement au chargement de la page. Assurez-vous qu'une véritable tâche cron système est configurée."
+
+#: include/cron-viewer.php:444
+msgid "ALTERNATE_WP_CRON is true - cron runs via a redirect instead of a non-blocking HTTP call."
+msgstr "ALTERNATE_WP_CRON est à true - le cron s'exécute via une redirection au lieu d'un appel HTTP non bloquant."
+
+#: include/cron-viewer.php:452
+msgid "The doing_cron transient is older than 10 minutes - WP-Cron appears to be stuck. Consider clearing it."
+msgstr "Le transient doing_cron date de plus de 10 minutes - WP-Cron semble bloqué. Envisagez de le supprimer."
+
+#. translators: %d: number of orphaned hooks
+#: include/cron-viewer.php:462
+#, php-format
+msgid "%d orphaned cron hook found - its plugin may have been deactivated without cleaning up."
+msgid_plural "%d orphaned cron hooks found - their plugins may have been deactivated without cleaning up."
+msgstr[0] "%d hook cron orphelin trouvé - son plugin a peut-être été désactivé sans nettoyage."
+msgstr[1] "%d hooks cron orphelins trouvés - leurs plugins ont peut-être été désactivés sans nettoyage."
+
+#. translators: %d: number of duplicated hooks
+#: include/cron-viewer.php:479
+#, php-format
+msgid "%d hook has multiple scheduled instances."
+msgid_plural "%d hooks have multiple scheduled instances."
+msgstr[0] "%d hook possède plusieurs instances planifiées."
+msgstr[1] "%d hooks possèdent plusieurs instances planifiées."
+
+#. translators: %s: hook name
+#: include/cron-viewer.php:498
+#, php-format
+msgid "\"%s\" is scheduled with an interval shorter than 1 minute."
+msgstr "« %s » est planifié avec un intervalle inférieur à 1 minute."
+
+#: include/cron-viewer.php:1182
+msgid "ago"
+msgstr "auparavant"
+
+#: include/cron-viewer.php:1185
+msgid "in"
+msgstr "dans"
+
+#: include/http-log.php:261
+msgid "Capturing"
+msgstr "Capture en cours"
+
+#: include/http-log.php:261
+msgid "Paused"
+msgstr "En pause"
+
+#: include/http-log.php:262
+msgid "HTTP capture"
+msgstr "Capture HTTP"
+
+#: include/http-log.php:269
+msgid "Requests logged"
+msgstr "Requêtes enregistrées"
+
+#: include/http-log.php:277
+msgid "Stop capturing"
+msgstr "Arrêter la capture"
+
+#: include/http-log.php:277
+msgid "Start capturing"
+msgstr "Démarrer la capture"
+
+#: include/http-log.php:282
+msgid "Clear log"
+msgstr "Vider le journal"
+
+#: include/http-log.php:294
+msgid "No requests captured yet. Browse other pages to record HTTP API calls."
+msgstr "Aucune requête capturée pour l'instant. Parcourez d'autres pages pour enregistrer les appels de l'API HTTP."
+
+#: include/http-log.php:296
+msgid "Capturing is disabled. Click \"Start capturing\" to begin recording outgoing HTTP requests."
+msgstr "La capture est désactivée. Cliquez sur « Démarrer la capture » pour commencer à enregistrer les requêtes HTTP sortantes."
+
+#: include/http-log.php:306
+msgid "Time"
+msgstr "Heure"
+
+#: include/http-log.php:307
+msgid "Request"
+msgstr "Requête"
+
+#: include/http-log.php:308
+msgid "Status"
+msgstr "Statut"
+
+#: include/http-log.php:309
+msgid "Transport"
+msgstr "Transport"
+
+#: include/log-viewer.php:88
+msgid "Insufficient permissions."
+msgstr "Permissions insuffisantes."
+
+#: include/log-viewer.php:94
+msgid "Log file not found."
+msgstr "Fichier journal introuvable."
+
+#: include/log-viewer.php:247
+msgid "Log file cleared."
+msgstr "Fichier journal vidé."
+
+#: include/log-viewer.php:258
+#: include/trait-admin-page.php:55
+msgid "Last fatal error:"
+msgstr "Dernière erreur fatale :"
+
+#. translators: %s: number of log lines
+#: include/log-viewer.php:290
+#: include/log-viewer.php:397
+#, php-format
+msgid "%s line"
+msgid_plural "%s lines"
+msgstr[0] "%s ligne"
+msgstr[1] "%s lignes"
+
+#: include/log-viewer.php:292
+msgid "Log file does not exist."
+msgstr "Le fichier journal n'existe pas."
+
+#: include/log-viewer.php:299
+msgid "Word wrap"
+msgstr "Retour à la ligne"
+
+#: include/log-viewer.php:318
+msgid "Download"
+msgstr "Télécharger"
+
+#: include/log-viewer.php:323
+msgid "Clear the log file?"
+msgstr "Vider le fichier journal ?"
+
+#: include/log-viewer.php:324
+msgid "Clear Log"
+msgstr "Vider le journal"
+
+#: include/log-viewer.php:344
+msgid "Test error"
+msgstr "Erreur de test"
+
+#: include/log-viewer.php:351
+msgid "Generate"
+msgstr "Générer"
+
+#: include/log-viewer.php:355
+msgid "Auto-refresh when log file changes"
+msgstr "Rafraîchissement automatique lorsque le fichier journal change"
+
+#: include/log-viewer.php:357
+msgid "Live tail"
+msgstr "Suivi en direct"
+
+#: include/log-viewer.php:367
+msgid "The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything."
+msgstr "Le fichier journal dépasse la limite d'affichage - seuls les 2 derniers Mo sont affichés. Téléchargez le fichier complet pour tout inspecter."
+
+#: include/log-viewer.php:422
+msgid "Log file is empty."
+msgstr "Le fichier journal est vide."
+
+#: include/options-viewer.php:94
+msgid "Autoloaded rows"
+msgstr "Lignes chargées automatiquement"
+
+#: include/options-viewer.php:101
+msgid "Total autoloaded"
+msgstr "Total chargé automatiquement"
+
+#. translators: %d: row limit
+#: include/options-viewer.php:111
+#, php-format
+msgid "Showing top %d rows by size."
+msgstr "Affichage des %d lignes les plus volumineuses."
+
+#: include/options-viewer.php:123
+msgid "No autoloaded options found."
+msgstr "Aucune option chargée automatiquement trouvée."
+
+#: include/options-viewer.php:130
+msgid "Option name"
+msgstr "Nom de l'option"
+
+#: include/options-viewer.php:131
+#: include/transient-viewer.php:278
+msgid "Size"
+msgstr "Taille"
+
+#: include/options-viewer.php:132
+msgid "Relative size"
+msgstr "Taille relative"
+
+#: include/trait-admin-page.php:40
+msgid "GLOBUS: Recent Errors"
+msgstr "GLOBUS : erreurs récentes"
+
+#: include/trait-admin-page.php:61
+msgid "No fatal errors recorded."
+msgstr "Aucune erreur fatale enregistrée."
+
+#: include/trait-admin-page.php:65
+msgid "Open Error Log"
+msgstr "Ouvrir le journal d'erreurs"
+
+#: include/trait-admin-page.php:82
+msgid "WP_DEBUG"
+msgstr "WP_DEBUG"
+
+#: include/trait-admin-page.php:83
+msgid "Error Log"
+msgstr "Journal d'erreurs"
+
+#: include/trait-admin-page.php:84
+msgid "Cron Tasks"
+msgstr "Tâches cron"
+
+#: include/trait-admin-page.php:85
+msgid "Transients"
+msgstr "Transients"
+
+#: include/trait-admin-page.php:86
+msgid "Autoloaded"
+msgstr "Chargées automatiquement"
+
+#: include/trait-admin-page.php:87
+msgid "HTTP Log"
+msgstr "Journal HTTP"
+
+#: include/trait-admin-page.php:88
+msgid "Constants"
+msgstr "Constantes"
+
+#: include/trait-admin-page.php:106
+msgid "ON"
+msgstr "ACTIVÉ"
+
+#: include/trait-admin-page.php:111
+msgid "OFF"
+msgstr "DÉSACTIVÉ"
+
+#: include/trait-admin-page.php:154
+msgid "System Information"
+msgstr "Informations système"
+
+#: include/trait-admin-page.php:155
+msgid "Runtime values reported by WordPress and PHP."
+msgstr "Valeurs d'exécution rapportées par WordPress et PHP."
+
+#: include/trait-admin-page.php:161
+msgid "Plugin version:"
+msgstr "Version du plugin :"
+
+#: include/trait-admin-page.php:165
+msgid "PHP version:"
+msgstr "Version de PHP :"
+
+#: include/trait-admin-page.php:181
+msgid "Current error_reporting:"
+msgstr "error_reporting actuel :"
+
+#: include/trait-admin-page.php:194
+#: include/trait-admin-settings.php:299
+msgid "Log file path:"
+msgstr "Chemin du fichier journal :"
+
+#: include/trait-admin-page.php:202
+msgid "size:"
+msgstr "taille :"
+
+#: include/trait-admin-page.php:204
+msgid "file does not exist"
+msgstr "le fichier n'existe pas"
+
+#: include/trait-admin-page.php:207
+msgid "Not configured"
+msgstr "Non configuré"
+
+#: include/trait-admin-page.php:213
+msgid "Execution context:"
+msgstr "Contexte d'exécution :"
+
+#: include/trait-admin-page.php:214
+msgid "API context"
+msgstr "Contexte API"
+
+#: include/trait-admin-page.php:214
+msgid "Normal"
+msgstr "Normal"
+
+#: include/trait-admin-page.php:217
+msgid "MU-plugin dropin:"
+msgstr "Dropin mu-plugin :"
+
+#: include/trait-admin-page.php:218
+#: include/trait-admin-settings.php:360
+msgid "Installed"
+msgstr "Installé"
+
+#: include/trait-admin-page.php:218
+msgid "Not installed - early interception disabled"
+msgstr "Non installé - interception précoce désactivée"
+
+#: include/trait-admin-page.php:224
+msgid "Version"
+msgstr "Version"
+
+#: include/trait-admin-page.php:244
+msgid "View all WP constants →"
+msgstr "Voir toutes les constantes WP →"
+
+#: include/trait-admin-settings.php:31
+msgid "General Settings"
+msgstr "Réglages généraux"
+
+#: include/trait-admin-settings.php:46
+msgid "Enable Plugin"
+msgstr "Activer le plugin"
+
+#: include/trait-admin-settings.php:51
+msgid "Error Type Filtering"
+msgstr "Filtrage des types d'erreurs"
+
+#: include/trait-admin-settings.php:56
+msgid "display_errors Mode"
+msgstr "Mode display_errors"
+
+#: include/trait-admin-settings.php:61
+msgid "Logging Settings"
+msgstr "Réglages de journalisation"
+
+#: include/trait-admin-settings.php:66
+msgid "php-error Class"
+msgstr "Classe php-error"
+
+#: include/trait-admin-settings.php:71
+msgid "API Contexts"
+msgstr "Contextes API"
+
+#: include/trait-admin-settings.php:76
+msgid "Early Error Interception"
+msgstr "Interception précoce des erreurs"
+
+#: include/trait-admin-settings.php:91
+msgid "Plugin status"
+msgstr "État du plugin"
+
+#: include/trait-admin-settings.php:92
+msgid "Turn all debug control behaviour on or off."
+msgstr "Active ou désactive l'ensemble du contrôle du débogage."
+
+#: include/trait-admin-settings.php:95
+msgid "Error filtering"
+msgstr "Filtrage des erreurs"
+
+#: include/trait-admin-settings.php:96
+msgid "Choose which PHP error types are hidden and how errors are displayed."
+msgstr "Choisissez les types d'erreurs PHP à masquer et le mode d'affichage des erreurs."
+
+#: include/trait-admin-settings.php:99
+msgid "Logging"
+msgstr "Journalisation"
+
+#: include/trait-admin-settings.php:100
+msgid "Write errors to a file and rotate it when it grows too large."
+msgstr "Écrit les erreurs dans un fichier et le fait tourner lorsqu'il devient trop volumineux."
+
+#: include/trait-admin-settings.php:103
+msgid "Display and API contexts"
+msgstr "Affichage et contextes API"
+
+#: include/trait-admin-settings.php:104
+msgid "Front-end cosmetics and non-HTML request handling."
+msgstr "Aspects visuels du front-end et gestion des requêtes non HTML."
+
+#: include/trait-admin-settings.php:107
+msgid "Early interception"
+msgstr "Interception précoce"
+
+#: include/trait-admin-settings.php:108
+msgid "Load the error filter before regular plugins."
+msgstr "Charge le filtre d'erreurs avant les plugins classiques."
+
+#: include/trait-admin-settings.php:156
+msgid "Save Settings"
+msgstr "Enregistrer les réglages"
+
+#: include/trait-admin-settings.php:230
+msgid "Enable debug control"
+msgstr "Activer le contrôle du débogage"
+
+#: include/trait-admin-settings.php:232
+msgid "When disabled, the plugin does not affect PHP or WordPress settings."
+msgstr "Lorsqu'il est désactivé, le plugin n'affecte ni la configuration de PHP ni celle de WordPress."
+
+#: include/trait-admin-settings.php:246
+msgid "Suppress E_NOTICE"
+msgstr "Masquer E_NOTICE"
+
+#: include/trait-admin-settings.php:246
+msgid "and E_USER_NOTICE"
+msgstr "et E_USER_NOTICE"
+
+#: include/trait-admin-settings.php:250
+msgid "Suppress E_DEPRECATED"
+msgstr "Masquer E_DEPRECATED"
+
+#: include/trait-admin-settings.php:250
+msgid "and E_USER_DEPRECATED"
+msgstr "et E_USER_DEPRECATED"
+
+#: include/trait-admin-settings.php:254
+msgid "Suppress E_WARNING"
+msgstr "Masquer E_WARNING"
+
+#: include/trait-admin-settings.php:254
+msgid "and E_USER_WARNING (use with caution!)"
+msgstr "et E_USER_WARNING (à utiliser avec prudence !)"
+
+#: include/trait-admin-settings.php:259
+#: include/trait-admin-settings.php:264
+msgid "Suppress E_STRICT"
+msgstr "Masquer E_STRICT"
+
+#: include/trait-admin-settings.php:264
+msgid "(not available in PHP 8.0+)"
+msgstr "(non disponible dans PHP 8.0+)"
+
+#: include/trait-admin-settings.php:268
+msgid "Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible."
+msgstr "Les types d'erreurs sélectionnés ne seront ni affichés ni journalisés. Les erreurs fatales (E_ERROR) restent toujours visibles."
+
+#: include/trait-admin-settings.php:279
+msgid "Inherit from WP_DEBUG_DISPLAY"
+msgstr "Hériter de WP_DEBUG_DISPLAY"
+
+#: include/trait-admin-settings.php:280
+msgid "Always on"
+msgstr "Toujours activé"
+
+#: include/trait-admin-settings.php:281
+msgid "Always off"
+msgstr "Toujours désactivé"
+
+#: include/trait-admin-settings.php:283
+msgid "Controls error output on screen. In API contexts, display is automatically disabled."
+msgstr "Contrôle l'affichage des erreurs à l'écran. Dans les contextes API, l'affichage est automatiquement désactivé."
+
+#: include/trait-admin-settings.php:296
+msgid "Enable error logging"
+msgstr "Activer la journalisation des erreurs"
+
+#: include/trait-admin-settings.php:300
+msgid "Leave empty for auto-detection"
+msgstr "Laisser vide pour la détection automatique"
+
+#: include/trait-admin-settings.php:301
+msgid "If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log)."
+msgstr "Si vide : utilise WP_DEBUG_LOG (généralement wp-content/debug.log)."
+
+#: include/trait-admin-settings.php:301
+msgid "You can specify an absolute or relative (from wp-content) path."
+msgstr "Vous pouvez indiquer un chemin absolu ou relatif (depuis wp-content)."
+
+#: include/trait-admin-settings.php:303
+msgid "Maximum log size (MB):"
+msgstr "Taille maximale du journal (Mo) :"
+
+#: include/trait-admin-settings.php:305
+msgid "When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB."
+msgstr "En cas de dépassement, le fichier est renommé avec un suffixe de date et un nouveau fichier est créé. Plage : 1-100 Mo."
+
+#. translators: 1: CSS class name, 2: HTML tag name
+#: include/trait-admin-settings.php:322
+#, php-format
+msgid "Remove %1$s class from %2$s"
+msgstr "Supprimer la classe %1$s de %2$s"
+
+#: include/trait-admin-settings.php:330
+msgid "WordPress adds this class when errors are detected. It can interfere with styling."
+msgstr "WordPress ajoute cette classe lorsque des erreurs sont détectées. Elle peut interférer avec le style."
+
+#: include/trait-admin-settings.php:342
+msgid "Show errors in API contexts"
+msgstr "Afficher les erreurs dans les contextes API"
+
+#: include/trait-admin-settings.php:344
+msgid "By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation."
+msgstr "Par défaut, l'affichage des erreurs est désactivé dans AJAX, l'API REST, Cron et la CLI pour garantir le bon fonctionnement."
+
+#: include/trait-admin-settings.php:344
+msgid "Enable only for API debugging."
+msgstr "À activer uniquement pour le débogage des API."
+
+#: include/trait-admin-settings.php:357
+msgid "Install mu-plugin for early interception"
+msgstr "Installer le mu-plugin pour l'interception précoce"
+
+#: include/trait-admin-settings.php:362
+msgid "Not installed"
+msgstr "Non installé"
+
+#: include/trait-admin-settings.php:365
+msgid "WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes."
+msgstr "WordPress charge les plugins par ordre alphabétique. Les erreurs des plugins chargés plus tôt (par ex. Elementor) surviennent avant l'initialisation de GLOBUS Debug Control."
+
+#. translators: 1: mu-plugin filename, 2: directory path
+#: include/trait-admin-settings.php:369
+#, php-format
+msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
+msgstr "Le mu-plugin se charge en premier et intercepte ces erreurs. Fichier : %1$s dans %2$s"
+
+#: include/transient-viewer.php:238
+msgid "Total"
+msgstr "Total"
+
+#: include/transient-viewer.php:245
+#: include/transient-viewer.php:293
+msgid "Expired"
+msgstr "Expiré"
+
+#: include/transient-viewer.php:252
+msgid "Total size"
+msgstr "Taille totale"
+
+#: include/transient-viewer.php:260
+msgid "Purge expired"
+msgstr "Purger les transients expirés"
+
+#: include/transient-viewer.php:270
+msgid "No transients found."
+msgstr "Aucun transient trouvé."
+
+#: include/transient-viewer.php:277
+msgid "Key"
+msgstr "Clé"
+
+#: include/transient-viewer.php:279
+msgid "Expires"
+msgstr "Expire le"
+
+#: include/transient-viewer.php:291
+msgid "No expiry"
+msgstr "Sans expiration"
+
+#. translators: %s: human-readable time difference
+#: include/transient-viewer.php:298
+#, php-format
+msgid "in %s"
+msgstr "dans %s"
+
+#: include/transient-viewer.php:307
+msgid "Delete"
+msgstr "Supprimer"
+
+#: include/wp-config-debug.php:301
+msgid "wp-config.php updated."
+msgstr "wp-config.php mis à jour."
+
+#: include/wp-config-debug.php:305
+msgid "wp-config.php is not writable."
+msgstr "wp-config.php n'est pas accessible en écriture."
+
+#: include/wp-config-debug.php:311
+msgid "wp-config.php not found."
+msgstr "wp-config.php introuvable."
+
+#. translators: %s: file path
+#: include/wp-config-debug.php:319
+#, php-format
+msgid "<strong>%s</strong> is not writable. Changes cannot be saved."
+msgstr "<strong>%s</strong> n'est pas accessible en écriture. Les modifications ne peuvent pas être enregistrées."
+
+#: include/wp-config-debug.php:332
+msgid "wp-config.php constants"
+msgstr "Constantes de wp-config.php"
+
+#: include/wp-config-debug.php:335
+msgid "Editing:"
+msgstr "Modification :"
+
+#: include/wp-config-debug.php:342
+msgid "Writable"
+msgstr "Accessible en écriture"
+
+#: include/wp-config-debug.php:342
+msgid "Read-only"
+msgstr "Lecture seule"
+
+#: include/wp-config-debug.php:386
+msgid "(not defined, will be added)"
+msgstr "(non définie, sera ajoutée)"
+
+#: include/wp-config-debug.php:388
+msgid "Current:"
+msgstr "Valeur actuelle :"
+
+#: include/wp-config-debug.php:394
+msgid "Custom log file path (relative to wp-content or absolute):"
+msgstr "Chemin personnalisé du fichier journal (relatif à wp-content ou absolu) :"
+
+#: include/wp-config-debug.php:402
+msgid "e.g. custom/debug.log - leave empty for true"
+msgstr "par ex. custom/debug.log - laisser vide pour true"
+
+#: include/wp-config-debug.php:415
+msgid "Save to wp-config.php"
+msgstr "Enregistrer dans wp-config.php"

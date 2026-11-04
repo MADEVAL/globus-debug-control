@@ -1,0 +1,22 @@
+/vendor/
+/.phpunit.result.cache
+/.phpunit.cache/
+/wordpress/
+/wp-cli.phar
+
+# Local env and editor files
+/.env
+/.env.*
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and build artifacts
+*.log
+debug.log
+*.zip
+node_modules/
+
+# Rendered screenshot previews (the PNGs in docs/screenshots are tracked)
+/tools/screenshots/out/

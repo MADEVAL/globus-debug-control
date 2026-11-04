@@ -1,0 +1,81 @@
+/*
+ * Screenshot-only overrides.
+ *
+ * The wp-admin CSS in vendor/ is the real thing. This file only hides the
+ * browser scrollbar and styles the static CodeMirror stand-in used by the
+ * Error Log template, because embedding CodeMirror itself is overkill for a
+ * marketing screenshot.
+ */
+
+html {
+	overflow-y: hidden;
+}
+
+/*
+ * WordPress prints the admin colour scheme variables inline from PHP.
+ * The static templates have no PHP, so define the "modern" scheme values here.
+ */
+:root {
+	--wp-admin-theme-color: #3858e9;
+	--wp-admin-theme-color-darker-10: #2145d0;
+	--wp-admin-theme-color-darker-20: #183bb5;
+	--wp-admin-theme-color-light-100: #f0f0ff;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+}
+
+#wpadminbar .avatar {
+	border-radius: 50%;
+	vertical-align: middle;
+}
+
+/* Static stand-in for the CodeMirror editor in the Error Log tab. */
+#gdc-log-wrap .gdc-log-mock {
+	background: #1e1e1e;
+	border: 1px solid #1d2327;
+	border-top: none;
+	border-radius: 0 0 3px 3px;
+	height: 540px;
+	overflow: hidden;
+	font-family: Consolas, "Fira Code", "JetBrains Mono", "Courier New", monospace;
+	font-size: 12px;
+	line-height: 1.65;
+}
+
+#gdc-log-wrap .gdc-log-line {
+	display: flex;
+	border-bottom: 1px solid rgba(255, 255, 255, .04);
+}
+
+#gdc-log-wrap .gdc-log-line:last-child {
+	border-bottom: none;
+}
+
+#gdc-log-wrap .gdc-log-ln {
+	flex: 0 0 52px;
+	width: 52px;
+	padding: 0 10px 0 0;
+	text-align: right;
+	color: #495162 !important;
+	background: #252526;
+	border-right: 1px solid #3e3e42;
+	font-size: 11px;
+	user-select: none;
+}
+
+#gdc-log-wrap .gdc-log-text {
+	flex: 1;
+	padding: 0 14px;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	color: #8b949e;
+}
+
+#gdc-log-wrap .gdc-log-info .gdc-log-text { color: #8b949e; }
+
+/* Keep the mock editor flush with the real two-row toolbar. */
+.gdc-log-toolbar {
+	margin: 0;
+}

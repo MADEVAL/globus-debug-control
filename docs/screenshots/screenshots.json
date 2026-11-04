@@ -1,0 +1,42 @@
+[
+	{
+		"file": "screenshot-1.png",
+		"slug": "settings",
+		"caption": "Settings tab: filter PHP error types, choose the error display mode, and configure logging."
+	},
+	{
+		"file": "screenshot-2.png",
+		"slug": "wp-debug",
+		"caption": "WP_DEBUG tab: toggle debug constants in wp-config.php without editing files."
+	},
+	{
+		"file": "screenshot-3.png",
+		"slug": "error-log",
+		"caption": "Error Log tab: color-coded debug.log with pagination, live polling, download, and clear."
+	},
+	{
+		"file": "screenshot-4.png",
+		"slug": "cron",
+		"caption": "Cron Tasks tab: overdue events, orphaned hooks, source detection, and one-click actions."
+	},
+	{
+		"file": "screenshot-5.png",
+		"slug": "transients",
+		"caption": "Transients tab: every database transient with size and expiry, plus bulk purge of expired rows."
+	},
+	{
+		"file": "screenshot-6.png",
+		"slug": "autoloaded",
+		"caption": "Autoloaded tab: the heaviest autoloaded options, sorted by size, to spot request bloat."
+	},
+	{
+		"file": "screenshot-7.png",
+		"slug": "http-log",
+		"caption": "HTTP Log tab: outgoing WordPress HTTP API calls with status, transport, and duration."
+	},
+	{
+		"file": "screenshot-8.png",
+		"slug": "constants",
+		"caption": "Constants tab: runtime WordPress constants grouped by category, with secrets masked."
+	}
+]
