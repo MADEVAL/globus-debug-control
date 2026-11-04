@@ -1,0 +1,21 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+
+# Development files are not part of the plugin ZIP that ships to users.
+composer.json export-ignore
+composer.lock export-ignore
+phpcs.xml.dist export-ignore
+phpunit.xml.dist export-ignore
+tests/ export-ignore
+tools/ export-ignore
+docs/ export-ignore
+.github/ export-ignore
+README.md export-ignore
+LICENSE export-ignore
+AGENTS.md export-ignore
