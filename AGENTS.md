@@ -1,5 +1,7 @@
 # AGENTS.md
 
+Always on skill `caveman` in `ultra` mode
+
 ## Project
 
 WordPress plugin "GLOBUS Debug Control" — error filtering, WP_DEBUG toggle, log/cron/transient/HTTP/constants viewers. PHP 7.4+, text domain `globus-debug-control`.
