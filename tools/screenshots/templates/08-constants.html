@@ -1,61 +1,53 @@
 				<p>
 					<a href="#" class="button button-secondary">
-						<span class="dashicons dashicons-arrow-left-alt" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+						<span class="dashicons dashicons-arrow-left-alt"></span>
 						WP_DEBUG settings
 					</a>
 				</p>
 
-				<h3 class="gdc-constant-group-heading">Debug</h3>
-				<table class="wp-list-table widefat striped gdc-constants-table" style="margin-bottom:20px;">
-					<thead>
-						<tr><th style="width:50%;">Constant</th><th>Value</th></tr>
-					</thead>
-					<tbody>
-						<tr><td><code>WP_DEBUG</code></td><td><code>true</code></td></tr>
-						<tr><td><code>WP_DEBUG_LOG</code></td><td><code>true</code></td></tr>
-						<tr><td><code>WP_DEBUG_DISPLAY</code></td><td><code>false</code></td></tr>
-						<tr><td><code>SCRIPT_DEBUG</code></td><td><code>false</code></td></tr>
-						<tr><td><code>SAVEQUERIES</code></td><td><code>true</code></td></tr>
-						<tr><td><code>WP_DEVELOPMENT_MODE</code></td><td><code>core</code></td></tr>
-					</tbody>
-				</table>
+				<div class="gdc-table-scroll">
+					<table class="wp-list-table widefat striped gdc-constants-table">
+						<thead>
+							<tr>
+								<th class="gdc-col-name">Constant</th>
+								<th>Value</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="gdc-constant-group">
+								<th colspan="2" class="gdc-constant-group-heading">Debug</th>
+							</tr>
+							<tr><td class="gdc-constant-name"><code>WP_DEBUG</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_DEBUG_LOG</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_DEBUG_DISPLAY</code></td><td><code>false</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>SCRIPT_DEBUG</code></td><td><code>false</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>SAVEQUERIES</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_DEVELOPMENT_MODE</code></td><td><code>core</code></td></tr>
 
-				<h3 class="gdc-constant-group-heading">Performance</h3>
-				<table class="wp-list-table widefat striped gdc-constants-table" style="margin-bottom:20px;">
-					<thead>
-						<tr><th style="width:50%;">Constant</th><th>Value</th></tr>
-					</thead>
-					<tbody>
-						<tr><td><code>WP_MEMORY_LIMIT</code></td><td><code>40M</code></td></tr>
-						<tr><td><code>WP_MAX_MEMORY_LIMIT</code></td><td><code>256M</code></td></tr>
-						<tr><td><code>WP_CACHE</code></td><td><code>false</code></td></tr>
-						<tr><td><code>CONCATENATE_SCRIPTS</code></td><td><code>true</code></td></tr>
-						<tr><td><code>WP_HTTP_BLOCK_EXTERNAL</code></td><td><code>false</code></td></tr>
-					</tbody>
-				</table>
+							<tr class="gdc-constant-group">
+								<th colspan="2" class="gdc-constant-group-heading">Performance</th>
+							</tr>
+							<tr><td class="gdc-constant-name"><code>WP_MEMORY_LIMIT</code></td><td><code>40M</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_MAX_MEMORY_LIMIT</code></td><td><code>256M</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_CACHE</code></td><td><code>false</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>CONCATENATE_SCRIPTS</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>WP_HTTP_BLOCK_EXTERNAL</code></td><td><code>false</code></td></tr>
 
-				<h3 class="gdc-constant-group-heading">Security</h3>
-				<table class="wp-list-table widefat striped gdc-constants-table" style="margin-bottom:20px;">
-					<thead>
-						<tr><th style="width:50%;">Constant</th><th>Value</th></tr>
-					</thead>
-					<tbody>
-						<tr><td><code>FORCE_SSL_ADMIN</code></td><td><code>true</code></td></tr>
-						<tr><td><code>DISALLOW_FILE_EDIT</code></td><td><code>true</code></td></tr>
-						<tr><td><code>DISALLOW_FILE_MODS</code></td><td><code>false</code></td></tr>
-					</tbody>
-				</table>
+							<tr class="gdc-constant-group">
+								<th colspan="2" class="gdc-constant-group-heading">Security</th>
+							</tr>
+							<tr><td class="gdc-constant-name"><code>FORCE_SSL_ADMIN</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>DISALLOW_FILE_EDIT</code></td><td><code>true</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>DISALLOW_FILE_MODS</code></td><td><code>false</code></td></tr>
 
-				<h3 class="gdc-constant-group-heading">Database</h3>
-				<table class="wp-list-table widefat striped gdc-constants-table" style="margin-bottom:20px;">
-					<thead>
-						<tr><th style="width:50%;">Constant</th><th>Value</th></tr>
-					</thead>
-					<tbody>
-						<tr><td><code>DB_NAME</code></td><td><code>globus_app</code></td></tr>
-						<tr><td><code>DB_USER</code></td><td><code>globus_user</code></td></tr>
-						<tr><td><code>DB_PASSWORD</code></td><td><span class="gdc-constant-masked">*** (masked)</span></td></tr>
-						<tr><td><code>DB_HOST</code></td><td><span class="gdc-constant-masked">*** (masked)</span></td></tr>
-						<tr><td><code>DB_CHARSET</code></td><td><code>utf8mb4</code></td></tr>
-					</tbody>
-				</table>
+							<tr class="gdc-constant-group">
+								<th colspan="2" class="gdc-constant-group-heading">Database</th>
+							</tr>
+							<tr><td class="gdc-constant-name"><code>DB_NAME</code></td><td><code>globus_app</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>DB_USER</code></td><td><code>globus_user</code></td></tr>
+							<tr><td class="gdc-constant-name"><code>DB_PASSWORD</code></td><td><span class="gdc-constant-masked">*** (masked)</span></td></tr>
+							<tr><td class="gdc-constant-name"><code>DB_HOST</code></td><td><span class="gdc-constant-masked">*** (masked)</span></td></tr>
+							<tr><td class="gdc-constant-name"><code>DB_CHARSET</code></td><td><code>utf8mb4</code></td></tr>
+						</tbody>
+					</table>
+				</div>

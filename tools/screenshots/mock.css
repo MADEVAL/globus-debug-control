@@ -37,7 +37,7 @@ body {
 	border: 1px solid #1d2327;
 	border-top: none;
 	border-radius: 0 0 3px 3px;
-	height: 560px;
+	height: 540px;
 	overflow: hidden;
 	font-family: Consolas, "Fira Code", "JetBrains Mono", "Courier New", monospace;
 	font-size: 12px;
@@ -75,7 +75,7 @@ body {
 
 #gdc-log-wrap .gdc-log-info .gdc-log-text { color: #8b949e; }
 
-/* Toolbar spacing matches the real plugin toolbar. */
+/* Keep the mock editor flush with the real two-row toolbar. */
 .gdc-log-toolbar {
-	margin-top: 0;
+	margin: 0;
 }

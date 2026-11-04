@@ -45,7 +45,7 @@ const SCREENS = [
 		slug: 'error-log',
 		template: '03-error-log.html',
 		tab: 'log',
-		caption: 'Error Log tab: colour-coded debug.log with pagination, live polling, download, and clear.',
+		caption: 'Error Log tab: color-coded debug.log with pagination, live polling, download, and clear.',
 	},
 	{
 		slug: 'cron',

@@ -1,95 +1,172 @@
 				<form action="#" method="post">
-					<h2>General Settings</h2>
-					<table class="form-table" role="presentation">
-						<tbody>
-							<tr>
-								<th scope="row">Enable Plugin</th>
-								<td>
-									<label><input type="checkbox" checked> <strong>Enable debug control</strong></label>
-									<p class="description">When disabled, the plugin does not affect PHP or WordPress settings.</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">Error Type Filtering</th>
-								<td>
-									<fieldset>
-										<label><input type="checkbox" checked> <strong>Suppress E_NOTICE</strong> and E_USER_NOTICE</label><br>
-										<label><input type="checkbox" checked> <strong>Suppress E_DEPRECATED</strong> and E_USER_DEPRECATED</label><br>
-										<label><input type="checkbox"> <strong>Suppress E_WARNING</strong> and E_USER_WARNING (use with caution!)</label><br>
-										<label style="opacity: 0.5; cursor: not-allowed;"><input type="checkbox" disabled> <strong>Suppress E_STRICT</strong> <em>(not available in PHP 8.0+)</em></label>
-									</fieldset>
-									<p class="description">Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible.</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">display_errors Mode</th>
-								<td>
-									<select>
-										<option>Inherit from WP_DEBUG_DISPLAY</option>
-										<option selected>Always on</option>
-										<option>Always off</option>
-									</select>
-									<p class="description">Controls error output on screen. In API contexts, display is automatically disabled.</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">Logging Settings</th>
-								<td>
-									<fieldset>
-										<label><input type="checkbox" checked> <strong>Enable error logging</strong></label><br><br>
-										<label for="gdc_log_path">Log file path:</label><br>
-										<input type="text" id="gdc_log_path" class="regular-text code" value="wp-content/debug.log">
-										<p class="description">If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log).<br>You can specify an absolute or relative (from wp-content) path.</p>
-										<label for="gdc_log_max_size">Maximum log size (MB):</label><br>
-										<input type="number" id="gdc_log_max_size" value="10" min="1" max="100" style="width: 80px;">
-										<p class="description">When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB.</p>
-									</fieldset>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">php-error Class</th>
-								<td>
-									<label><input type="checkbox" checked> <strong>Remove <code>php-error</code> class from <code>&lt;body&gt;</code></strong></label>
-									<p class="description">WordPress adds this class when errors are detected. It can interfere with styling.</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">API Contexts</th>
-								<td>
-									<label><input type="checkbox"> <strong>Show errors in API contexts</strong></label>
-									<p class="description">By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation.<br>Enable only for API debugging.</p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row">Early Error Interception</th>
-								<td>
-									<label><input type="checkbox" checked> <strong>Install mu-plugin for early interception</strong></label>
-									<span style="color: #00a32a; margin-left: 8px;">&#9679; Installed</span>
-									<p class="description">WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes.<br>The mu-plugin loads first and intercepts such errors. File: <code>globus-debug-control.php</code> in <code>wp-content/mu-plugins/</code></p>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>Plugin status</h2>
+								<p>Turn all debug control behaviour on or off.</p>
+							</div>
+						</div>
+						<div class="gdc-card-body">
+							<table class="form-table" role="presentation">
+								<tbody>
+									<tr>
+										<th scope="row">Enable Plugin</th>
+										<td>
+											<label><input type="checkbox" checked> <strong>Enable debug control</strong></label>
+											<p class="description">When disabled, the plugin does not affect PHP or WordPress settings.</p>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>Error filtering</h2>
+								<p>Choose which PHP error types are hidden and how errors are displayed.</p>
+							</div>
+						</div>
+						<div class="gdc-card-body">
+							<table class="form-table" role="presentation">
+								<tbody>
+									<tr>
+										<th scope="row">Error Type Filtering</th>
+										<td>
+											<fieldset>
+												<label><input type="checkbox" checked> <strong>Suppress E_NOTICE</strong> and E_USER_NOTICE</label><br>
+												<label><input type="checkbox" checked> <strong>Suppress E_DEPRECATED</strong> and E_USER_DEPRECATED</label><br>
+												<label><input type="checkbox"> <strong>Suppress E_WARNING</strong> and E_USER_WARNING (use with caution!)</label><br>
+												<label style="opacity: 0.5; cursor: not-allowed;"><input type="checkbox" disabled> <strong>Suppress E_STRICT</strong> <em>(not available in PHP 8.0+)</em></label>
+											</fieldset>
+											<p class="description">Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible.</p>
+										</td>
+									</tr>
+									<tr>
+										<th scope="row">display_errors Mode</th>
+										<td>
+											<select>
+												<option>Inherit from WP_DEBUG_DISPLAY</option>
+												<option selected>Always on</option>
+												<option>Always off</option>
+											</select>
+											<p class="description">Controls error output on screen. In API contexts, display is automatically disabled.</p>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>Logging</h2>
+								<p>Write errors to a file and rotate it when it grows too large.</p>
+							</div>
+						</div>
+						<div class="gdc-card-body">
+							<table class="form-table" role="presentation">
+								<tbody>
+									<tr>
+										<th scope="row">Logging Settings</th>
+										<td>
+											<fieldset>
+												<label><input type="checkbox" checked> <strong>Enable error logging</strong></label><br><br>
+												<label for="gdc_log_path">Log file path:</label><br>
+												<input type="text" id="gdc_log_path" class="regular-text code" value="wp-content/debug.log">
+												<p class="description">If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log).<br>You can specify an absolute or relative (from wp-content) path.</p>
+												<label for="gdc_log_max_size">Maximum log size (MB):</label><br>
+												<input type="number" id="gdc_log_max_size" value="10" min="1" max="100" style="width: 80px;">
+												<p class="description">When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB.</p>
+											</fieldset>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>Display and API contexts</h2>
+								<p>Front-end cosmetics and non-HTML request handling.</p>
+							</div>
+						</div>
+						<div class="gdc-card-body">
+							<table class="form-table" role="presentation">
+								<tbody>
+									<tr>
+										<th scope="row">php-error Class</th>
+										<td>
+											<label><input type="checkbox" checked> <strong>Remove <code>php-error</code> class from <code>&lt;body&gt;</code></strong></label>
+											<p class="description">WordPress adds this class when errors are detected. It can interfere with styling.</p>
+										</td>
+									</tr>
+									<tr>
+										<th scope="row">API Contexts</th>
+										<td>
+											<label><input type="checkbox"> <strong>Show errors in API contexts</strong></label>
+											<p class="description">By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation.<br>Enable only for API debugging.</p>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>Early interception</h2>
+								<p>Load the error filter before regular plugins.</p>
+							</div>
+						</div>
+						<div class="gdc-card-body">
+							<table class="form-table" role="presentation">
+								<tbody>
+									<tr>
+										<th scope="row">Early Error Interception</th>
+										<td>
+											<label><input type="checkbox" checked> <strong>Install mu-plugin for early interception</strong></label>
+											<span class="gdc-badge gdc-badge-success" style="margin-left: 8px;">Installed</span>
+											<p class="description">WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes.<br>The mu-plugin loads first and intercepts such errors. File: <code>gdc-early-loader.php</code> in <code>wp-content/mu-plugins/</code></p>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
 					<p class="submit"><input type="submit" class="button button-primary" value="Save Settings"></p>
 				</form>
 
-				<hr>
+				<div class="gdc-card">
+					<div class="gdc-card-header">
+						<div>
+							<h2>System Information</h2>
+							<p>Runtime values reported by WordPress and PHP.</p>
+						</div>
+					</div>
+					<div class="gdc-card-body">
+						<table class="widefat striped gdc-system-table">
+							<tbody>
+								<tr><td style="width: 250px;"><strong>Plugin version:</strong></td><td>2.2.6</td></tr>
+								<tr><td><strong>PHP version:</strong></td><td>8.3.14</td></tr>
+								<tr><td><strong>WP_DEBUG:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
+								<tr><td><strong>WP_DEBUG_DISPLAY:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
+								<tr><td><strong>WP_DEBUG_LOG:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
+								<tr><td><strong>Current error_reporting:</strong></td><td><code>32767</code></td></tr>
+								<tr><td><strong>display_errors:</strong></td><td><code>On</code></td></tr>
+								<tr><td><strong>log_errors:</strong></td><td><code>On</code></td></tr>
+								<tr><td><strong>Log file path:</strong></td><td><code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-content/debug.log</code> <span style="color: #2271b1;">(size: 184.6 KB)</span></td></tr>
+								<tr><td><strong>Execution context:</strong></td><td><span style="color: #2271b1;">Normal</span></td></tr>
+								<tr><td><strong>MU-plugin dropin:</strong></td><td><span style="color: #00a32a;">&#9679;</span> Installed (<code>gdc-early-loader.php</code>)</td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
 
-				<h2>System Information</h2>
-				<table class="widefat striped">
-					<tbody>
-						<tr><td style="width: 250px;"><strong>Plugin version:</strong></td><td>2.2.6</td></tr>
-						<tr><td><strong>PHP version:</strong></td><td>8.3.14</td></tr>
-						<tr><td><strong>WP_DEBUG:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
-						<tr><td><strong>WP_DEBUG_DISPLAY:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
-						<tr><td><strong>WP_DEBUG_LOG:</strong></td><td><span style="color: #d63638;">&#9679;</span> Enabled</td></tr>
-						<tr><td><strong>Current error_reporting:</strong></td><td><code>32767</code></td></tr>
-						<tr><td><strong>display_errors:</strong></td><td><code>On</code></td></tr>
-						<tr><td><strong>log_errors:</strong></td><td><code>On</code></td></tr>
-						<tr><td><strong>Log file path:</strong></td><td><code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-content/debug.log</code> <span style="color: #2271b1;">(size: 184.6 KB)</span></td></tr>
-						<tr><td><strong>Execution context:</strong></td><td><span style="color: #2271b1;">Normal</span></td></tr>
-						<tr><td><strong>MU-plugin dropin:</strong></td><td><span style="color: #00a32a;">&#9679;</span> Installed (<code>globus-debug-control.php</code>)</td></tr>
-					</tbody>
-				</table>
-
-				<p style="margin-top: 20px;"><small>&copy; 2026 GLOBUS.studio | Version 2.2.6</small></p>
+				<p class="gdc-text-muted"><small>&copy; 2026 GLOBUS.studio | Version 2.2.6</small></p>

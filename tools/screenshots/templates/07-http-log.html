@@ -6,164 +6,165 @@
 						</div>
 						<div class="gdc-cron-summary-card">
 							<span class="dashicons dashicons-cloud"></span>
-							<div><strong>13</strong><span>Requests logged</span></div>
+							<div><strong>12</strong><span>Requests logged</span></div>
 						</div>
 					</div>
-					<div class="gdc-log-actions">
-						<button type="button" id="gdc-http-toggle" class="button button-secondary gdc-http-capturing">
-							<span class="dashicons dashicons-controls-pause" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+					<div class="gdc-tool-actions gdc-log-actions">
+						<button type="button" id="gdc-http-toggle" class="button button-secondary gdc-http-capturing" data-capturing="1">
+							<span class="dashicons dashicons-controls-pause"></span>
 							Stop capturing
 						</button>
 						<button type="button" id="gdc-http-clear" class="button button-secondary">
-							<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+							<span class="dashicons dashicons-trash"></span>
 							Clear log
 						</button>
 					</div>
 				</div>
 
-				<table class="wp-list-table widefat striped gdc-http-table" style="table-layout:fixed;">
-					<thead>
-						<tr>
-							<th style="width:26px;">#</th>
-							<th style="width:64px;">Time</th>
-							<th style="width:62px;">Method</th>
-							<th>URL</th>
-							<th style="width:48px;">Status</th>
-							<th style="width:92px;">Transport</th>
-							<th style="width:62px;">Duration</th>
-							<th style="width:105px;">Error</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>1</td>
-							<td><code style="font-size:11px;">09:11:58</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://api.wordpress.org/core/version-check/1.7/?locale=en_US</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.284s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>2</td>
-							<td><code style="font-size:11px;">09:11:59</code></td>
-							<td><span class="gdc-http-method gdc-http-method-post">POST</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://api.wordpress.org/plugins/info/1.2/?action=plugin_information</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.412s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>3</td>
-							<td><code style="font-size:11px;">09:12:01</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://downloads.wordpress.org/plugin/woocommerce.9.4.2.zip</code></td>
-							<td><span class="gdc-http-status gdc-http-status-3xx">302</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.038s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>4</td>
-							<td><code style="font-size:11px;">09:12:03</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.196s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>5</td>
-							<td><code style="font-size:11px;">09:12:04</code></td>
-							<td><span class="gdc-http-method gdc-http-method-post">POST</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://api.stripe.com/v1/charges?key=***&amp;amount=4900&amp;currency=eur</code></td>
-							<td><span class="gdc-http-status gdc-http-status-4xx">401</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.581s</td>
-							<td>Invalid API key provided</td>
-						</tr>
-						<tr>
-							<td>6</td>
-							<td><code style="font-size:11px;">09:12:05</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://maps.googleapis.com/maps/api/js?key=***&amp;libraries=places</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.324s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>7</td>
-							<td><code style="font-size:11px;">09:12:09</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://example.com/wp-json/globus/v1/health</code></td>
-							<td><span class="gdc-http-status gdc-http-status-5xx">500</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>5.001s</td>
-							<td>cURL error 28: Operation timed out after 5001 ms</td>
-						</tr>
-						<tr>
-							<td>8</td>
-							<td><code style="font-size:11px;">09:12:12</code></td>
-							<td><span class="gdc-http-method gdc-http-method-delete">DELETE</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://api.example.com/v2/cache/purge?token=***</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">204</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.112s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>9</td>
-							<td><code style="font-size:11px;">09:12:15</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.174s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>10</td>
-							<td><code style="font-size:11px;">09:12:18</code></td>
-							<td><span class="gdc-http-method gdc-http-method-post">POST</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://api.sendgrid.com/v3/mail/send?api_key=***</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">202</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.642s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>11</td>
-							<td><code style="font-size:11px;">09:12:21</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://secure.gravatar.com/avatar/9f2c41a7b3d8e6f5?s=96&amp;d=mm</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.211s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>12</td>
-							<td><code style="font-size:11px;">09:12:24</code></td>
-							<td><span class="gdc-http-method gdc-http-method-head">HEAD</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://globus.studio/</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.093s</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td>13</td>
-							<td><code style="font-size:11px;">09:12:27</code></td>
-							<td><span class="gdc-http-method gdc-http-method-get">GET</span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url">https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTcviYwY.woff2</code></td>
-							<td><span class="gdc-http-status gdc-http-status-2xx">200</span></td>
-							<td><code style="font-size:11px;">WP_Http_Curl</code></td>
-							<td>0.084s</td>
-							<td></td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="gdc-table-scroll">
+					<table class="wp-list-table widefat striped gdc-http-table">
+						<thead>
+							<tr>
+								<th class="gdc-col-time">Time</th>
+								<th>Request</th>
+								<th class="gdc-col-status">Status</th>
+								<th class="gdc-col-transport">Transport</th>
+								<th class="gdc-col-error">Error</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><span class="gdc-http-time">09:11:58</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://api.wordpress.org/core/version-check/1.7/?locale=en_US">https://api.wordpress.org/core/version-check/1.7/?locale=en_US</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.284s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:11:59</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-post">POST</span>
+										<code class="gdc-http-url" title="https://api.wordpress.org/plugins/info/1.2/?action=plugin_information">https://api.wordpress.org/plugins/info/1.2/?action=plugin_information</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.412s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:01</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://downloads.wordpress.org/plugin/woocommerce.9.4.2.zip">https://downloads.wordpress.org/plugin/woocommerce.9.4.2.zip</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-3xx">302</span><span class="gdc-http-duration">0.038s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:03</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap">https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.196s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:04</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-post">POST</span>
+										<code class="gdc-http-url" title="https://api.stripe.com/v1/charges?key=***&amp;amount=4900&amp;currency=eur">https://api.stripe.com/v1/charges?key=***&amp;amount=4900&amp;currency=eur</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-4xx">401</span><span class="gdc-http-duration">0.581s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-http-error">Invalid API key provided</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:05</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://maps.googleapis.com/maps/api/js?key=***&amp;libraries=places">https://maps.googleapis.com/maps/api/js?key=***&amp;libraries=places</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.324s</span></div></td>
+								<td><code>WpOrg\Requests\Requests</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:09</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://example.com/wp-json/globus/v1/health">https://example.com/wp-json/globus/v1/health</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-5xx">500</span><span class="gdc-http-duration">5.001s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-http-error">cURL error 28: Operation timed out after 5001 ms</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:12</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-delete">DELETE</span>
+										<code class="gdc-http-url" title="https://api.example.com/v2/cache/purge?token=***">https://api.example.com/v2/cache/purge?token=***</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">204</span><span class="gdc-http-duration">0.112s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:15</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js">https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.174s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:18</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-post">POST</span>
+										<code class="gdc-http-url" title="https://api.sendgrid.com/v3/mail/send?api_key=***">https://api.sendgrid.com/v3/mail/send?api_key=***</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">202</span><span class="gdc-http-duration">0.642s</span></div></td>
+								<td><code>WpOrg\Requests\Requests</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+							<tr>
+								<td><span class="gdc-http-time">09:12:21</span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-get">GET</span>
+										<code class="gdc-http-url" title="https://secure.gravatar.com/avatar/9f2c41a7b3d8e6f5?s=96&amp;d=mm">https://secure.gravatar.com/avatar/9f2c41a7b3d8e6f5?s=96&amp;d=mm</code>
+									</div>
+								</td>
+								<td><div class="gdc-http-status-cell"><span class="gdc-http-status gdc-http-status-2xx">200</span><span class="gdc-http-duration">0.211s</span></div></td>
+								<td><code>WP_Http_Curl</code></td>
+								<td><span class="gdc-text-muted">&mdash;</span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>

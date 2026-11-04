@@ -123,9 +123,11 @@ export function renderDocument( { tab, content, cssHrefs } ) {
 		<div id="wpcontent">
 			<div id="wpbody" role="main">
 				<div id="wpbody-content">
-					<div class="wrap">
-						<h1 class="wp-heading-inline">GLOBUS Debug Control</h1>
-						<span class="gdc-debug-badge gdc-debug-on"><span class="dashicons dashicons-warning" style="font-size:14px;vertical-align:-2px;margin-right:2px;"></span>WP_DEBUG ON</span>
+					<div class="wrap gdc-page">
+						<div class="gdc-page-header">
+							<h1 class="wp-heading-inline">GLOBUS Debug Control</h1>
+							<span class="gdc-debug-badge gdc-debug-on"><span class="dashicons dashicons-warning" aria-hidden="true"></span>WP_DEBUG ON</span>
+						</div>
 						<hr class="wp-header-end">
 						<nav class="nav-tab-wrapper">
 							${ pluginTabs( tab ) }

@@ -1,69 +1,82 @@
 				<div class="gdc-wpcfg-wrap">
 					<div class="notice notice-success is-dismissible"><p>wp-config.php updated.</p></div>
-					<p class="description">Editing: <code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-config.php</code></p>
 
-					<form method="post">
-						<table class="form-table" role="presentation">
-							<tbody>
-								<tr>
-									<th scope="row"><label><code>WP_DEBUG</code></label></th>
-									<td>
-										<label class="gdc-toggle-label">
-											<input type="checkbox" checked class="gdc-wpcfg-checkbox">
-											<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
-										</label>
-										<span style="color:#646970;margin-left:10px;font-size:12px;">Current: <code>true</code></span>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row"><label><code>WP_DEBUG_LOG</code></label></th>
-									<td>
-										<label class="gdc-toggle-label">
-											<input type="checkbox" checked class="gdc-wpcfg-checkbox">
-											<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
-										</label>
-										<span style="color:#646970;margin-left:10px;font-size:12px;">Current: <code>true</code></span>
-										<p class="description" style="margin-top:6px;">
-											<label for="gdc_wpcfg_log_path_value">Custom log file path (relative to wp-content or absolute):</label>
-											<input type="text" id="gdc_wpcfg_log_path_value" class="regular-text code" value="" placeholder="e.g. custom/debug.log - leave empty for true">
-										</p>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row"><label><code>WP_DEBUG_DISPLAY</code></label></th>
-									<td>
-										<label class="gdc-toggle-label">
-											<input type="checkbox" class="gdc-wpcfg-checkbox">
-											<span class="gdc-status-badge gdc-status-off"><span class="dashicons dashicons-no"></span> Disabled</span>
-										</label>
-										<span style="color:#646970;margin-left:10px;font-size:12px;">Current: <code>false</code></span>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row"><label><code>SCRIPT_DEBUG</code></label></th>
-									<td>
-										<label class="gdc-toggle-label">
-											<input type="checkbox" class="gdc-wpcfg-checkbox">
-											<span class="gdc-status-badge gdc-status-off"><span class="dashicons dashicons-no"></span> Disabled</span>
-										</label>
-										<span style="color:#646970;margin-left:10px;font-size:12px;">Current: <code>false</code></span>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row"><label><code>SAVEQUERIES</code></label></th>
-									<td>
-										<label class="gdc-toggle-label">
-											<input type="checkbox" checked class="gdc-wpcfg-checkbox">
-											<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
-										</label>
-										<span style="color:#646970;margin-left:10px;font-size:12px;">Current: <code>true</code></span>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+					<div class="gdc-card">
+						<div class="gdc-card-header">
+							<div>
+								<h2>wp-config.php constants</h2>
+								<p class="gdc-wpcfg-path"><span>Editing:</span> <code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-config.php</code></p>
+							</div>
+							<span class="gdc-badge gdc-badge-success">Writable</span>
+						</div>
 
-						<p class="submit"><input type="submit" class="button button-primary" value="Save to wp-config.php"></p>
-					</form>
+						<form method="post">
+							<div class="gdc-card-body">
+								<table class="form-table gdc-wpcfg-table" role="presentation">
+									<tbody>
+										<tr>
+											<th scope="row"><label><code>WP_DEBUG</code></label></th>
+											<td>
+												<label class="gdc-toggle-label">
+													<input type="checkbox" checked class="gdc-wpcfg-checkbox">
+													<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
+												</label>
+												<span class="gdc-wpcfg-row-current">Current: <code>true</code></span>
+											</td>
+										</tr>
+										<tr>
+											<th scope="row"><label><code>WP_DEBUG_LOG</code></label></th>
+											<td>
+												<label class="gdc-toggle-label">
+													<input type="checkbox" checked class="gdc-wpcfg-checkbox">
+													<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
+												</label>
+												<span class="gdc-wpcfg-row-current">Current: <code>true</code></span>
+												<p class="description gdc-wpcfg-logpath">
+													<label for="gdc_wpcfg_log_path_value">Custom log file path (relative to wp-content or absolute):</label>
+													<input type="text" id="gdc_wpcfg_log_path_value" class="regular-text code" value="" placeholder="e.g. custom/debug.log - leave empty for true">
+												</p>
+											</td>
+										</tr>
+										<tr>
+											<th scope="row"><label><code>WP_DEBUG_DISPLAY</code></label></th>
+											<td>
+												<label class="gdc-toggle-label">
+													<input type="checkbox" class="gdc-wpcfg-checkbox">
+													<span class="gdc-status-badge gdc-status-off"><span class="dashicons dashicons-no"></span> Disabled</span>
+												</label>
+												<span class="gdc-wpcfg-row-current">Current: <code>false</code></span>
+											</td>
+										</tr>
+										<tr>
+											<th scope="row"><label><code>SCRIPT_DEBUG</code></label></th>
+											<td>
+												<label class="gdc-toggle-label">
+													<input type="checkbox" class="gdc-wpcfg-checkbox">
+													<span class="gdc-status-badge gdc-status-off"><span class="dashicons dashicons-no"></span> Disabled</span>
+												</label>
+												<span class="gdc-wpcfg-row-current">Current: <code>false</code></span>
+											</td>
+										</tr>
+										<tr>
+											<th scope="row"><label><code>SAVEQUERIES</code></label></th>
+											<td>
+												<label class="gdc-toggle-label">
+													<input type="checkbox" checked class="gdc-wpcfg-checkbox">
+													<span class="gdc-status-badge gdc-status-on"><span class="dashicons dashicons-yes-alt"></span> Enabled</span>
+												</label>
+												<span class="gdc-wpcfg-row-current">Current: <code>true</code></span>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div class="gdc-card-footer">
+								<input type="submit" class="button button-primary" value="Save to wp-config.php">
+							</div>
+						</form>
+					</div>
 				</div>
 
 				<p style="margin-top:16px;">

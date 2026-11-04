@@ -1,17 +1,20 @@
 				<div class="gdc-log-viewer">
 					<div class="gdc-log-toolbar">
-						<div class="gdc-log-meta">
-							<code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-content/debug.log</code>
-							<span class="gdc-log-badge">184.6 KB</span>
-							<span class="gdc-log-badge">1,284 lines</span>
-						</div>
-						<div class="gdc-log-right">
+						<div class="gdc-log-toolbar-row">
+							<div class="gdc-log-meta">
+								<code>/var/www/globus_studio_user/data/www/app.globus.studio/wp-content/debug.log</code>
+								<span class="gdc-log-badge">184.6 KB</span>
+								<span class="gdc-log-badge">1,284 lines</span>
+							</div>
 							<div class="gdc-log-actions">
 								<label class="gdc-log-wrap-label"><input type="checkbox" id="gdc-log-wrap-toggle" checked> Word wrap</label>
 								<a href="#" class="button button-secondary"><span class="dashicons dashicons-download"></span>Download</a>
 								<form method="post" class="gdc-clear-form"><button type="submit" class="button button-secondary"><span class="dashicons dashicons-trash"></span>Clear Log</button></form>
 							</div>
+						</div>
+						<div class="gdc-log-toolbar-row">
 							<div class="gdc-log-generate">
+								<span class="gdc-toolbar-label">Test error</span>
 								<select id="gdc-error-type" class="gdc-select-small">
 									<option>E_USER_NOTICE</option>
 									<option>E_USER_WARNING</option>
@@ -22,7 +25,9 @@
 									<option>Parse Error (sim.)</option>
 								</select>
 								<button type="button" id="gdc-generate-error" class="button button-secondary">Generate</button>
-								<button type="button" id="gdc-live-toggle" class="button button-secondary"><span class="dashicons dashicons-update gdc-live-icon"></span>Live</button>
+							</div>
+							<div class="gdc-log-right">
+								<button type="button" id="gdc-live-toggle" class="button button-secondary"><span class="dashicons dashicons-update gdc-live-icon"></span>Live tail</button>
 							</div>
 						</div>
 					</div>
@@ -33,7 +38,7 @@
 							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">2</span><span class="gdc-log-text">[05-Nov-2026 09:11:58 UTC] PHP Notice: Function _load_textdomain_just_in_time was called incorrectly (contact-form-7 domain, too early).</span></div>
 							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">3</span><span class="gdc-log-text">[05-Nov-2026 09:12:01 UTC] PHP Deprecated: Creation of dynamic property Elementor\Widget_Base::$widget_id is deprecated in /wp-content/plugins/elementor/includes/base/widget-base.php on line 223</span></div>
 							<div class="gdc-log-line gdc-log-warning"><span class="gdc-log-ln">4</span><span class="gdc-log-text">[05-Nov-2026 09:12:02 UTC] PHP Warning: Undefined array key "id" in /wp-content/plugins/contact-form-7/includes/form-tag.php on line 412</span></div>
-							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">5</span><span class="gdc-log-text">[05-Nov-2026 09:12:02 UTC] PHP Deprecated: Optional parameter $args declared before required parameter $defaults is implicitly treated as a required parameter in /wp-content/plugins/woocommerce/includes/class-wc-query.php on line 88</span></div>
+							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">5</span><span class="gdc-log-text">[05-Nov-2026 09:12:02 UTC] PHP Deprecated: Optional parameter $args declared before required parameter $defaults in /wp-content/plugins/woocommerce/includes/class-wc-query.php on line 88</span></div>
 							<div class="gdc-log-line gdc-log-fatal"><span class="gdc-log-ln">6</span><span class="gdc-log-text">[05-Nov-2026 09:12:04 UTC] PHP Fatal error: Uncaught Error: Call to undefined function globus_get_template() in /wp-content/themes/globus-studio/functions.php:184</span></div>
 							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">7</span><span class="gdc-log-text">Stack trace:</span></div>
 							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">8</span><span class="gdc-log-text">#0 /wp-content/themes/globus-studio/functions.php(212): globus_render_header()</span></div>
@@ -46,12 +51,10 @@
 							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">15</span><span class="gdc-log-text">#7 {main}</span></div>
 							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">16</span><span class="gdc-log-text">  thrown in /wp-content/themes/globus-studio/functions.php on line 184</span></div>
 							<div class="gdc-log-line gdc-log-cron"><span class="gdc-log-ln">17</span><span class="gdc-log-text">[05-Nov-2026 09:12:07 UTC] WP-Cron: wp_version_check fired in 0.412s (12 queries, 48.2 MB memory)</span></div>
-							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">18</span><span class="gdc-log-text">[05-Nov-2026 09:12:09 UTC] PHP Deprecated: strpos(): Passing null to parameter #1 ($haystack) is deprecated in /wp-content/plugins/woocommerce/includes/wc-template-functions.php on line 1640</span></div>
-							<div class="gdc-log-line gdc-log-warning"><span class="gdc-log-ln">19</span><span class="gdc-log-text">[05-Nov-2026 09:12:11 UTC] PHP Warning: Cannot modify header information - headers already sent by (output started at /wp-content/themes/globus-studio/header.php:3) in /wp-admin/includes/misc.php on line 1430</span></div>
-							<div class="gdc-log-line gdc-log-info"><span class="gdc-log-ln">20</span><span class="gdc-log-text">[05-Nov-2026 09:12:11 UTC] PHP Notice: ob_end_flush(): Failed to send buffer of zlib output compression (1) in /wp-includes/functions.php on line 5461</span></div>
-							<div class="gdc-log-line gdc-log-cron"><span class="gdc-log-ln">21</span><span class="gdc-log-text">[05-Nov-2026 09:12:14 UTC] WP-Cron: action_scheduler_run_queue fired in 2.184s (86 queries, 61.7 MB memory)</span></div>
-							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">22</span><span class="gdc-log-text">[05-Nov-2026 09:12:16 UTC] PHP Deprecated: Return type of Walker_Nav_Menu::walk() should either be compatible with Walker::walk() or the #[ReturnTypeWillChange] attribute should be used in /wp-content/themes/globus-studio/classes/class-walker-nav.php on line 12</span></div>
-							<div class="gdc-log-line gdc-log-fatal"><span class="gdc-log-ln">23</span><span class="gdc-log-text">[05-Nov-2026 09:12:26 UTC] PHP Fatal error: Allowed memory size of 268435456 bytes exhausted (tried to allocate 20480 bytes) in /wp-content/plugins/woocommerce/includes/data-stores/class-wc-product-data-store-cpt.php on line 1204</span></div>
+							<div class="gdc-log-line gdc-log-warning"><span class="gdc-log-ln">18</span><span class="gdc-log-text">[05-Nov-2026 09:12:11 UTC] PHP Warning: Cannot modify header information - headers already sent by (output started at /wp-content/themes/globus-studio/header.php:3) in /wp-admin/includes/misc.php on line 1430</span></div>
+							<div class="gdc-log-line gdc-log-notice"><span class="gdc-log-ln">19</span><span class="gdc-log-text">[05-Nov-2026 09:12:16 UTC] PHP Deprecated: Return type of Walker_Nav_Menu::walk() should either be compatible with Walker::walk() in /wp-content/themes/globus-studio/classes/class-walker-nav.php on line 12</span></div>
+							<div class="gdc-log-line gdc-log-cron"><span class="gdc-log-ln">20</span><span class="gdc-log-text">[05-Nov-2026 09:12:14 UTC] WP-Cron: action_scheduler_run_queue fired in 2.184s (86 queries, 61.7 MB memory)</span></div>
+							<div class="gdc-log-line gdc-log-fatal"><span class="gdc-log-ln">21</span><span class="gdc-log-text">[05-Nov-2026 09:12:26 UTC] PHP Fatal error: Allowed memory size of 268435456 bytes exhausted (tried to allocate 20480 bytes) in /wp-content/plugins/woocommerce/includes/data-stores/class-wc-product-data-store-cpt.php on line 1204</span></div>
 						</div>
 					</div>
 
