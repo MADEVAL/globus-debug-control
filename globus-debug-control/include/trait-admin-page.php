@@ -95,21 +95,24 @@ trait GDC_Admin_Page {
 		$opts          = $this->get_options();
 		$wp_debug_file = GDC_WpConfig_Debug::get_wp_debug_status();
 		?>
-		<div class="wrap">
-			<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<div class="wrap gdc-page">
+			<div class="gdc-page-header">
+				<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
-			<?php if ( null !== $wp_debug_file ) : ?>
-				<?php if ( $wp_debug_file ) : ?>
-					<span class="gdc-debug-badge gdc-debug-on">
-						<span class="dashicons dashicons-warning" style="font-size:14px;vertical-align:-2px;margin-right:2px;"></span>
-						WP_DEBUG <?php esc_html_e( 'ON', 'globus-debug-control' ); ?>
-					</span>
-				<?php else : ?>
-					<span class="gdc-debug-badge gdc-debug-off">
-						WP_DEBUG <?php esc_html_e( 'OFF', 'globus-debug-control' ); ?>
-					</span>
+				<?php if ( null !== $wp_debug_file ) : ?>
+					<?php if ( $wp_debug_file ) : ?>
+						<span class="gdc-debug-badge gdc-debug-on">
+							<span class="dashicons dashicons-warning" aria-hidden="true"></span>
+							WP_DEBUG <?php esc_html_e( 'ON', 'globus-debug-control' ); ?>
+						</span>
+					<?php else : ?>
+						<span class="gdc-debug-badge gdc-debug-off">
+							<span class="dashicons dashicons-hidden" aria-hidden="true"></span>
+							WP_DEBUG <?php esc_html_e( 'OFF', 'globus-debug-control' ); ?>
+						</span>
+					<?php endif; ?>
 				<?php endif; ?>
-			<?php endif; ?>
+			</div>
 
 			<hr class="wp-header-end">
 
@@ -141,15 +144,19 @@ trait GDC_Admin_Page {
 				<form action="options.php" method="post">
 					<?php
 					settings_fields( 'globus_debug_control' );
-					do_settings_sections( 'globus_debug_control' );
-					submit_button( __( 'Save Settings', 'globus-debug-control' ) );
+					$this->render_settings_form();
 					?>
 				</form>
 
-				<hr>
-
-				<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
-				<table class="widefat striped">
+				<div class="gdc-card">
+					<div class="gdc-card-header">
+						<div>
+							<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
+							<p><?php esc_html_e( 'Runtime values reported by WordPress and PHP.', 'globus-debug-control' ); ?></p>
+						</div>
+					</div>
+					<div class="gdc-card-body">
+				<table class="widefat striped gdc-system-table">
 					<tr>
 						<td style="width: 250px;"><strong><?php esc_html_e( 'Plugin version:', 'globus-debug-control' ); ?></strong></td>
 						<td><?php echo esc_html( self::VERSION ); ?></td>
@@ -211,8 +218,10 @@ trait GDC_Admin_Page {
 						<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">&#9679;</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">&#9679;</span> ' . esc_html__( 'Not installed - early interception disabled', 'globus-debug-control' ); ?></td>
 					</tr>
 				</table>
+					</div>
+				</div>
 
-				<p style="margin-top: 20px;"><small>&copy; 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
+				<p class="gdc-text-muted"><small>&copy; 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
 
 			<?php elseif ( 'wpcfg' === $active_tab ) : ?>
 

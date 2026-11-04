@@ -106,7 +106,7 @@ When you need to check what debug, performance, or security constants are active
 
 1. Settings tab: filter PHP error types, choose the error display mode, and configure logging.
 2. WP_DEBUG tab: toggle debug constants in wp-config.php without editing files.
-3. Error Log tab: colour-coded debug.log with pagination, live polling, download, and clear.
+3. Error Log tab: color-coded debug.log with pagination, live polling, download, and clear.
 4. Cron Tasks tab: overdue events, orphaned hooks, source detection, and one-click actions.
 5. Transients tab: every database transient with size and expiry, plus bulk purge of expired rows.
 6. Autoloaded tab: the heaviest autoloaded options, sorted by size, to spot request bloat.
@@ -156,6 +156,9 @@ Yes. The recommended setup: suppress all error types, disable error display, ena
 == Changelog ==
 
 = 2.2.6 =
+* Redesigned admin screens: card-based settings groups, compact toolbar with two rows, clearer cron and HTTP tables, single grouped constants table
+* Improved table readability on narrow screens with horizontal scrolling and capped column widths
+* Badges and accents now follow the active WordPress admin colour scheme
 * Fix: WP_Filesystem failures no longer cause fatal errors in the mu-plugin dropin management (direct file fallback added)
 * Fix: cron events with falsy arguments (0, false, empty string) can now be deleted correctly
 * Fix: log path no longer accepts parent-traversal ("..") values that could point at critical files

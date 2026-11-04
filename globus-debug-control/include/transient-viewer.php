@@ -254,58 +254,64 @@ final class GDC_Transient_Viewer {
 				</div>
 			</div>
 			<?php if ( $summary['expired'] > 0 ) : ?>
-				<button type="button" id="gdc-transient-purge" class="button button-secondary">
-					<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
-					<?php esc_html_e( 'Purge expired', 'globus-debug-control' ); ?>
-				</button>
+				<div class="gdc-tool-actions">
+					<button type="button" id="gdc-transient-purge" class="button button-secondary">
+						<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+						<?php esc_html_e( 'Purge expired', 'globus-debug-control' ); ?>
+						<span class="gdc-badge gdc-badge-warning"><?php echo esc_html( (string) $summary['expired'] ); ?></span>
+					</button>
+				</div>
 			<?php endif; ?>
 		</div>
 
 		<?php if ( empty( $transients ) ) : ?>
 			<div class="gdc-empty-state">
+				<span class="dashicons dashicons-database" aria-hidden="true"></span>
 				<p><?php esc_html_e( 'No transients found.', 'globus-debug-control' ); ?></p>
 			</div>
 		<?php else : ?>
-			<table class="wp-list-table widefat striped gdc-transient-table">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Key', 'globus-debug-control' ); ?></th>
-						<th style="width:90px;"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
-						<th style="width:160px;"><?php esc_html_e( 'Expires', 'globus-debug-control' ); ?></th>
-						<th style="width:80px;"></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ( $transients as $t ) : ?>
-						<tr class="gdc-transient-row<?php echo $t['is_expired'] ? ' gdc-transient-expired' : ''; ?>" data-key="<?php echo esc_attr( $t['key'] ); ?>">
-							<td><code class="gdc-transient-key"><?php echo esc_html( $t['key'] ); ?></code></td>
-							<td><?php echo esc_html( size_format( $t['value_size'] ) ); ?></td>
-							<td>
-								<?php
-								if ( null === $t['expires_in'] ) {
-									esc_html_e( 'No expiry', 'globus-debug-control' );
-								} elseif ( $t['is_expired'] ) {
-									echo '<span class="gdc-badge-expired">' . esc_html__( 'Expired', 'globus-debug-control' ) . '</span>';
-								} else {
-									echo esc_html(
-										sprintf(
-											/* translators: %s: human-readable time difference */
-											__( 'in %s', 'globus-debug-control' ),
-											human_time_diff( time(), time() + (int) $t['expires_in'] )
-										)
-									);
-								}
-								?>
-							</td>
-							<td>
-								<button type="button" class="button button-small gdc-transient-delete">
-									<?php esc_html_e( 'Delete', 'globus-debug-control' ); ?>
-								</button>
-							</td>
+			<div class="gdc-table-scroll">
+				<table class="wp-list-table widefat striped gdc-transient-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Key', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-expires"><?php esc_html_e( 'Expires', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-actions"></th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						<?php foreach ( $transients as $t ) : ?>
+							<tr class="gdc-transient-row<?php echo $t['is_expired'] ? ' gdc-transient-expired' : ''; ?>" data-key="<?php echo esc_attr( $t['key'] ); ?>">
+								<td><code class="gdc-transient-key" title="<?php echo esc_attr( $t['key'] ); ?>"><?php echo esc_html( $t['key'] ); ?></code></td>
+								<td><?php echo esc_html( size_format( $t['value_size'] ) ); ?></td>
+								<td>
+									<?php
+									if ( null === $t['expires_in'] ) {
+										esc_html_e( 'No expiry', 'globus-debug-control' );
+									} elseif ( $t['is_expired'] ) {
+										echo '<span class="gdc-badge-expired">' . esc_html__( 'Expired', 'globus-debug-control' ) . '</span>';
+									} else {
+										echo esc_html(
+											sprintf(
+												/* translators: %s: human-readable time difference */
+												__( 'in %s', 'globus-debug-control' ),
+												human_time_diff( time(), time() + (int) $t['expires_in'] )
+											)
+										);
+									}
+									?>
+								</td>
+								<td>
+									<button type="button" class="button button-small gdc-transient-delete">
+										<?php esc_html_e( 'Delete', 'globus-debug-control' ); ?>
+									</button>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		<?php endif; ?>
 		<?php
 	}

@@ -81,112 +81,118 @@ final class GDC_Cron_Viewer {
 				?>
 				;</script>
 
-				<?php if ( $summary['orphans'] > 0 ) : ?>
-					<button type="button" id="gdc-cron-bulk-delete" class="button button-secondary">
-						<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;color:#d63638;"></span>
-						<?php esc_html_e( 'Delete orphaned', 'globus-debug-control' ); ?>
-						<span class="gdc-badge gdc-badge-orphan" style="margin-left:4px;"><?php echo esc_html( (string) $summary['orphans'] ); ?></span>
-					</button>
-				<?php endif; ?>
+				<div class="gdc-cron-toolbar">
+					<?php if ( $summary['orphans'] > 0 ) : ?>
+						<button type="button" id="gdc-cron-bulk-delete" class="button button-secondary">
+							<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+							<?php esc_html_e( 'Delete orphaned', 'globus-debug-control' ); ?>
+							<span class="gdc-badge gdc-badge-orphan"><?php echo esc_html( (string) $summary['orphans'] ); ?></span>
+						</button>
+					<?php endif; ?>
+				</div>
 
-				<table class="wp-list-table widefat fixed striped gdc-cron-table">
-					<thead>
-						<tr>
-							<th scope="col" style="width:155px;"><?php esc_html_e( 'Next Run', 'globus-debug-control' ); ?></th>
-							<th scope="col" style="width:100px;"><?php esc_html_e( 'In', 'globus-debug-control' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Hook / Callback', 'globus-debug-control' ); ?></th>
-							<th scope="col" style="width:150px;"><?php esc_html_e( 'Source', 'globus-debug-control' ); ?></th>
-							<th scope="col" style="width:130px;"><?php esc_html_e( 'Schedule', 'globus-debug-control' ); ?></th>
-							<th scope="col" style="width:80px;"><?php esc_html_e( 'Args', 'globus-debug-control' ); ?></th>
-							<th scope="col" style="width:90px;"><?php esc_html_e( 'Actions', 'globus-debug-control' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $crons as $event ) : ?>
-							<?php
-							$overdue_class   = $event['overdue'] ? 'gdc-cron-overdue' : '';
-							$orphan_class    = $event['orphan'] ? 'gdc-cron-orphan' : '';
-							$row_class       = trim( $overdue_class . ' ' . $orphan_class );
-							$overdue_urgency = self::overdue_urgency( $event['timestamp'] );
-							?>
-							<tr class="<?php echo esc_attr( $row_class ); ?>"
-								data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-								data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>">
-								<td>
-									<?php echo esc_html( gmdate( 'Y-m-d H:i:s', $event['timestamp'] ) ); ?>
-									<?php if ( $event['overdue'] ) : ?>
-										<span class="gdc-badge gdc-badge-<?php echo esc_attr( $overdue_urgency ); ?>">
-											<?php esc_html_e( 'overdue', 'globus-debug-control' ); ?>
-										</span>
-									<?php endif; ?>
-								</td>
-								<td class="<?php echo $event['overdue'] ? 'gdc-text-warning' : 'gdc-text-muted'; ?>">
-									<?php echo esc_html( self::human_time_diff( $event['timestamp'] ) ); ?>
-								</td>
-								<td>
-									<code class="gdc-cron-hook-name"><?php echo esc_html( $event['hook'] ); ?></code>
-									<?php if ( $event['orphan'] ) : ?>
-										<span class="gdc-badge gdc-badge-orphan" title="<?php esc_attr_e( 'No callback registered and hook not found in plugin files', 'globus-debug-control' ); ?>">
-											<?php esc_html_e( 'orphan', 'globus-debug-control' ); ?>
-										</span>
-									<?php endif; ?>
-									<?php if ( ! empty( $event['callbacks'] ) ) : ?>
-										<button type="button" class="button-link gdc-cron-cb-toggle" aria-expanded="false">
-											<span class="dashicons dashicons-arrow-down-alt2" style="font-size:12px;width:12px;height:12px;vertical-align:middle;"></span>
-										</button>
-										<ul class="gdc-cron-callbacks" hidden>
-											<?php foreach ( $event['callbacks'] as $cb_label ) : ?>
-												<li><code class="gdc-cron-cb"><?php echo esc_html( $cb_label ); ?></code></li>
-											<?php endforeach; ?>
-										</ul>
-									<?php endif; ?>
-									<?php if ( ! empty( $event['instances'] ) && $event['instances'] > 1 ) : ?>
-										<span class="gdc-badge gdc-badge-info" title="<?php esc_attr_e( 'Multiple scheduled instances of this hook', 'globus-debug-control' ); ?>">
-											&times;<?php echo esc_html( (string) $event['instances'] ); ?>
-										</span>
-									<?php endif; ?>
-								</td>
-								<td class="gdc-cron-source" data-hook="<?php echo esc_attr( $event['hook'] ); ?>">
-									<span class="spinner is-active" style="float:none;margin:0;"></span>
-								</td>
-								<td>
-									<?php if ( ! empty( $event['schedule'] ) ) : ?>
-										<span class="gdc-badge gdc-badge-info"><?php echo esc_html( $event['schedule'] ); ?></span>
-										<?php if ( ! empty( $event['interval'] ) ) : ?>
-											<small class="gdc-text-muted"><?php echo esc_html( self::interval_label( $event['interval'] ) ); ?></small>
-										<?php endif; ?>
-									<?php else : ?>
-										<span class="gdc-text-muted"><?php esc_html_e( 'one-time', 'globus-debug-control' ); ?></span>
-									<?php endif; ?>
-								</td>
-								<td>
-									<?php if ( ! empty( $event['args'] ) ) : ?>
-										<code title="<?php echo esc_attr( wp_json_encode( $event['args'] ) ); ?>"><?php esc_html_e( 'yes', 'globus-debug-control' ); ?></code>
-									<?php else : ?>
-										<span class="gdc-text-muted">-</span>
-									<?php endif; ?>
-								</td>
-								<td class="gdc-cron-actions">
-									<button type="button"
-										class="button button-small gdc-cron-run"
-										title="<?php esc_attr_e( 'Trigger now', 'globus-debug-control' ); ?>"
-										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-										data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>">
-										<span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span>
-									</button>
-									<button type="button"
-										class="button button-small gdc-cron-delete"
-										title="<?php esc_attr_e( 'Delete event', 'globus-debug-control' ); ?>"
-										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-										data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
-										data-args="<?php echo esc_attr( wp_json_encode( $event['args'] ) ); ?>">
-										<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span>
-									</button>
-								</td>
+				<div class="gdc-table-scroll">
+					<table class="wp-list-table widefat fixed striped gdc-cron-table">
+						<thead>
+							<tr>
+								<th scope="col" class="gdc-col-when"><?php esc_html_e( 'Next Run', 'globus-debug-control' ); ?></th>
+								<th scope="col" class="gdc-col-hook"><?php esc_html_e( 'Hook / Source', 'globus-debug-control' ); ?></th>
+								<th scope="col" class="gdc-col-schedule"><?php esc_html_e( 'Schedule', 'globus-debug-control' ); ?></th>
+								<th scope="col" class="gdc-col-actions"><?php esc_html_e( 'Actions', 'globus-debug-control' ); ?></th>
 							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							<?php foreach ( $crons as $event ) : ?>
+								<?php
+								$overdue_class   = $event['overdue'] ? 'gdc-cron-overdue' : '';
+								$orphan_class    = $event['orphan'] ? 'gdc-cron-orphan' : '';
+								$row_class       = trim( $overdue_class . ' ' . $orphan_class );
+								$overdue_urgency = self::overdue_urgency( $event['timestamp'] );
+								?>
+								<tr class="<?php echo esc_attr( $row_class ); ?>"
+									data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+									data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>">
+									<td class="gdc-col-when">
+										<span class="gdc-cron-when <?php echo $event['overdue'] ? 'gdc-text-warning' : ''; ?>">
+											<?php echo esc_html( self::human_time_diff( $event['timestamp'] ) ); ?>
+										</span>
+										<span class="gdc-cron-date"><?php echo esc_html( gmdate( 'Y-m-d H:i:s', $event['timestamp'] ) ); ?></span>
+										<?php if ( $event['overdue'] ) : ?>
+											<span class="gdc-badge gdc-badge-<?php echo esc_attr( $overdue_urgency ); ?>">
+												<?php esc_html_e( 'overdue', 'globus-debug-control' ); ?>
+											</span>
+										<?php endif; ?>
+									</td>
+									<td class="gdc-col-hook">
+										<div class="gdc-cron-hook-line">
+											<code class="gdc-cron-hook-name"><?php echo esc_html( $event['hook'] ); ?></code>
+											<?php if ( $event['orphan'] ) : ?>
+												<span class="gdc-badge gdc-badge-orphan" title="<?php esc_attr_e( 'No callback registered and hook not found in plugin files', 'globus-debug-control' ); ?>">
+													<?php esc_html_e( 'orphan', 'globus-debug-control' ); ?>
+												</span>
+											<?php endif; ?>
+											<?php if ( ! empty( $event['instances'] ) && $event['instances'] > 1 ) : ?>
+												<span class="gdc-badge gdc-badge-info" title="<?php esc_attr_e( 'Multiple scheduled instances of this hook', 'globus-debug-control' ); ?>">
+													&times;<?php echo esc_html( (string) $event['instances'] ); ?>
+												</span>
+											<?php endif; ?>
+											<?php if ( ! empty( $event['callbacks'] ) ) : ?>
+												<button type="button" class="button-link gdc-cron-cb-toggle" aria-expanded="false">
+													<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+													<span class="screen-reader-text"><?php esc_html_e( 'Show callbacks', 'globus-debug-control' ); ?></span>
+												</button>
+												<ul class="gdc-cron-callbacks" hidden>
+													<?php foreach ( $event['callbacks'] as $cb_label ) : ?>
+														<li><code class="gdc-cron-cb"><?php echo esc_html( $cb_label ); ?></code></li>
+													<?php endforeach; ?>
+												</ul>
+											<?php endif; ?>
+										</div>
+										<div class="gdc-cron-hook-meta">
+											<span class="gdc-cron-source" data-hook="<?php echo esc_attr( $event['hook'] ); ?>">
+												<span class="spinner is-active"></span>
+											</span>
+											<?php if ( ! empty( $event['args'] ) ) : ?>
+												<span class="gdc-badge" title="<?php echo esc_attr( wp_json_encode( $event['args'] ) ); ?>">
+													<?php esc_html_e( 'args', 'globus-debug-control' ); ?>
+												</span>
+											<?php endif; ?>
+										</div>
+									</td>
+									<td class="gdc-col-schedule">
+										<?php if ( ! empty( $event['schedule'] ) ) : ?>
+											<span class="gdc-badge gdc-badge-info"><?php echo esc_html( $event['schedule'] ); ?></span>
+											<?php if ( ! empty( $event['interval'] ) ) : ?>
+												<span class="gdc-text-muted"><?php echo esc_html( self::interval_label( $event['interval'] ) ); ?></span>
+											<?php endif; ?>
+										<?php else : ?>
+											<span class="gdc-text-muted"><?php esc_html_e( 'one-time', 'globus-debug-control' ); ?></span>
+										<?php endif; ?>
+									</td>
+									<td class="gdc-col-actions gdc-cron-actions">
+										<button type="button"
+											class="button button-small gdc-cron-run"
+											title="<?php esc_attr_e( 'Trigger now', 'globus-debug-control' ); ?>"
+											data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+											data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>">
+											<span class="dashicons dashicons-controls-play" aria-hidden="true"></span>
+											<span class="screen-reader-text"><?php esc_html_e( 'Trigger now', 'globus-debug-control' ); ?></span>
+										</button>
+										<button type="button"
+											class="button button-small gdc-cron-delete"
+											title="<?php esc_attr_e( 'Delete event', 'globus-debug-control' ); ?>"
+											data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+											data-ts="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
+											data-args="<?php echo esc_attr( wp_json_encode( $event['args'] ) ); ?>">
+											<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+											<span class="screen-reader-text"><?php esc_html_e( 'Delete event', 'globus-debug-control' ); ?></span>
+										</button>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php

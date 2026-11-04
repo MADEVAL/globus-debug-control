@@ -281,51 +281,53 @@ final class GDC_Log_Viewer {
 							;</script>
 		<div class="gdc-log-viewer">
 			<div class="gdc-log-toolbar">
-				<div class="gdc-log-meta">
-					<?php if ( $exists ) : ?>
-						<code><?php echo esc_html( $path ); ?></code>
-						<span class="gdc-log-badge"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
-						<?php /* translators: %s: number of log lines */ ?>
-				<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
-					<?php else : ?>
-						<span><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
+				<div class="gdc-log-toolbar-row">
+					<div class="gdc-log-meta">
+						<?php if ( $exists ) : ?>
+							<code title="<?php echo esc_attr( $path ); ?>"><?php echo esc_html( $path ); ?></code>
+							<span class="gdc-log-badge"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
+							<?php /* translators: %s: number of log lines */ ?>
+							<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
+						<?php else : ?>
+							<span><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
+						<?php endif; ?>
+					</div>
+					<?php if ( $exists && $size > 0 ) : ?>
+						<div class="gdc-log-actions">
+							<label class="gdc-log-wrap-label">
+								<input type="checkbox" id="gdc-log-wrap-toggle">
+								<?php esc_html_e( 'Word wrap', 'globus-debug-control' ); ?>
+							</label>
+							<a href="
+							<?php
+							echo esc_url(
+								wp_nonce_url(
+									add_query_arg(
+										array(
+											'page'   => 'globus-debug-control',
+											'tab'    => 'log',
+											'gdc_dl' => '1',
+										),
+										admin_url( 'options-general.php' )
+									),
+									'gdc_log_download'
+								)
+							);
+							?>
+										" class="button button-secondary">
+								<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
+							</a>
+							<form method="post" class="gdc-clear-form">
+								<?php wp_nonce_field( self::NONCE_CLEAR ); ?>
+								<input type="hidden" name="gdc_clear_log" value="1">
+								<button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>')">
+									<span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Clear Log', 'globus-debug-control' ); ?>
+								</button>
+							</form>
+						</div>
 					<?php endif; ?>
 				</div>
-				<div class="gdc-log-right">
-					<?php if ( $exists && $size > 0 ) : ?>
-					<div class="gdc-log-actions">
-						<label class="gdc-log-wrap-label">
-							<input type="checkbox" id="gdc-log-wrap-toggle">
-							<?php esc_html_e( 'Word wrap', 'globus-debug-control' ); ?>
-						</label>
-						<a href="
-						<?php
-						echo esc_url(
-							wp_nonce_url(
-								add_query_arg(
-									array(
-										'page'   => 'globus-debug-control',
-										'tab'    => 'log',
-										'gdc_dl' => '1',
-									),
-									admin_url( 'options-general.php' )
-								),
-								'gdc_log_download'
-							)
-						);
-						?>
-									" class="button button-secondary">
-							<span class="dashicons dashicons-download"></span><?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
-						</a>
-						<form method="post" class="gdc-clear-form">
-							<?php wp_nonce_field( self::NONCE_CLEAR ); ?>
-							<input type="hidden" name="gdc_clear_log" value="1">
-							<button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>')">
-								<span class="dashicons dashicons-trash"></span><?php esc_html_e( 'Clear Log', 'globus-debug-control' ); ?>
-							</button>
-						</form>
-					</div>
-					<?php endif; ?>
+				<div class="gdc-log-toolbar-row">
 					<div class="gdc-log-generate">
 						<?php
 						$suppressed_types   = self::get_suppressed_types();
@@ -339,6 +341,7 @@ final class GDC_Log_Viewer {
 							'parse'      => 'Parse Error (sim.)',
 						);
 						?>
+						<span class="gdc-toolbar-label"><?php esc_html_e( 'Test error', 'globus-debug-control' ); ?></span>
 						<select id="gdc-error-type" class="gdc-select-small">
 							<?php foreach ( $error_type_options as $val => $label ) : ?>
 								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' - suppressed' : $label ); ?></option>
@@ -347,9 +350,11 @@ final class GDC_Log_Viewer {
 						<button type="button" id="gdc-generate-error" class="button button-secondary">
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>
+					</div>
+					<div class="gdc-log-right">
 						<button type="button" id="gdc-live-toggle" class="button button-secondary" title="<?php esc_attr_e( 'Auto-refresh when log file changes', 'globus-debug-control' ); ?>">
-							<span class="dashicons dashicons-update gdc-live-icon"></span>
-							Live
+							<span class="dashicons dashicons-update gdc-live-icon" aria-hidden="true"></span>
+							<?php esc_html_e( 'Live tail', 'globus-debug-control' ); ?>
 						</button>
 					</div>
 				</div>
@@ -413,6 +418,7 @@ final class GDC_Log_Viewer {
 
 			<?php else : ?>
 			<div class="gdc-log-empty-state">
+				<span class="dashicons dashicons-media-text" aria-hidden="true"></span>
 				<p><?php esc_html_e( 'Log file is empty.', 'globus-debug-control' ); ?></p>
 			</div>
 			<?php endif; ?>

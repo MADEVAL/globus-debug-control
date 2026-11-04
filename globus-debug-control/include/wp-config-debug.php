@@ -324,89 +324,99 @@ final class GDC_WpConfig_Debug {
 						?>
 					</p>
 				</div>
-			<?php else : ?>
-				<p class="description">
-					<?php
-					echo wp_kses(
-						sprintf(
-							/* translators: %s: file path */
-							__( 'Editing: <code>%s</code>', 'globus-debug-control' ),
-							esc_html( $config_path )
-						),
-						array( 'code' => array() )
-					);
-					?>
-				</p>
 			<?php endif; ?>
 
-			<form method="post">
-				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
-				<input type="hidden" name="gdc_wpcfg_save" value="1">
+			<div class="gdc-card">
+				<div class="gdc-card-header">
+					<div>
+						<h2><?php esc_html_e( 'wp-config.php constants', 'globus-debug-control' ); ?></h2>
+						<?php if ( ! empty( $config_path ) ) : ?>
+							<p class="gdc-wpcfg-path">
+								<span><?php esc_html_e( 'Editing:', 'globus-debug-control' ); ?></span>
+								<code><?php echo esc_html( $config_path ); ?></code>
+							</p>
+						<?php endif; ?>
+					</div>
+					<?php if ( ! empty( $config_path ) ) : ?>
+						<span class="gdc-badge <?php echo $writable ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
+							<?php echo $writable ? esc_html__( 'Writable', 'globus-debug-control' ) : esc_html__( 'Read-only', 'globus-debug-control' ); ?>
+						</span>
+					<?php endif; ?>
+				</div>
 
-				<table class="form-table" role="presentation">
-					<?php
-					foreach ( $constants as $name => $info ) :
-						$is_true = $info['defined'] && $info['value'];
-						?>
-					<tr>
-						<th scope="row">
-							<label>
-								<code><?php echo esc_html( $name ); ?></code>
-							</label>
-						</th>
-						<td>
-							<label class="gdc-toggle-label">
-								<input
-									type="checkbox"
-									name="gdc_wpcfg[<?php echo esc_attr( $name ); ?>]"
-									value="true"
-									<?php checked( $is_true ); ?>
-									<?php disabled( ! $writable ); ?>
-									class="gdc-wpcfg-checkbox"
-								>
-								<?php if ( $is_true ) : ?>
-									<span class="gdc-status-badge gdc-status-on">
-										<span class="dashicons dashicons-yes-alt"></span>
-										<?php esc_html_e( 'Enabled', 'globus-debug-control' ); ?>
-									</span>
-								<?php else : ?>
-									<span class="gdc-status-badge gdc-status-off">
-										<span class="dashicons dashicons-no"></span>
-										<?php esc_html_e( 'Disabled', 'globus-debug-control' ); ?>
-									</span>
-								<?php endif; ?>
-							</label>
-							<?php if ( ! $info['defined'] ) : ?>
-								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php esc_html_e( '(not defined, will be added)', 'globus-debug-control' ); ?></span>
-							<?php else : ?>
-								<span style="color:#646970;margin-left:10px;font-size:12px;"><?php echo esc_html__( 'Current:', 'globus-debug-control' ) . ' <code>' . esc_html( $info['raw'] ) . '</code>'; ?></span>
-							<?php endif; ?>
-							<?php if ( 'WP_DEBUG_LOG' === $name && $writable ) : ?>
-								<p class="description" style="margin-top:6px;">
-									<label for="gdc_wpcfg_log_path_value">
-										<?php esc_html_e( 'Custom log file path (relative to wp-content or absolute):', 'globus-debug-control' ); ?>
-									</label>
-									<input
-										type="text"
-										id="gdc_wpcfg_log_path_value"
-										class="regular-text code"
-										name="gdc_wpcfg[WP_DEBUG_LOG_value]"
-										value=""
-										placeholder="<?php esc_attr_e( 'e.g. custom/debug.log - leave empty for true', 'globus-debug-control' ); ?>"
-									>
-								</p>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<?php endforeach; ?>
-				</table>
+				<form method="post">
+					<?php wp_nonce_field( self::NONCE_ACTION ); ?>
+					<input type="hidden" name="gdc_wpcfg_save" value="1">
 
-				<?php if ( $writable ) : ?>
-					<p class="submit">
-						<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Save to wp-config.php', 'globus-debug-control' ); ?>">
-					</p>
-				<?php endif; ?>
-			</form>
+					<div class="gdc-card-body">
+						<table class="form-table gdc-wpcfg-table" role="presentation">
+							<tbody>
+								<?php
+								foreach ( $constants as $name => $info ) :
+									$is_true = $info['defined'] && $info['value'];
+									?>
+									<tr>
+										<th scope="row">
+											<label><code><?php echo esc_html( $name ); ?></code></label>
+										</th>
+										<td>
+											<label class="gdc-toggle-label">
+												<input
+													type="checkbox"
+													name="gdc_wpcfg[<?php echo esc_attr( $name ); ?>]"
+													value="true"
+													<?php checked( $is_true ); ?>
+													<?php disabled( ! $writable ); ?>
+													class="gdc-wpcfg-checkbox"
+												>
+												<?php if ( $is_true ) : ?>
+													<span class="gdc-status-badge gdc-status-on">
+														<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
+														<?php esc_html_e( 'Enabled', 'globus-debug-control' ); ?>
+													</span>
+												<?php else : ?>
+													<span class="gdc-status-badge gdc-status-off">
+														<span class="dashicons dashicons-no" aria-hidden="true"></span>
+														<?php esc_html_e( 'Disabled', 'globus-debug-control' ); ?>
+													</span>
+												<?php endif; ?>
+											</label>
+											<span class="gdc-wpcfg-row-current">
+												<?php if ( ! $info['defined'] ) : ?>
+													<?php esc_html_e( '(not defined, will be added)', 'globus-debug-control' ); ?>
+												<?php else : ?>
+													<?php echo esc_html__( 'Current:', 'globus-debug-control' ) . ' <code>' . esc_html( $info['raw'] ) . '</code>'; ?>
+												<?php endif; ?>
+											</span>
+											<?php if ( 'WP_DEBUG_LOG' === $name && $writable ) : ?>
+												<p class="description gdc-wpcfg-logpath">
+													<label for="gdc_wpcfg_log_path_value">
+														<?php esc_html_e( 'Custom log file path (relative to wp-content or absolute):', 'globus-debug-control' ); ?>
+													</label>
+													<input
+														type="text"
+														id="gdc_wpcfg_log_path_value"
+														class="regular-text code"
+														name="gdc_wpcfg[WP_DEBUG_LOG_value]"
+														value=""
+														placeholder="<?php esc_attr_e( 'e.g. custom/debug.log - leave empty for true', 'globus-debug-control' ); ?>"
+													>
+												</p>
+											<?php endif; ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+
+					<?php if ( $writable ) : ?>
+						<div class="gdc-card-footer">
+							<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Save to wp-config.php', 'globus-debug-control' ); ?>">
+						</div>
+					<?php endif; ?>
+				</form>
+			</div>
 		</div>
 		<?php
 	}

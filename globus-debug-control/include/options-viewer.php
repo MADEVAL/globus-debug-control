@@ -119,37 +119,40 @@ final class GDC_Options_Viewer {
 
 		<?php if ( empty( $options ) ) : ?>
 			<div class="gdc-empty-state">
+				<span class="dashicons dashicons-database-view" aria-hidden="true"></span>
 				<p><?php esc_html_e( 'No autoloaded options found.', 'globus-debug-control' ); ?></p>
 			</div>
 		<?php else : ?>
-			<table class="wp-list-table widefat striped gdc-options-table">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Option name', 'globus-debug-control' ); ?></th>
-						<th style="width:100px;"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
-						<th style="width:180px;"><?php esc_html_e( 'Relative size', 'globus-debug-control' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					$max = ! empty( $options ) ? max( 1, $options[0]['value_size'] ) : 1;
-					foreach ( $options as $opt ) :
-						$pct       = (int) round( ( $opt['value_size'] / $max ) * 100 );
-						$bar_class = $opt['value_size'] > 100000 ? 'gdc-bar-danger'
-							: ( $opt['value_size'] > 10000 ? 'gdc-bar-warning' : 'gdc-bar-ok' );
-						?>
+			<div class="gdc-table-scroll">
+				<table class="wp-list-table widefat striped gdc-options-table">
+					<thead>
 						<tr>
-							<td><code><?php echo esc_html( $opt['name'] ); ?></code></td>
-							<td><?php echo esc_html( size_format( $opt['value_size'] ) ); ?></td>
-							<td>
-								<div class="gdc-size-bar-wrap">
-									<div class="gdc-size-bar <?php echo esc_attr( $bar_class ); ?>" style="width:<?php echo esc_attr( $pct ); ?>%"></div>
-								</div>
-							</td>
+							<th><?php esc_html_e( 'Option name', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-bar"><?php esc_html_e( 'Relative size', 'globus-debug-control' ); ?></th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						<?php
+						$max = ! empty( $options ) ? max( 1, $options[0]['value_size'] ) : 1;
+						foreach ( $options as $opt ) :
+							$pct       = (int) round( ( $opt['value_size'] / $max ) * 100 );
+							$bar_class = $opt['value_size'] > 100000 ? 'gdc-bar-danger'
+								: ( $opt['value_size'] > 10000 ? 'gdc-bar-warning' : 'gdc-bar-ok' );
+							?>
+							<tr>
+								<td><code title="<?php echo esc_attr( $opt['name'] ); ?>"><?php echo esc_html( $opt['name'] ); ?></code></td>
+								<td><?php echo esc_html( size_format( $opt['value_size'] ) ); ?></td>
+								<td>
+									<div class="gdc-size-bar-wrap" title="<?php echo esc_attr( $pct . '%' ); ?>">
+										<div class="gdc-size-bar <?php echo esc_attr( $bar_class ); ?>" style="width:<?php echo esc_attr( $pct ); ?>%"></div>
+									</div>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		<?php endif; ?>
 		<?php
 	}

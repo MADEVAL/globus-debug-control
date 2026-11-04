@@ -181,34 +181,39 @@ final class GDC_Constants_Viewer {
 
 		<?php if ( empty( $groups ) ) : ?>
 			<div class="gdc-empty-state">
+				<span class="dashicons dashicons-editor-code" aria-hidden="true"></span>
 				<p><?php esc_html_e( 'No WP constants found.', 'globus-debug-control' ); ?></p>
 			</div>
 		<?php else : ?>
-			<?php foreach ( $groups as $group_label => $constants ) : ?>
-				<h3 class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></h3>
-				<table class="wp-list-table widefat striped gdc-constants-table" style="margin-bottom:20px;">
+			<div class="gdc-table-scroll">
+				<table class="wp-list-table widefat striped gdc-constants-table">
 					<thead>
 						<tr>
-							<th style="width:50%;"><?php esc_html_e( 'Constant', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-name"><?php esc_html_e( 'Constant', 'globus-debug-control' ); ?></th>
 							<th><?php esc_html_e( 'Value', 'globus-debug-control' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
-						<?php foreach ( $constants as $const_name => $const_value ) : ?>
-							<tr>
-								<td><code><?php echo esc_html( $const_name ); ?></code></td>
-								<td>
-									<?php if ( '*** (masked)' === $const_value ) : ?>
-										<span class="gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
-									<?php else : ?>
-										<code><?php echo esc_html( $const_value ); ?></code>
-									<?php endif; ?>
-								</td>
+						<?php foreach ( $groups as $group_label => $constants ) : ?>
+							<tr class="gdc-constant-group">
+								<th colspan="2" class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></th>
 							</tr>
+							<?php foreach ( $constants as $const_name => $const_value ) : ?>
+								<tr>
+									<td class="gdc-constant-name"><code><?php echo esc_html( $const_name ); ?></code></td>
+									<td>
+										<?php if ( '*** (masked)' === $const_value ) : ?>
+											<span class="gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
+										<?php else : ?>
+											<code><?php echo esc_html( $const_value ); ?></code>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
-			<?php endforeach; ?>
+			</div>
 		<?php endif; ?>
 		<?php
 	}

@@ -44,8 +44,9 @@
 					}
 			);
 
-				var cm = editor.codemirror;
-				cm.setSize( null, '640px' );
+				var cm           = editor.codemirror;
+				var editorHeight = Math.max( 420, Math.min( 640, window.innerHeight - 260 ) );
+				cm.setSize( null, editorHeight + 'px' );
 
 				var lineDataEl = document.getElementById( 'gdc-log-line-data' );
 			if ( lineDataEl ) {

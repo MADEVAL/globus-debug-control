@@ -270,16 +270,15 @@ final class GDC_Http_Log {
 					</div>
 				</div>
 			</div>
-			<div class="gdc-log-actions">
+			<div class="gdc-tool-actions gdc-log-actions">
 				<button type="button" id="gdc-http-toggle" class="button button-secondary<?php echo $capturing ? ' gdc-http-capturing' : ''; ?>"
 					data-capturing="<?php echo $capturing ? '1' : '0'; ?>">
-					<span class="dashicons <?php echo $capturing ? 'dashicons-controls-pause' : 'dashicons-controls-play'; ?>"
-						style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+					<span class="dashicons <?php echo $capturing ? 'dashicons-controls-pause' : 'dashicons-controls-play'; ?>" aria-hidden="true"></span>
 					<?php echo $capturing ? esc_html__( 'Stop capturing', 'globus-debug-control' ) : esc_html__( 'Start capturing', 'globus-debug-control' ); ?>
 				</button>
 				<?php if ( ! empty( $log ) ) : ?>
 					<button type="button" id="gdc-http-clear" class="button button-secondary">
-						<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+						<span class="dashicons dashicons-trash" aria-hidden="true"></span>
 						<?php esc_html_e( 'Clear log', 'globus-debug-control' ); ?>
 					</button>
 				<?php endif; ?>
@@ -288,6 +287,7 @@ final class GDC_Http_Log {
 
 		<?php if ( empty( $log ) ) : ?>
 			<div class="gdc-empty-state">
+				<span class="dashicons dashicons-cloud" aria-hidden="true"></span>
 				<p>
 					<?php
 					if ( $capturing ) {
@@ -299,43 +299,53 @@ final class GDC_Http_Log {
 				</p>
 			</div>
 		<?php else : ?>
-			<table class="wp-list-table widefat striped gdc-http-table">
-				<thead>
-					<tr>
-						<th style="width:40px;">#</th>
-						<th style="width:80px;"><?php esc_html_e( 'Time', 'globus-debug-control' ); ?></th>
-						<th style="width:60px;"><?php esc_html_e( 'Method', 'globus-debug-control' ); ?></th>
-						<th><?php esc_html_e( 'URL', 'globus-debug-control' ); ?></th>
-						<th style="width:70px;"><?php esc_html_e( 'Status', 'globus-debug-control' ); ?></th>
-						<th style="width:100px;"><?php esc_html_e( 'Transport', 'globus-debug-control' ); ?></th>
-						<th style="width:80px;"><?php esc_html_e( 'Duration', 'globus-debug-control' ); ?></th>
-						<th style="width:200px;"><?php esc_html_e( 'Error', 'globus-debug-control' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ( $log as $i => $entry ) : ?>
+			<div class="gdc-table-scroll">
+				<table class="wp-list-table widefat striped gdc-http-table">
+					<thead>
 						<tr>
-							<td><?php echo esc_html( $i + 1 ); ?></td>
-							<td><code style="font-size:11px;"><?php echo esc_html( gmdate( 'H:i:s', $entry['ts'] ) ); ?></code></td>
-							<td><span class="gdc-http-method gdc-http-method-<?php echo esc_attr( strtolower( $entry['method'] ) ); ?>"><?php echo esc_html( $entry['method'] ); ?></span></td>
-							<td class="gdc-http-url-cell"><code class="gdc-http-url" title="<?php echo esc_attr( $entry['url'] ); ?>"><?php echo esc_html( $entry['url'] ); ?></code></td>
-							<td>
-								<?php
-								$s   = (int) $entry['status'];
-								$cls = 0 === $s ? 'gdc-http-status-err'
-									: ( $s >= 500 ? 'gdc-http-status-5xx'
-									: ( $s >= 400 ? 'gdc-http-status-4xx'
-									: ( $s >= 300 ? 'gdc-http-status-3xx' : 'gdc-http-status-2xx' ) ) );
-								echo '<span class="gdc-http-status ' . esc_attr( $cls ) . '">' . esc_html( $s > 0 ? (string) $s : '—' ) . '</span>';
-								?>
-							</td>
-							<td><code style="font-size:11px;"><?php echo esc_html( isset( $entry['transport'] ) ? (string) $entry['transport'] : '-' ); ?></code></td>
-							<td><?php echo esc_html( number_format_i18n( (float) ( $entry['duration'] ?? 0.0 ), 3 ) . 's' ); ?></td>
-							<td><?php echo esc_html( $entry['error'] ); ?></td>
+							<th class="gdc-col-time"><?php esc_html_e( 'Time', 'globus-debug-control' ); ?></th>
+							<th><?php esc_html_e( 'Request', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-status"><?php esc_html_e( 'Status', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-transport"><?php esc_html_e( 'Transport', 'globus-debug-control' ); ?></th>
+							<th class="gdc-col-error"><?php esc_html_e( 'Error', 'globus-debug-control' ); ?></th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						<?php foreach ( $log as $entry ) : ?>
+							<?php
+							$s   = (int) $entry['status'];
+							$cls = 0 === $s ? 'gdc-http-status-err'
+								: ( $s >= 500 ? 'gdc-http-status-5xx'
+								: ( $s >= 400 ? 'gdc-http-status-4xx'
+								: ( $s >= 300 ? 'gdc-http-status-3xx' : 'gdc-http-status-2xx' ) ) );
+							?>
+							<tr>
+								<td><span class="gdc-http-time"><?php echo esc_html( gmdate( 'H:i:s', $entry['ts'] ) ); ?></span></td>
+								<td class="gdc-http-url-cell">
+									<div class="gdc-http-request">
+										<span class="gdc-http-method gdc-http-method-<?php echo esc_attr( strtolower( $entry['method'] ) ); ?>"><?php echo esc_html( $entry['method'] ); ?></span>
+										<code class="gdc-http-url" title="<?php echo esc_attr( $entry['url'] ); ?>"><?php echo esc_html( $entry['url'] ); ?></code>
+									</div>
+								</td>
+								<td>
+									<div class="gdc-http-status-cell">
+										<span class="gdc-http-status <?php echo esc_attr( $cls ); ?>"><?php echo esc_html( $s > 0 ? (string) $s : '—' ); ?></span>
+										<span class="gdc-http-duration"><?php echo esc_html( number_format_i18n( (float) ( $entry['duration'] ?? 0.0 ), 3 ) . 's' ); ?></span>
+									</div>
+								</td>
+								<td><code><?php echo esc_html( isset( $entry['transport'] ) ? (string) $entry['transport'] : '-' ); ?></code></td>
+								<td>
+									<?php if ( ! empty( $entry['error'] ) ) : ?>
+										<span class="gdc-http-error"><?php echo esc_html( $entry['error'] ); ?></span>
+									<?php else : ?>
+										<span class="gdc-text-muted">&mdash;</span>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		<?php endif; ?>
 		<?php
 	}

@@ -30,13 +30,130 @@ trait GDC_Admin_Settings {
 
 		add_settings_section( 'gdc_main', __( 'General Settings', 'globus-debug-control' ), '__return_false', 'globus_debug_control' );
 
-		add_settings_field( 'enabled', __( 'Enable Plugin', 'globus-debug-control' ), array( $this, 'field_enabled' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'suppress', __( 'Error Type Filtering', 'globus-debug-control' ), array( $this, 'field_suppress' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'display_errors_mode', __( 'display_errors Mode', 'globus-debug-control' ), array( $this, 'field_display_mode' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'logging', __( 'Logging Settings', 'globus-debug-control' ), array( $this, 'field_logging' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'remove_php_error_bodyclass', __( 'php-error Class', 'globus-debug-control' ), array( $this, 'field_body_class' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'force_in_api_contexts', __( 'API Contexts', 'globus-debug-control' ), array( $this, 'field_api_contexts' ), 'globus_debug_control', 'gdc_main' );
-		add_settings_field( 'install_mu_dropin', __( 'Early Error Interception', 'globus-debug-control' ), array( $this, 'field_mu_dropin' ), 'globus_debug_control', 'gdc_main' );
+		foreach ( $this->settings_fields_map() as $field_id => $field ) {
+			add_settings_field( $field_id, $field['label'], array( $this, $field['callback'] ), 'globus_debug_control', 'gdc_main' );
+		}
+	}
+
+	/**
+	 * Returns the settings fields, their labels, callbacks, and visual groups.
+	 *
+	 * @return array<string, array{label: string, callback: string, group: string}>
+	 */
+	private function settings_fields_map(): array {
+		return array(
+			'enabled'                    => array(
+				'label'    => __( 'Enable Plugin', 'globus-debug-control' ),
+				'callback' => 'field_enabled',
+				'group'    => 'general',
+			),
+			'suppress'                   => array(
+				'label'    => __( 'Error Type Filtering', 'globus-debug-control' ),
+				'callback' => 'field_suppress',
+				'group'    => 'filtering',
+			),
+			'display_errors_mode'        => array(
+				'label'    => __( 'display_errors Mode', 'globus-debug-control' ),
+				'callback' => 'field_display_mode',
+				'group'    => 'filtering',
+			),
+			'logging'                    => array(
+				'label'    => __( 'Logging Settings', 'globus-debug-control' ),
+				'callback' => 'field_logging',
+				'group'    => 'logging',
+			),
+			'remove_php_error_bodyclass' => array(
+				'label'    => __( 'php-error Class', 'globus-debug-control' ),
+				'callback' => 'field_body_class',
+				'group'    => 'display',
+			),
+			'force_in_api_contexts'      => array(
+				'label'    => __( 'API Contexts', 'globus-debug-control' ),
+				'callback' => 'field_api_contexts',
+				'group'    => 'display',
+			),
+			'install_mu_dropin'          => array(
+				'label'    => __( 'Early Error Interception', 'globus-debug-control' ),
+				'callback' => 'field_mu_dropin',
+				'group'    => 'early',
+			),
+		);
+	}
+
+	/**
+	 * Returns the visual groups used on the settings screen.
+	 *
+	 * @return array<string, array{title: string, description: string}>
+	 */
+	private function settings_groups(): array {
+		return array(
+			'general'   => array(
+				'title'       => __( 'Plugin status', 'globus-debug-control' ),
+				'description' => __( 'Turn all debug control behaviour on or off.', 'globus-debug-control' ),
+			),
+			'filtering' => array(
+				'title'       => __( 'Error filtering', 'globus-debug-control' ),
+				'description' => __( 'Choose which PHP error types are hidden and how errors are displayed.', 'globus-debug-control' ),
+			),
+			'logging'   => array(
+				'title'       => __( 'Logging', 'globus-debug-control' ),
+				'description' => __( 'Write errors to a file and rotate it when it grows too large.', 'globus-debug-control' ),
+			),
+			'display'   => array(
+				'title'       => __( 'Display and API contexts', 'globus-debug-control' ),
+				'description' => __( 'Front-end cosmetics and non-HTML request handling.', 'globus-debug-control' ),
+			),
+			'early'     => array(
+				'title'       => __( 'Early interception', 'globus-debug-control' ),
+				'description' => __( 'Load the error filter before regular plugins.', 'globus-debug-control' ),
+			),
+		);
+	}
+
+	/**
+	 * Renders the grouped settings form with one card per field group.
+	 */
+	public function render_settings_form(): void {
+		$fields = $this->settings_fields_map();
+
+		foreach ( $this->settings_groups() as $group_key => $group ) {
+			$group_fields = array_filter(
+				$fields,
+				static function ( array $field ) use ( $group_key ): bool {
+					return $group_key === $field['group'];
+				}
+			);
+
+			if ( empty( $group_fields ) ) {
+				continue;
+			}
+			?>
+			<div class="gdc-card">
+				<div class="gdc-card-header">
+					<div>
+						<h2><?php echo esc_html( $group['title'] ); ?></h2>
+						<p><?php echo esc_html( $group['description'] ); ?></p>
+					</div>
+				</div>
+				<div class="gdc-card-body">
+					<table class="form-table" role="presentation">
+						<tbody>
+							<?php foreach ( $group_fields as $field ) : ?>
+								<tr>
+									<th scope="row"><?php echo esc_html( $field['label'] ); ?></th>
+									<td>
+										<?php call_user_func( array( $this, $field['callback'] ) ); ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<?php
+		}
+
+		submit_button( __( 'Save Settings', 'globus-debug-control' ) );
 	}
 
 	/**
