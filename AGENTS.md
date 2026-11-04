@@ -13,6 +13,8 @@ WordPress plugin "GLOBUS Debug Control" — error filtering, WP_DEBUG toggle, lo
 - `globus-debug-control/include/` — one file per feature: traits (`trait-*.php`) compose the main class, standalone classes (`log-viewer.php`, `cron-viewer.php`, etc.)
 - `tests/` — PHPUnit tests (namespace `GDC\Tests`)
 - `tools/gen-pot.php` — i18n `.pot` generator
+- `tools/screenshots/` — Playwright renderer for the WordPress.org screenshots (HTML templates in `templates/`)
+- `docs/screenshots/` — generated `screenshot-1.png` … `screenshot-8.png`, tracked, copied to SVN `assets` on release
 
 ## Commands
 
@@ -22,6 +24,7 @@ composer test             # run PHPUnit
 composer cs               # lint with PHPCS (WordPress standard)
 composer cs-fix           # auto-fix with PHPCBF
 php tools/gen-pot.php     # regenerate languages/globus-debug-control.pot
+cd tools/screenshots && npm install && npm run capture   # regenerate docs/screenshots/*.png
 ```
 
 Run `composer cs` and `composer test` before committing.

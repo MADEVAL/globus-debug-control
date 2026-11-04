@@ -13,6 +13,27 @@ Stop wading through hundreds of irrelevant PHP notices. Debug WordPress on your 
 filter errors, toggle `WP_DEBUG`, read logs, and diagnose performance issues without
 leaving the admin panel or editing a single file.
 
+## Screenshots
+
+| Settings | WP_DEBUG |
+| --- | --- |
+| ![Settings tab](docs/screenshots/screenshot-1.png) | ![WP_DEBUG tab](docs/screenshots/screenshot-2.png) |
+
+| Error Log | Cron Tasks |
+| --- | --- |
+| ![Error Log tab](docs/screenshots/screenshot-3.png) | ![Cron Tasks tab](docs/screenshots/screenshot-4.png) |
+
+| Transients | Autoloaded |
+| --- | --- |
+| ![Transients tab](docs/screenshots/screenshot-5.png) | ![Autoloaded tab](docs/screenshots/screenshot-6.png) |
+
+| HTTP Log | Constants |
+| --- | --- |
+| ![HTTP Log tab](docs/screenshots/screenshot-7.png) | ![Constants tab](docs/screenshots/screenshot-8.png) |
+
+The images are rendered from HTML templates with Playwright, so they can be
+regenerated after any UI change - see [`tools/screenshots`](tools/screenshots/README.md).
+
 ## Features
 
 The plugin adds eight tabs under **Settings -> GLOBUS Debug Control**:
@@ -78,6 +99,20 @@ php tools/gen-pot.php     # regenerate languages/globus-debug-control.pot
 
 Run `composer cs` and `composer test` before committing.
 
+### Screenshots
+
+The WordPress.org screenshots are generated from static HTML templates:
+
+```sh
+cd tools/screenshots
+npm install
+npm run capture
+```
+
+Output is written to `docs/screenshots/` in the exact `screenshot-N.png` order
+WordPress.org expects. The same files are copied to the plugin's SVN `assets`
+directory when publishing. See [`tools/screenshots/README.md`](tools/screenshots/README.md).
+
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/DEPLOY.yml`, which rsyncs the
@@ -94,4 +129,5 @@ GPLv2 or later. See [LICENSE](LICENSE).
 - [Support forum](https://wordpress.org/support/plugin/globus-debug-control/)
 - [Translate the plugin](https://translate.wordpress.org/projects/wp-plugins/globus-debug-control)
 - [SVN repository](https://plugins.svn.wordpress.org/globus-debug-control/)
+- [Report a security issue](SECURITY.md)
 - [Author](https://leonidov.dev)
