@@ -345,18 +345,21 @@ trait GDC_Admin_Page {
 			return;
 		}
 
+		$css_file = GDC_DIR . '/assets/css/admin.css';
+		$js_file  = GDC_DIR . '/assets/js/admin.js';
+
 		wp_enqueue_style(
 			'gdc-admin',
 			GDC_ASSETS_URL . 'css/admin.css',
 			array( 'dashicons' ),
-			self::VERSION
+			file_exists( $css_file ) ? (string) filemtime( $css_file ) : self::VERSION
 		);
 
 		wp_enqueue_script(
 			'gdc-admin',
 			GDC_ASSETS_URL . 'js/admin.js',
 			array( 'jquery' ),
-			self::VERSION,
+			file_exists( $js_file ) ? (string) filemtime( $js_file ) : self::VERSION,
 			true
 		);
 
