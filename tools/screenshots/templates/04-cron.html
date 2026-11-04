@@ -1,0 +1,175 @@
+				<div class="gdc-cron-viewer">
+					<div class="gdc-cron-summary">
+						<div class="gdc-cron-summary-card gdc-card-ok">
+							<span class="dashicons dashicons-yes-alt"></span>
+							<div><strong>WP-Cron</strong><span>Enabled</span></div>
+						</div>
+						<div class="gdc-cron-summary-card">
+							<span class="dashicons dashicons-calendar-alt"></span>
+							<div><strong>14</strong><span>Events</span></div>
+						</div>
+						<div class="gdc-cron-summary-card">
+							<span class="dashicons dashicons-admin-links"></span>
+							<div><strong>12</strong><span>Unique hooks</span></div>
+						</div>
+						<div class="gdc-cron-summary-card gdc-card-warning">
+							<span class="dashicons dashicons-warning"></span>
+							<div><strong>2</strong><span>Overdue</span></div>
+						</div>
+						<div class="gdc-cron-summary-card gdc-card-error">
+							<span class="dashicons dashicons-dismiss"></span>
+							<div><strong>1</strong><span>Orphaned</span></div>
+						</div>
+						<div class="gdc-cron-summary-card">
+							<span class="dashicons dashicons-clock"></span>
+							<div><strong>in 4 minutes</strong><span>Next run</span></div>
+						</div>
+					</div>
+
+					<div class="gdc-cron-notices">
+						<div class="notice notice-warning notice-alt gdc-cron-notice inline">
+							<p><span class="dashicons dashicons-dismiss" style="vertical-align:middle;margin-right:4px;"></span>1 orphaned cron hook found - its plugin may have been deactivated without cleaning up.</p>
+						</div>
+					</div>
+
+					<button type="button" id="gdc-cron-bulk-delete" class="button button-secondary" style="margin-bottom:12px;">
+						<span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;color:#d63638;"></span>
+						Delete orphaned <span class="gdc-badge gdc-badge-orphan" style="margin-left:4px;">1</span>
+					</button>
+
+					<table class="wp-list-table widefat fixed striped gdc-cron-table">
+						<thead>
+							<tr>
+								<th scope="col" style="width:135px;">Next Run</th>
+								<th scope="col" style="width:95px;">In</th>
+								<th scope="col" style="width:255px;">Hook / Callback</th>
+								<th scope="col" style="width:105px;">Source</th>
+								<th scope="col" style="width:100px;">Schedule</th>
+								<th scope="col" style="width:55px;">Args</th>
+								<th scope="col" style="width:78px;">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="gdc-cron-overdue">
+								<td>2026-11-03 04:00:00 <span class="gdc-badge gdc-badge-critical">overdue</span></td>
+								<td class="gdc-text-warning">2 days ago</td>
+								<td><code class="gdc-cron-hook-name">old_plugin_cleanup_hook</code> <span class="gdc-badge gdc-badge-orphan" title="No callback registered and hook not found in plugin files">orphan</span></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-theme">unknown</span></td>
+								<td><span class="gdc-text-muted">one-time</span></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 09:16:00</td>
+								<td class="gdc-text-muted">in 4 minutes</td>
+								<td><code class="gdc-cron-hook-name">action_scheduler_run_queue</code> <span class="gdc-badge gdc-badge-info" title="Multiple scheduled instances of this hook">&times;2</span></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-plugin">woocommerce</span></td>
+								<td><span class="gdc-badge gdc-badge-info">every_minute</span> <small class="gdc-text-muted">1m</small></td>
+								<td><code>yes</code></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 09:20:00</td>
+								<td class="gdc-text-muted">in 8 minutes</td>
+								<td><code class="gdc-cron-hook-name">wp_version_check</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">twicedaily</span> <small class="gdc-text-muted">12h</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 09:24:00</td>
+								<td class="gdc-text-muted">in 12 minutes</td>
+								<td><code class="gdc-cron-hook-name">wp_update_plugins</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">twicedaily</span> <small class="gdc-text-muted">12h</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr class="gdc-cron-overdue">
+								<td>2026-11-05 08:00:00 <span class="gdc-badge gdc-badge-warning">overdue</span></td>
+								<td class="gdc-text-warning">1 hour ago</td>
+								<td><code class="gdc-cron-hook-name">wc_admin_daily</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-plugin">woocommerce</span></td>
+								<td><span class="gdc-badge gdc-badge-info">daily</span> <small class="gdc-text-muted">1d</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 09:32:00</td>
+								<td class="gdc-text-muted">in 20 minutes</td>
+								<td><code class="gdc-cron-hook-name">wp_scheduled_delete</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">daily</span> <small class="gdc-text-muted">1d</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 09:42:00</td>
+								<td class="gdc-text-muted">in 30 minutes</td>
+								<td><code class="gdc-cron-hook-name">wpcf7_retry_failed_submissions</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-plugin">contact-form-7</span></td>
+								<td><span class="gdc-badge gdc-badge-info">hourly</span> <small class="gdc-text-muted">1h</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 10:12:00</td>
+								<td class="gdc-text-muted">in 1 hour</td>
+								<td><code class="gdc-cron-hook-name">wp_privacy_delete_old_export_files</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">hourly</span> <small class="gdc-text-muted">1h</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 11:12:00</td>
+								<td class="gdc-text-muted">in 2 hours</td>
+								<td><code class="gdc-cron-hook-name">wp_scheduled_auto_draft_delete</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">daily</span> <small class="gdc-text-muted">1d</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+							<tr>
+								<td>2026-11-05 12:12:00</td>
+								<td class="gdc-text-muted">in 3 hours</td>
+								<td><code class="gdc-cron-hook-name">wp_delete_temp_updater_backups</code></td>
+								<td class="gdc-cron-source"><span class="gdc-source-badge gdc-source-core">WordPress</span></td>
+								<td><span class="gdc-badge gdc-badge-info">weekly</span> <small class="gdc-text-muted">7d</small></td>
+								<td><span class="gdc-text-muted">-</span></td>
+								<td class="gdc-cron-actions">
+									<button type="button" class="button button-small gdc-cron-run" title="Trigger now"><span class="dashicons dashicons-controls-play" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span></button>
+									<button type="button" class="button button-small gdc-cron-delete" title="Delete event"><span class="dashicons dashicons-trash" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#d63638;"></span></button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>

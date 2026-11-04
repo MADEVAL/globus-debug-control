@@ -102,6 +102,17 @@ Plugins and themes silently make outgoing HTTP calls - license checks, update pi
 
 When you need to check what debug, performance, or security constants are active at runtime, you normally have to grep through wp-config.php and hope nothing is overridden elsewhere. This tab displays all WordPress-related PHP constants defined at runtime, grouped by category: Debug, Performance, Security, Database, Auth and Salts, Paths, and Other WP_* constants. Sensitive values (database password, auth keys, salts) are automatically masked.
 
+== Screenshots ==
+
+1. Settings tab: filter PHP error types, choose the error display mode, and configure logging.
+2. WP_DEBUG tab: toggle debug constants in wp-config.php without editing files.
+3. Error Log tab: colour-coded debug.log with pagination, live polling, download, and clear.
+4. Cron Tasks tab: overdue events, orphaned hooks, source detection, and one-click actions.
+5. Transients tab: every database transient with size and expiry, plus bulk purge of expired rows.
+6. Autoloaded tab: the heaviest autoloaded options, sorted by size, to spot request bloat.
+7. HTTP Log tab: outgoing WordPress HTTP API calls with status, transport, and duration.
+8. Constants tab: runtime WordPress constants grouped by category, with secrets masked.
+
 == Installation ==
 
 1. Upload the `globus-debug-control` folder to the `/wp-content/plugins/` directory.
