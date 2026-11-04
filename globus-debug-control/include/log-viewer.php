@@ -363,7 +363,7 @@ final class GDC_Log_Viewer {
 			<?php if ( $exists && $size > $max_render_bytes ) : ?>
 				<div class="notice notice-warning notice-alt gdc-log-tail-notice inline">
 					<p>
-						<span class="dashicons dashicons-download" style="vertical-align:middle;margin-right:4px;"></span>
+						<span class="dashicons dashicons-download" aria-hidden="true"></span>
 						<?php esc_html_e( 'The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything.', 'globus-debug-control' ); ?>
 					</p>
 				</div>

@@ -35,6 +35,39 @@
 	margin-top: 14px;
 }
 
+/* Buttons: icons and label share one centred flex row. */
+.gdc-page a.button,
+.gdc-page button.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	line-height: 1.8;
+}
+
+.gdc-page a.button .dashicons,
+.gdc-page button.button .dashicons {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+	line-height: 1;
+	margin: 0;
+	flex: 0 0 auto;
+	transform: translateY(2px);
+}
+
+.gdc-page .notice .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 1;
+	vertical-align: -2px;
+	margin-right: 4px;
+}
+
 .gdc-tab-content {
 	margin-top: 16px;
 }
@@ -624,10 +657,12 @@
 	margin-left: 4px;
 }
 
-.gdc-cron-actions .dashicons {
-	font-size: 15px;
-	width: 15px;
-	height: 15px;
+.gdc-cron-actions .button {
+	gap: 0;
+}
+
+.gdc-cron-actions .button .dashicons {
+	transform: none;
 }
 
 .gdc-cron-run-ok {
@@ -756,12 +791,9 @@
 	gap: 4px;
 }
 
-.gdc-log-actions .button .dashicons,
-.gdc-log-generate .button .dashicons {
-	font-size: 15px;
-	width: 15px;
-	height: 15px;
-	line-height: 1;
+.gdc-log-actions .button,
+.gdc-log-generate .button {
+	gap: 6px;
 }
 
 .gdc-log-wrap-label {

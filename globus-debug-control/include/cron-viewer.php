@@ -45,7 +45,7 @@ final class GDC_Cron_Viewer {
 					<?php foreach ( $notices as $notice ) : ?>
 						<div class="notice notice-<?php echo esc_attr( $notice['type'] ); ?> notice-alt gdc-cron-notice inline">
 							<p>
-								<span class="dashicons dashicons-<?php echo esc_attr( $notice['icon'] ); ?>" style="vertical-align:middle;margin-right:4px;"></span>
+								<span class="dashicons dashicons-<?php echo esc_attr( $notice['icon'] ); ?>" aria-hidden="true"></span>
 								<?php echo esc_html( $notice['message'] ); ?>
 							</p>
 						</div>

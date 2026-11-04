@@ -174,7 +174,7 @@ final class GDC_Constants_Viewer {
 		?>
 		<p>
 			<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="button button-secondary">
-				<span class="dashicons dashicons-arrow-left-alt" style="font-size:14px;width:14px;height:14px;vertical-align:middle;margin-right:3px;"></span>
+				<span class="dashicons dashicons-arrow-left-alt" aria-hidden="true"></span>
 				<?php esc_html_e( 'WP_DEBUG settings', 'globus-debug-control' ); ?>
 			</a>
 		</p>
