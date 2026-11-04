@@ -86,7 +86,7 @@ globus-debug-control/     deployable plugin (this is what ships)
   assets/                   admin CSS and JS
   languages/                translation files
 tests/                    PHPUnit tests
-tools/gen-pot.php         .pot generator
+tools/screenshots/        Playwright screenshot renderer
 ```
 
 ```sh
@@ -94,7 +94,7 @@ composer install          # install dev dependencies
 composer test             # run PHPUnit
 composer cs               # lint with PHPCS (WordPress standard)
 composer cs-fix           # auto-fix with PHPCBF
-php tools/gen-pot.php     # regenerate languages/globus-debug-control.pot
+composer pot              # regenerate languages/globus-debug-control.pot (WP-CLI)
 ```
 
 Run `composer cs` and `composer test` before committing.
