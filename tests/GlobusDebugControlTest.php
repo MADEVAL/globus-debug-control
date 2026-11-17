@@ -117,6 +117,14 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertStringContainsString("add_filter( 'enable_wp_debug_mode_checks', '__return_false', 1 );", $content);
 	}
 
+	public function testGenerateMuContentDisablesLoggingWhenOptionOff(): void {
+		$content = $this->invokePrivate('generate_mu_content');
+
+		$this->assertStringContainsString("empty( \$gdc_opts['log_enabled'] )", $content);
+		$this->assertStringContainsString("ini_set( 'log_errors', '0' );", $content);
+		$this->assertStringContainsString("ini_set( 'error_log', DIRECTORY_SEPARATOR === '\\\\' ? 'NUL' : '/dev/null' );", $content);
+	}
+
 	public function testInstallAndRemoveMuDropinManageOwnedFile(): void {
 		$path = str_replace('\\', '/', WPMU_PLUGIN_DIR . '/gdc-early-loader.php');
 
@@ -460,6 +468,26 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$path = $this->invokePrivate('resolve_log_path', [['log_path' => '']]);
 
 		$this->assertSame('', $path);
+	}
+
+	public function testDisabledLoggingTurnsOffErrorsAndRedirectsErrorLog(): void {
+		$opts = $this->refreshOptions([
+			'enabled' => 1,
+			'log_enabled' => 0,
+		]);
+
+		$original_log_errors = ini_get('log_errors');
+		$original_error_log  = ini_get('error_log');
+
+		try {
+			$this->invokePrivate('apply_log_settings', [$opts]);
+
+			$this->assertSame('0', ini_get('log_errors'));
+			$this->assertSame('Windows' === PHP_OS_FAMILY ? 'NUL' : '/dev/null', ini_get('error_log'));
+		} finally {
+			ini_set('log_errors', false === $original_log_errors ? '' : $original_log_errors);
+			ini_set('error_log', false === $original_error_log ? '' : $original_error_log);
+		}
 	}
 
 	public function testResolveLogPathRejectsParentTraversal(): void {

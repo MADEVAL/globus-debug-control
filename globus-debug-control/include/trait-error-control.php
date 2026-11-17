@@ -299,6 +299,9 @@ trait GDC_Error_Control {
 	private function apply_log_settings( array $opts ) {
 		if ( empty( $opts['log_enabled'] ) ) {
 			ini_set( 'log_errors', '0' ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
+			// Direct error_log() calls ignore log_errors and still append to the
+			// configured file, so point the log sink at the OS null device too.
+			ini_set( 'error_log', $this->get_null_device() ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Required for log control.
 			return;
 		}
 
@@ -319,6 +322,15 @@ trait GDC_Error_Control {
 	// -------------------------------------------------------------------------
 	// Log path helpers
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Returns the OS null device path used to discard logged output.
+	 *
+	 * @return string "NUL" on Windows, "/dev/null" elsewhere.
+	 */
+	private function get_null_device(): string {
+		return 'Windows' === PHP_OS_FAMILY ? 'NUL' : '/dev/null';
+	}
 
 	/**
 	 * Determines the active log file path from options or WordPress constants.
