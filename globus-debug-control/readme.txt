@@ -5,8 +5,8 @@ Requires at least: 5.2
 Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 2.3.0
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License: MIT
+License URI: https://opensource.org/license/mit
 
 Filter PHP debug noise, toggle WP_DEBUG, read logs, and inspect cron, transients, HTTP calls, and constants from one dashboard.
 
@@ -185,6 +185,18 @@ Check the **Cron Tasks** tab for overdue or orphaned events. Check the **Autoloa
 
 Yes. The recommended setup: suppress all error types, disable error display, enable logging to a file, and keep the `php-error` class removal active. The diagnostic tabs (Cron Tasks, Transients, Autoloaded, HTTP Log, Constants) are read-only and safe at any time.
 
+= Does the plugin change global PHP settings? =
+
+The plugin is a debug control panel, so it intentionally sets `error_reporting`, `display_errors`, `log_errors`, and the `error_log` path for the current request. The changes are scoped to that request and apply only while the plugin is enabled; `wp-config.php` remains the source of truth for the next request. Each change is guarded by `WP_DEBUG` and the plugin options, and can be reverted from the Settings screen or by disabling the plugin.
+
+= Is wp-config.php backed up before changes? =
+
+Yes. Before the plugin writes a debug constant it creates a timestamped `wp-config.php.gdc-backup-YYYYMMDD-HHMMSS` copy next to the file. The plugin does not restore it automatically: rename the backup over `wp-config.php` if you need to roll back. The same backup runs for the admin form and for the `gdc/update-wp-config` ability.
+
+= What does the "generate test error" button do? =
+
+It is an admin-only tool in the **Error Log** tab. It requires `manage_options` and a valid nonce, and writes one sample line so you can confirm that logging works. It is not available on the front end and never runs automatically.
+
 == Changelog ==
 
 = 2.3.0 =
@@ -260,13 +272,6 @@ Yes. The recommended setup: suppress all error types, disable error display, ena
 * Added optional MU-plugin dropin for early error interception
 * Improved log file management
 * Added automatic log file rotation
-
-= 2.1.0 =
-* Added automatic error suppression in API contexts (AJAX, REST API, Cron, CLI)
-* Added removal of the php-error CSS body class via JavaScript and CSS
-
-= 2.0.0 =
-* Complete plugin rewrite
 
 == Upgrade Notice ==
 

@@ -3,7 +3,7 @@
 [![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/globus-debug-control?label=wordpress.org)](https://wordpress.org/plugins/globus-debug-control/)
 [![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/globus-debug-control)](https://wordpress.org/plugins/globus-debug-control/)
 [![Requires PHP](https://img.shields.io/wordpress/plugin/required-php/globus-debug-control)](https://wordpress.org/plugins/globus-debug-control/)
-[![License](https://img.shields.io/badge/license-GPLv2%2B-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 WordPress debug dashboard in the admin panel. Filter PHP error types, toggle `WP_DEBUG`
 constants, read `debug.log`, and inspect cron events, transients, autoloaded options,
@@ -148,7 +148,7 @@ Pushing to `main` triggers `.github/workflows/DEPLOY.yml`, which rsyncs the
 
 ## License
 
-GPLv2 or later. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ## Links
 

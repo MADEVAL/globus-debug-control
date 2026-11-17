@@ -3,6 +3,7 @@
 /.phpunit.cache/
 /wordpress/
 /wp-cli.phar
+/.opencode/
 
 # Local env and editor files
 /.env
