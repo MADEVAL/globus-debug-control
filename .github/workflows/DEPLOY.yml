@@ -12,8 +12,8 @@ env:
   #   globus-debug-control/globus-debug-control.php  -> Version: X.Y.Z
   #   globus-debug-control/readme.txt                -> Stable tag: X.Y.Z
   # The workflow fails if the two values differ.
-  RELEASE_MODE: "false"
-  PUBLISH_WPORG: "false"
+  RELEASE_MODE: "true"
+  PUBLISH_WPORG: "true"
   WPORG_DRY_RUN: "false"
 
 jobs:
