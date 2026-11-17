@@ -243,7 +243,45 @@ trait GDC_Mu_Dropin {
 			return false;
 		}
 
-		return $this->write_file_contents( $path, $this->generate_mu_content() );
+		$written = $this->write_file_contents( $path, $this->generate_mu_content() );
+
+		if ( $written ) {
+			update_option( self::MU_VERSION_OPT, self::VERSION, false );
+		}
+
+		return $written;
+	}
+
+	/**
+	 * Re-generates the dropin automatically after a plugin update.
+	 *
+	 * Runs once per version change; no user action required. When the dropin
+	 * option is enabled but the file is missing, the file is restored too.
+	 */
+	public function maybe_upgrade_mu_dropin(): void {
+		$opts      = $this->get_options();
+		$installed = $this->is_mu_dropin_installed();
+		$stored    = (string) get_option( self::MU_VERSION_OPT, '' );
+
+		if ( empty( $opts['install_mu_dropin'] ) ) {
+			if ( ! $installed ) {
+				delete_option( self::MU_VERSION_OPT );
+			}
+			return;
+		}
+
+		if ( $installed && self::VERSION === $stored ) {
+			return;
+		}
+
+		$this->install_mu_dropin();
+	}
+
+	/**
+	 * Regenerates the dropin right after the upgrader finishes.
+	 */
+	public function on_upgrader_process_complete(): void {
+		$this->maybe_upgrade_mu_dropin();
 	}
 
 	/**
@@ -254,6 +292,7 @@ trait GDC_Mu_Dropin {
 	public function remove_mu_dropin(): bool {
 		$path = $this->get_mu_plugin_path();
 		if ( ! file_exists( $path ) ) {
+			delete_option( self::MU_VERSION_OPT );
 			return true;
 		}
 
@@ -262,7 +301,13 @@ trait GDC_Mu_Dropin {
 			return false;
 		}
 
-		return $this->delete_file_path( $path );
+		$removed = $this->delete_file_path( $path );
+
+		if ( $removed ) {
+			delete_option( self::MU_VERSION_OPT );
+		}
+
+		return $removed;
 	}
 
 	/**

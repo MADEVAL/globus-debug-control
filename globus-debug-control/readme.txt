@@ -4,7 +4,7 @@ Tags: debug, error-log, cron, wp-config, transients
 Requires at least: 5.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.2.7
+Stable tag: 2.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,21 @@ Normally, toggling `WP_DEBUG` means SSH access, finding wp-config.php, and editi
 
 The plugin locates your `wp-config.php` automatically and patches it in place, adding the constant if it is missing or updating the existing value. A timestamped backup copy of `wp-config.php` is created before the first write so the file can always be restored. Commented-out defines and block-comment sections are never touched. The current status of `WP_DEBUG` is always visible as a badge in the plugin header.
 
+= MCP and REST abilities =
+
+On WordPress 6.9+ the plugin registers abilities for MCP and REST clients:
+
+* `gdc/get-schema` - every option with its type, default and allowed values, plus supported wp-config constants
+* `gdc/get-options` - all plugin options and the effective runtime state (`error_reporting`, `display_errors`, `log_errors`, `error_log`, resolved log file, mu-plugin status, API context)
+* `gdc/update-options` - patch any option by key; values are sanitised and applied immediately
+* `gdc/reset-options` - restore defaults, requires `confirm=true`
+* `gdc/get-log` - tail of the error log with severity levels, optional substring filter
+* `gdc/clear-log` - truncate the log file, requires `confirm=true`
+* `gdc/get-wp-config` - current values of `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY`, `SCRIPT_DEBUG`, `SAVEQUERIES`
+* `gdc/update-wp-config` - write those constants into `wp-config.php`, requires `confirm=true`
+
+All abilities require the `manage_options` capability. The early-loader dropin is regenerated automatically after a plugin update - no manual re-save is needed.
+
 = Error Log tab =
 
 Your debug.log file can grow to hundreds of megabytes without you noticing. This tab displays it directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low.
@@ -172,6 +187,15 @@ Yes. The recommended setup: suppress all error types, disable error display, ena
 
 == Changelog ==
 
+= 2.3.0 =
+* Added MCP and REST abilities: get/update/reset options, read/clear the error log, and read/update wp-config debug constants
+* Added complete option schema with types, defaults and allowed values for `gdc/get-schema`
+* Added runtime diagnostics to `gdc/get-options`: `error_reporting`, `display_errors`, `log_errors`, `error_log`, log size and API context
+* Changed: disabling error logging now also redirects `error_log` to the OS null device, so direct `error_log()` calls stop writing to `debug.log`
+* Changed: the early-loader mu-plugin dropin sets the same logging switch before regular plugins load
+* Added: the mu-plugin dropin is regenerated automatically after a plugin update, with no user action required
+* Added: stored dropin version option for the automatic upgrade check
+
 = 2.2.7 =
 * Redesigned admin screens: card-based settings groups, two-row toolbars, clearer cron and HTTP tables, and a single grouped constants table
 * Improved table readability on narrow screens with horizontal scrolling and capped column widths
@@ -243,6 +267,9 @@ Yes. The recommended setup: suppress all error types, disable error display, ena
 * Complete plugin rewrite
 
 == Upgrade Notice ==
+
+= 2.3.0 =
+Adds MCP/REST abilities for options, log and wp-config constants. The early-loader dropin updates itself after the upgrade.
 
 = 2.2.7 =
 Refreshed admin interface, aligned button icons, five translation drafts, regenerated screenshots, and updated developer tooling.

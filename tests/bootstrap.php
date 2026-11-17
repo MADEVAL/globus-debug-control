@@ -94,6 +94,8 @@ function gdc_test_default_state(): array {
 		'error_log'      => [],
 		'wp_filesystem_fail' => false,
 		'wp_filesystem_calls' => 0,
+		'abilities'      => [],
+		'ability_categories' => [],
 	];
 }
 
@@ -406,6 +408,20 @@ if (! function_exists('wp_is_writable')) {
 if (! function_exists('register_setting')) {
 	function register_setting($group, $name, $args = []): void {
 		$GLOBALS['gdc_test_state']['registered_settings'][] = compact('group', 'name', 'args');
+	}
+}
+
+if (! function_exists('wp_register_ability')) {
+	function wp_register_ability($name, $args) {
+		$GLOBALS['gdc_test_state']['abilities'][$name] = $args;
+		return true;
+	}
+}
+
+if (! function_exists('wp_register_ability_category')) {
+	function wp_register_ability_category($name, $args) {
+		$GLOBALS['gdc_test_state']['ability_categories'][$name] = $args;
+		return true;
 	}
 }
 

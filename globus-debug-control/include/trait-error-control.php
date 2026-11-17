@@ -154,19 +154,7 @@ trait GDC_Error_Control {
 
 		$opts = wp_parse_args( $saved, $this->defaults() );
 
-		$bool_keys = array(
-			'enabled',
-			'suppress_notices',
-			'suppress_deprecated',
-			'suppress_warnings',
-			'suppress_strict',
-			'log_enabled',
-			'remove_php_error_bodyclass',
-			'force_in_api_contexts',
-			'install_mu_dropin',
-		);
-
-		foreach ( $bool_keys as $key ) {
+		foreach ( $this->bool_option_keys() as $key ) {
 			$opts[ $key ] = (int) ! empty( $opts[ $key ] );
 		}
 
@@ -180,6 +168,98 @@ trait GDC_Error_Control {
 
 		$cached_options = $opts;
 		return $opts;
+	}
+
+	/**
+	 * Returns the option keys that are stored as booleans.
+	 *
+	 * @return string[]
+	 */
+	private function bool_option_keys(): array {
+		return array(
+			'enabled',
+			'suppress_notices',
+			'suppress_deprecated',
+			'suppress_warnings',
+			'suppress_strict',
+			'log_enabled',
+			'remove_php_error_bodyclass',
+			'force_in_api_contexts',
+			'install_mu_dropin',
+		);
+	}
+
+	/**
+	 * Applies a partial options patch, sanitises it and re-applies runtime settings.
+	 *
+	 * Unknown keys are ignored. Boolean values are interpreted as real booleans,
+	 * so passing false actually disables an option (unlike a raw form submission).
+	 *
+	 * @param array<string, mixed> $patch Option values to change.
+	 * @return array<string, mixed> Fresh, sanitised options.
+	 */
+	public function update_options( array $patch ): array {
+		$merged = array_merge( $this->get_options( true ), $patch );
+		$form   = $merged;
+
+		foreach ( $this->bool_option_keys() as $key ) {
+			if ( empty( $merged[ $key ] ) ) {
+				unset( $form[ $key ] );
+			} else {
+				$form[ $key ] = '1';
+			}
+		}
+
+		$clean = $this->sanitize_options( $form );
+
+		update_option( self::OPT, $clean, false );
+
+		$this->apply_error_reporting( $clean );
+		$this->apply_display_settings( $clean );
+		$this->apply_log_settings( $clean );
+
+		return $this->get_options( true );
+	}
+
+	/**
+	 * Restores every plugin option to its default value.
+	 *
+	 * @return array<string, mixed> Fresh, sanitised options.
+	 */
+	public function reset_options(): array {
+		return $this->update_options( $this->defaults() );
+	}
+
+	/**
+	 * Returns the effective PHP and WordPress debug state for diagnostics.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function get_runtime_state(): array {
+		$opts     = $this->get_options();
+		$log_path = $this->resolve_log_path( $opts );
+		$exists   = '' !== $log_path && file_exists( $log_path );
+
+		return array(
+			'php_version'         => PHP_VERSION,
+			'wp_debug'            => defined( 'WP_DEBUG' ) ? (bool) WP_DEBUG : null,
+			'wp_debug_log'        => defined( 'WP_DEBUG_LOG' ) ? WP_DEBUG_LOG : null,
+			'wp_debug_display'    => defined( 'WP_DEBUG_DISPLAY' ) ? WP_DEBUG_DISPLAY : null,
+			'script_debug'        => defined( 'SCRIPT_DEBUG' ) ? (bool) SCRIPT_DEBUG : null,
+			'savequeries'         => defined( 'SAVEQUERIES' ) ? (bool) SAVEQUERIES : null,
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting,PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall -- Read-only diagnostic value.
+			'error_reporting'     => error_reporting(),
+			'suppress_mask'       => $this->build_suppress_mask( $opts ),
+			'display_errors'      => ini_get( 'display_errors' ),
+			'log_errors'          => ini_get( 'log_errors' ),
+			'error_log'           => ini_get( 'error_log' ),
+			'log_path'            => $log_path,
+			'log_exists'          => $exists,
+			'log_size'            => $exists ? (int) @filesize( $log_path ) : 0,
+			'log_mtime'           => $exists ? (int) @filemtime( $log_path ) : 0,
+			'mu_dropin_installed' => $this->is_mu_dropin_installed(),
+			'api_context'         => $this->is_api_context(),
+		);
 	}
 
 	// -------------------------------------------------------------------------

@@ -3,7 +3,7 @@
  * Plugin Name: GLOBUS Debug Control
  * Plugin URI: https://globus.studio
  * Description: Full WordPress debug mode control: error type filtering, display and logging management, php-error body class removal.
- * Version: 2.2.7
+ * Version: 2.3.0
  * Author: Yevhen Leonidov
  * Author URI: https://leonidov.dev
  * Requires at least: 5.2
@@ -33,6 +33,7 @@ require_once GDC_INCLUDES . '/transient-viewer.php';
 require_once GDC_INCLUDES . '/options-viewer.php';
 require_once GDC_INCLUDES . '/http-log.php';
 require_once GDC_INCLUDES . '/constants-viewer.php';
+require_once GDC_INCLUDES . '/abilities.php';
 require_once GDC_INCLUDES . '/trait-error-control.php';
 require_once GDC_INCLUDES . '/trait-mu-dropin.php';
 require_once GDC_INCLUDES . '/trait-admin-settings.php';
@@ -52,9 +53,10 @@ final class Globus_Debug_Control {
 	use GDC_Admin_Settings;
 	use GDC_Admin_Page;
 
-	private const OPT     = 'globus_debug_control_options';
-	private const VERSION = '2.2.7';
-	private const MU_FILE = 'gdc-early-loader.php';
+	private const OPT            = 'globus_debug_control_options';
+	private const VERSION        = '2.3.0';
+	private const MU_FILE        = 'gdc-early-loader.php';
+	private const MU_VERSION_OPT = 'gdc_mu_dropin_version';
 
 	/**
 	 * Singleton class instance.
@@ -95,13 +97,15 @@ final class Globus_Debug_Control {
 		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ), 1 );
 		add_action( 'wp_loaded', array( $this, 'on_wp_loaded' ), PHP_INT_MAX );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_init', array( $this, 'handle_module_actions' ) );
+		add_action( 'admin_init', array( $this, 'maybe_upgrade_mu_dropin' ), 1 );
+		add_action( 'upgrader_process_complete', array( $this, 'on_upgrader_process_complete' ) );
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
 		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_settings_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_enqueue_php_error_assets' ) );
-		add_action( 'admin_init', array( $this, 'handle_module_actions' ) );
 
 		GDC_Log_Viewer::register_ajax_hooks();
 		GDC_Cron_Viewer::register_ajax_hooks();

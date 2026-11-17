@@ -62,6 +62,25 @@ The plugin adds eight tabs under **Settings -> GLOBUS Debug Control**:
 PHP errors are always suppressed in AJAX, REST API, WP-Cron, WP-CLI, and XML-RPC contexts,
 so JSON responses stay clean regardless of the display setting.
 
+## MCP and REST abilities
+
+On WordPress 6.9+ the plugin exposes its controls as Abilities API tools for MCP
+and REST clients (they require `manage_options`):
+
+| Ability | Purpose |
+| --- | --- |
+| `gdc/get-schema` | Option schema with types, defaults and allowed values; wp-config constants |
+| `gdc/get-options` | All plugin options plus effective runtime state (`error_reporting`, `display_errors`, `log_errors`, `error_log`, log size, dropin status, API context) |
+| `gdc/update-options` | Patch any option by key; sanitised and applied immediately |
+| `gdc/reset-options` | Restore defaults (`confirm=true`) |
+| `gdc/get-log` | Tail of the error log with severity levels and an optional substring filter |
+| `gdc/clear-log` | Truncate the log file (`confirm=true`) |
+| `gdc/get-wp-config` | Current debug constants from `wp-config.php` |
+| `gdc/update-wp-config` | Write debug constants into `wp-config.php` (`confirm=true`) |
+
+The optional early-loader dropin is regenerated automatically after a plugin
+update, so no settings re-save is required.
+
 ## Requirements
 
 - WordPress 5.2 or higher
