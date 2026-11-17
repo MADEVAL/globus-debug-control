@@ -214,9 +214,11 @@ trait GDC_Error_Control {
 
 		update_option( self::OPT, $clean, false );
 
-		$this->apply_error_reporting( $clean );
-		$this->apply_display_settings( $clean );
-		$this->apply_log_settings( $clean );
+		if ( ! empty( $clean['enabled'] ) ) {
+			$this->apply_error_reporting( $clean );
+			$this->apply_display_settings( $clean );
+			$this->apply_log_settings( $clean );
+		}
 
 		return $this->get_options( true );
 	}

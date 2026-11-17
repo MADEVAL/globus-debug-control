@@ -327,7 +327,8 @@ final class GDC_Abilities {
 						return new \WP_Error( 'gdc_wp_config_not_writable', __( 'wp-config.php is missing or not writable.', 'globus-debug-control' ) );
 					}
 
-					$schema  = self::wp_config_schema();
+					$backup = \GDC_WpConfig_Debug::backup_wp_config( $path );
+					$schema = self::wp_config_schema();
 					$updated = array();
 					$ignored = array();
 
@@ -359,6 +360,7 @@ final class GDC_Abilities {
 
 					return array(
 						'path'      => $path,
+						'backup'    => $backup,
 						'updated'   => $updated,
 						'ignored'   => $ignored,
 						'constants' => \GDC_WpConfig_Debug::read_constants( $path ),

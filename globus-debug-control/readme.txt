@@ -108,7 +108,7 @@ On WordPress 6.9+ the plugin registers abilities for MCP and REST clients:
 * `gdc/get-wp-config` - current values of `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY`, `SCRIPT_DEBUG`, `SAVEQUERIES`
 * `gdc/update-wp-config` - write those constants into `wp-config.php`, requires `confirm=true`
 
-All abilities require the `manage_options` capability. The early-loader dropin is regenerated automatically after a plugin update - no manual re-save is needed.
+All abilities require the `manage_options` capability. The early-loader dropin is regenerated automatically after a plugin update - no manual re-save is needed. `gdc/update-wp-config` keeps a timestamped backup of `wp-config.php` before writing.
 
 = Error Log tab =
 
@@ -195,6 +195,8 @@ Yes. The recommended setup: suppress all error types, disable error display, ena
 * Changed: the early-loader mu-plugin dropin sets the same logging switch before regular plugins load
 * Added: the mu-plugin dropin is regenerated automatically after a plugin update, with no user action required
 * Added: stored dropin version option for the automatic upgrade check
+* Added: `gdc/update-wp-config` creates a timestamped `wp-config.php` backup before writing
+* Fixed: uninstall now removes the stored dropin version option
 
 = 2.2.7 =
 * Redesigned admin screens: card-based settings groups, two-row toolbars, clearer cron and HTTP tables, and a single grouped constants table

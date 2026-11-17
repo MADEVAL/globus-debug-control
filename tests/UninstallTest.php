@@ -11,6 +11,7 @@ final class UninstallTest extends WordPressTestCase {
 		$GLOBALS['gdc_test_state']['options']['globus_debug_control_options'] = ['enabled' => 1];
 		$GLOBALS['gdc_test_state']['options']['gdc_options'] = ['enabled' => 1];
 		$GLOBALS['gdc_test_state']['options']['gdc_http_log_capturing'] = 1;
+		$GLOBALS['gdc_test_state']['options']['gdc_mu_dropin_version'] = '2.3.0';
 		$GLOBALS['gdc_test_state']['options']['gdc_last_fatal'] = [
 			'ts' => time(), 'message' => 'boom', 'file' => '/x.php', 'line' => 1,
 		];
@@ -23,6 +24,7 @@ final class UninstallTest extends WordPressTestCase {
 		$this->assertContains('globus_debug_control_options', $this->state('deleted_options'));
 		$this->assertContains('gdc_options', $this->state('deleted_options'));
 		$this->assertContains('gdc_http_log_capturing', $this->state('deleted_options'));
+		$this->assertContains('gdc_mu_dropin_version', $this->state('deleted_options'));
 		$this->assertContains('gdc_last_fatal', $this->state('deleted_options'));
 		$this->assertArrayNotHasKey('gdc_http_log', $GLOBALS['gdc_test_state']['transients']);
 		$this->assertFileDoesNotExist($path);

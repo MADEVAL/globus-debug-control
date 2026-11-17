@@ -198,6 +198,27 @@ final class GDC_WpConfig_Debug {
 	}
 
 	/**
+	 * Creates a timestamped backup copy of wp-config.php before a write.
+	 *
+	 * @param string $config_path Absolute path to wp-config.php.
+	 * @return string Backup path, or empty string when no backup was created.
+	 */
+	public static function backup_wp_config( string $config_path ): string {
+		if ( '' === $config_path || ! file_exists( $config_path ) ) {
+			return '';
+		}
+
+		$backup_path = $config_path . '.gdc-backup-' . gmdate( 'Ymd-His' );
+
+		if ( file_exists( $backup_path ) ) {
+			return $backup_path;
+		}
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_copy -- Backup copy of wp-config.php before modification.
+		return @copy( $config_path, $backup_path ) ? $backup_path : '';
+	}
+
+	/**
 	 * Parses a raw define() value string to a boolean.
 	 *
 	 * @param string $raw Raw value from source (e.g. "true", "1", "false").
@@ -251,11 +272,7 @@ final class GDC_WpConfig_Debug {
 
 		// Keep a timestamped backup copy before the first write so the config
 		// can always be restored if a mistake is made.
-		$backup_path = $config_path . '.gdc-backup-' . gmdate( 'Ymd-His' );
-		if ( ! file_exists( $backup_path ) ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_copy -- Backup copy of wp-config.php before modification.
-			@copy( $config_path, $backup_path );
-		}
+		self::backup_wp_config( $config_path );
 
 		foreach ( self::CONSTANTS as $name => $meta ) {
 			$is_checked = isset( $fields[ $name ] ) && 'true' === $fields[ $name ];

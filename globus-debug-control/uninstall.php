@@ -15,6 +15,7 @@ delete_option( 'globus_debug_control_options' );
 delete_option( 'gdc_options' ); // Legacy key - remove if present.
 delete_option( 'gdc_http_log_capturing' );
 delete_option( 'gdc_last_fatal' );
+delete_option( 'gdc_mu_dropin_version' );
 delete_transient( 'gdc_http_log' );
 
 // Remove mu-plugin dropin if it exists.

@@ -53,6 +53,19 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		$this->assertSame('', $found);
 	}
 
+	public function testBackupWpConfigCreatesAndReusesTimestampedCopy(): void {
+		$this->assertSame('', \GDC_WpConfig_Debug::backup_wp_config($this->config_path));
+
+		$this->writeConfig("<?php\n// config\n");
+
+		$first = \GDC_WpConfig_Debug::backup_wp_config($this->config_path);
+
+		$this->assertNotSame('', $first);
+		$this->assertFileExists($first);
+		$this->assertSame("<?php\n// config\n", (string) file_get_contents($first));
+		$this->assertSame($first, \GDC_WpConfig_Debug::backup_wp_config($this->config_path));
+	}
+
 	public function testReadConstantsDetectsDefinedTrueConstant(): void {
 		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', true );\n");
 

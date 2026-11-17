@@ -112,6 +112,75 @@ final class AbilitiesTest extends WordPressTestCase {
 		$this->assertCount(8, $result['abilities']);
 	}
 
+	public function testEveryPluginOptionCanBeChangedThroughAbility(): void {
+		$cases = [
+			['enabled', false, 0],
+			['suppress_notices', false, 0],
+			['suppress_deprecated', false, 0],
+			['suppress_warnings', true, 1],
+			['suppress_strict', false, 0],
+			['display_errors_mode', 'off', 'off'],
+			['log_enabled', false, 0],
+			['log_path', 'logs/coverage.log', 'logs/coverage.log'],
+			['log_max_size_mb', 42, 42],
+			['remove_php_error_bodyclass', false, 0],
+			['force_in_api_contexts', true, 1],
+			['install_mu_dropin', true, 1],
+		];
+
+		$snapshot = $this->iniSnapshot();
+		$this->refreshOptions(['enabled' => 1]);
+
+		try {
+			foreach ($cases as $case) {
+				$result = $this->execute('gdc/update-options', [$case[0] => $case[1]]);
+
+				$this->assertSame($case[2], $result['options'][$case[0]], 'Ability result: ' . $case[0]);
+				$this->assertSame($case[2], $this->plugin()->get_options(true)[$case[0]], 'Persisted: ' . $case[0]);
+			}
+		} finally {
+			$this->restoreIni($snapshot);
+		}
+	}
+
+	public function testUpdateOptionsClampsBoundariesAndFallsBackOnInvalidMode(): void {
+		$snapshot = $this->iniSnapshot();
+		$this->refreshOptions(['enabled' => 1]);
+
+		try {
+			$low = $this->execute('gdc/update-options', [
+				'log_max_size_mb' => 0,
+				'display_errors_mode' => 'nonsense',
+				'log_path' => '../wp-config.php',
+			]);
+			$high = $this->execute('gdc/update-options', ['log_max_size_mb' => 999]);
+		} finally {
+			$this->restoreIni($snapshot);
+		}
+
+		$this->assertSame(1, $low['options']['log_max_size_mb']);
+		$this->assertSame('inherit', $low['options']['display_errors_mode']);
+		$this->assertSame('', $low['options']['log_path']);
+		$this->assertSame(100, $high['options']['log_max_size_mb']);
+	}
+
+	public function testDisablingPluginDoesNotReapplyRuntimeSettings(): void {
+		$snapshot = array_merge($this->iniSnapshot(), ['error_reporting' => error_reporting()]);
+		error_reporting(E_ALL);
+		$this->refreshOptions(['enabled' => 1]);
+
+		try {
+			$this->execute('gdc/update-options', [
+				'enabled' => false,
+				'suppress_warnings' => true,
+			]);
+
+			$this->assertSame(E_ALL, error_reporting());
+		} finally {
+			$this->restoreIni($snapshot);
+		}
+	}
+
 	public function testUpdateOptionsPatchesOnlySuppliedKeysAndSanitises(): void {
 		$snapshot = $this->iniSnapshot();
 		$this->refreshOptions(['enabled' => 1]);
@@ -222,6 +291,131 @@ final class AbilitiesTest extends WordPressTestCase {
 		$this->assertSame([], $result['lines']);
 	}
 
+	public function testGetLogClampsLineLimit(): void {
+		$path = $this->runtimePath('debug.log');
+		file_put_contents($path, "one\ntwo\nthree\n");
+		$this->refreshOptions(['log_path' => $path]);
+
+		$low = $this->execute('gdc/get-log', ['lines' => 0]);
+		$high = $this->execute('gdc/get-log', ['lines' => 5000]);
+
+		$this->assertCount(1, $low['lines']);
+		$this->assertSame('three', $low['lines'][0]['text']);
+		$this->assertCount(3, $high['lines']);
+	}
+
+	public function testClearLogHandlesMissingFile(): void {
+		$this->refreshOptions(['log_path' => $this->runtimePath('missing.log')]);
+
+		$result = $this->execute('gdc/clear-log', ['confirm' => true]);
+
+		$this->assertTrue($result['cleared']);
+		$this->assertSame(0, $result['bytes']);
+	}
+
+	public function testClearLogReportsFailureForDirectoryPath(): void {
+		$this->refreshOptions(['log_path' => $this->runtimePath()]);
+
+		$result = $this->execute('gdc/clear-log', ['confirm' => true]);
+
+		$this->assertInstanceOf(\WP_Error::class, $result);
+		$this->assertSame('gdc_log_clear_failed', $result->get_error_code());
+	}
+
+	public function testGetLogHandlesDirectoryPath(): void {
+		$this->refreshOptions(['log_path' => $this->runtimePath()]);
+
+		$result = $this->execute('gdc/get-log');
+
+		$this->assertSame([], $result['lines']);
+	}
+
+	public function testUpdateWpConfigRejectsEmptyConstants(): void {
+		$result = $this->execute('gdc/update-wp-config', [
+			'confirm' => true,
+			'constants' => [],
+		]);
+
+		$this->assertInstanceOf(\WP_Error::class, $result);
+		$this->assertSame('gdc_empty_patch', $result->get_error_code());
+	}
+
+	public function testUpdateWpConfigReportsWriteFailure(): void {
+		$config = rtrim(ABSPATH, '/\\') . '/wp-config.php';
+		$parent = dirname(rtrim(ABSPATH, '/\\')) . '/wp-config.php';
+		$saved = [];
+
+		foreach ([$config, $parent] as $file) {
+			if (file_exists($file) && ! is_dir($file)) {
+				$saved[$file] = (string) file_get_contents($file);
+				unlink($file);
+			}
+		}
+
+		mkdir($config);
+
+		try {
+			$result = $this->execute('gdc/update-wp-config', [
+				'confirm' => true,
+				'constants' => ['WP_DEBUG' => true],
+			]);
+		} finally {
+			rmdir($config);
+			foreach ($saved as $file => $content) {
+				file_put_contents($file, $content);
+			}
+		}
+
+		$this->assertInstanceOf(\WP_Error::class, $result);
+		$this->assertSame('gdc_wp_config_write_failed', $result->get_error_code());
+	}
+
+	public function testAddFillsDefaultSchemaAndPermissionCallback(): void {
+		$method = new \ReflectionMethod(\GDC_Abilities::class, 'add');
+		if (PHP_VERSION_ID < 80100) {
+			$method->setAccessible(true);
+		}
+		$method->invoke(null, 'gdc/test-defaults', ['label' => 'Test']);
+
+		$ability = $this->ability('gdc/test-defaults');
+
+		$this->assertSame('object', $ability['input_schema']['type']);
+		$this->assertArrayHasKey('default', $ability['input_schema']);
+		$this->assertSame([], $ability['input_schema']['default']);
+		$this->assertSame('gdc-debug', $ability['category']);
+		$this->assertTrue(($ability['permission_callback'])());
+	}
+
+	public function testWpConfigAbilitiesReportMissingConfig(): void {
+		$config = rtrim(ABSPATH, '/\\') . '/wp-config.php';
+		$parent = dirname(rtrim(ABSPATH, '/\\')) . '/wp-config.php';
+		$saved = [];
+
+		foreach ([$config, $parent] as $file) {
+			if (file_exists($file)) {
+				$saved[$file] = (string) file_get_contents($file);
+				unlink($file);
+			}
+		}
+
+		try {
+			$read = $this->execute('gdc/get-wp-config');
+			$write = $this->execute('gdc/update-wp-config', [
+				'confirm' => true,
+				'constants' => ['WP_DEBUG' => true],
+			]);
+		} finally {
+			foreach ($saved as $file => $content) {
+				file_put_contents($file, $content);
+			}
+		}
+
+		$this->assertInstanceOf(\WP_Error::class, $read);
+		$this->assertSame('gdc_wp_config_missing', $read->get_error_code());
+		$this->assertInstanceOf(\WP_Error::class, $write);
+		$this->assertSame('gdc_wp_config_not_writable', $write->get_error_code());
+	}
+
 	public function testClearLogRequiresConfirmAndTruncatesFile(): void {
 		$path = $this->runtimePath('debug.log');
 		file_put_contents($path, "something\n");
@@ -273,18 +467,25 @@ final class AbilitiesTest extends WordPressTestCase {
 		$this->assertFalse($result['constants']['WP_DEBUG']['value']);
 		$this->assertSame("'logs/debug.log'", $result['constants']['WP_DEBUG_LOG']['raw']);
 		$this->assertTrue($result['constants']['SCRIPT_DEBUG']['value']);
+		$this->assertNotSame('', $result['backup']);
+		$this->assertFileExists($result['backup']);
 	}
 
 	public function testGetOptionsReturnsOptionsAndRuntimeState(): void {
-		$this->refreshOptions(['enabled' => 1, 'suppress_warnings' => 1]);
+		$path = $this->runtimePath('debug.log');
+		file_put_contents($path, "one\ntwo\n");
+		$this->refreshOptions(['enabled' => 1, 'suppress_warnings' => 1, 'log_path' => $path]);
 
 		$result = $this->execute('gdc/get-options');
 
 		$this->assertSame(1, $result['options']['suppress_warnings']);
 		$this->assertArrayHasKey('error_reporting', $result['runtime']);
 		$this->assertArrayHasKey('display_errors', $result['runtime']);
-		$this->assertArrayHasKey('log_path', $result['runtime']);
+		$this->assertSame($path, $result['runtime']['log_path']);
+		$this->assertTrue($result['runtime']['log_exists']);
+		$this->assertSame(8, $result['runtime']['log_size']);
 		$this->assertArrayHasKey('mu_dropin_installed', $result['runtime']);
 		$this->assertArrayHasKey('api_context', $result['runtime']);
+		$this->assertSame(E_WARNING, $result['runtime']['suppress_mask'] & E_WARNING);
 	}
 }

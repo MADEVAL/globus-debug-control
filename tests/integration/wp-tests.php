@@ -69,6 +69,8 @@ function gdc_itest_check( string $name, bool $ok, string $detail = '' ): void {
 $plugin_root = WP_PLUGIN_DIR . '/globus-debug-control';
 $debug_log   = WP_CONTENT_DIR . '/debug.log';
 
+global $wpdb;
+
 // Act as the administrator for nonce/capability-based checks.
 wp_set_current_user( 1 );
 
@@ -210,7 +212,7 @@ $itest_hook = 'gdc_itest_cron_hook';
 $itest_ts   = time() + 300;
 $itest_args = array( 0, 'keep' );
 
-wp_clear_scheduled_hook( $itest_hook );
+wp_unschedule_hook( $itest_hook );
 wp_schedule_event( $itest_ts, 'hourly', $itest_hook, $itest_args );
 $events = GDC_Cron_Viewer::get_cron_events();
 
@@ -225,6 +227,11 @@ foreach ( $events as $event ) {
 gdc_itest_check( 'scheduled event listed by cron viewer', $found );
 
 // Real delete via AJAX handler (nonce valid in-process).
+// wp_send_json() calls die when wp_doing_ajax() is false; define DOING_AJAX so
+// the no-op wp_die handler above lets the script continue to later sections.
+if ( ! defined( 'DOING_AJAX' ) ) {
+	define( 'DOING_AJAX', true );
+}
 $_POST['_ajax_nonce'] = wp_create_nonce( 'gdc_cron_delete' );
 $_POST['hook']        = $itest_hook;
 $_POST['timestamp']   = (string) $itest_ts;
@@ -336,7 +343,13 @@ gdc_itest_check( 'log viewer renders fatal banner', false !== strpos( $fatal_htm
 gdc_itest_check( 'HTTP capturing enabled', GDC_Http_Log::is_capturing() );
 
 $http_entries = GDC_Http_Log::get_log();
-$http_entry   = $http_entries[0] ?? array();
+$http_entry   = array();
+foreach ( $http_entries as $gdc_http_candidate ) {
+	if ( false !== strpos( (string) ( $gdc_http_candidate['url'] ?? '' ), 'api_key=' ) ) {
+		$http_entry = $gdc_http_candidate;
+		break;
+	}
+}
 gdc_itest_check( 'HTTP request captured', ! empty( $http_entry ) );
 gdc_itest_check( 'sensitive query param masked in URL', false === strpos( (string) ( $http_entry['url'] ?? '' ), 'supersecret123' ) && false !== strpos( (string) ( $http_entry['url'] ?? '' ), 'api_key=***' ), (string) ( $http_entry['url'] ?? '' ) );
 gdc_itest_check( 'transport class recorded', ! empty( $http_entry['transport'] ), (string) ( $http_entry['transport'] ?? '' ) );
@@ -366,11 +379,86 @@ gdc_itest_check(
 // L. Dashboard widget on a real install
 // ---------------------------------------------------------------------------
 
+require_once ABSPATH . 'wp-admin/includes/dashboard.php';
+
 $gdc->add_dashboard_widgets();
 ob_start();
 $gdc->render_dashboard_widget();
 $widget_html = ob_get_clean();
 gdc_itest_check( 'dashboard widget renders', false !== strpos( $widget_html, 'gdc-dashboard' ) );
+
+// ---------------------------------------------------------------------------
+// M. MCP / Abilities API registration and execution
+// ---------------------------------------------------------------------------
+
+gdc_itest_check( 'gdc ability category registered', wp_has_ability_category( 'gdc-debug' ) );
+
+$gdc_ability_names = array(
+	'gdc/get-schema',
+	'gdc/get-options',
+	'gdc/update-options',
+	'gdc/reset-options',
+	'gdc/get-log',
+	'gdc/clear-log',
+	'gdc/get-wp-config',
+	'gdc/update-wp-config',
+);
+
+$all_registered = true;
+foreach ( $gdc_ability_names as $gdc_ability_name ) {
+	$all_registered = $all_registered && wp_has_ability( $gdc_ability_name );
+}
+gdc_itest_check( 'all gdc abilities registered', $all_registered );
+
+$schema_ability = wp_get_ability( 'gdc/get-schema' );
+$schema_meta    = $schema_ability ? $schema_ability->get_meta() : array();
+gdc_itest_check( 'gdc abilities exposed to MCP', ! empty( $schema_meta['mcp']['public'] ) );
+
+$schema = $schema_ability ? $schema_ability->execute( array() ) : null;
+gdc_itest_check(
+	'MCP schema exposes all 12 options',
+	is_array( $schema ) && 12 === count( $schema['options'] ) && isset( $schema['options']['log_enabled'] ),
+	is_array( $schema ) ? (string) count( $schema['options'] ) : 'not array'
+);
+
+$state = wp_get_ability( 'gdc/get-options' )->execute( array() );
+gdc_itest_check(
+	'MCP get-options returns runtime state',
+	! is_wp_error( $state ) && isset( $state['options']['enabled'], $state['runtime']['error_reporting'], $state['runtime']['mu_dropin_installed'] )
+);
+
+$log_result = wp_get_ability( 'gdc/get-log' )->execute( array( 'lines' => 5 ) );
+gdc_itest_check(
+	'MCP get-log returns tail lines',
+	! is_wp_error( $log_result ) && is_array( $log_result['lines'] ) && false !== strpos( (string) $log_result['path'], 'debug.log' ),
+	(string) ( $log_result['path'] ?? '' )
+);
+
+$before_update = $gdc->get_options( true );
+$update_result = wp_get_ability( 'gdc/update-options' )->execute(
+	array(
+		'suppress_warnings'   => false,
+		'display_errors_mode' => 'off',
+	)
+);
+gdc_itest_check(
+	'MCP update-options applies a patch',
+	! is_wp_error( $update_result ) && 0 === $update_result['options']['suppress_warnings'] && 'off' === $update_result['options']['display_errors_mode']
+);
+
+wp_get_ability( 'gdc/update-options' )->execute(
+	array(
+		'suppress_warnings'   => $before_update['suppress_warnings'],
+		'display_errors_mode' => $before_update['display_errors_mode'],
+	)
+);
+gdc_itest_check( 'MCP update-options restores the site state', $before_update['display_errors_mode'] === $gdc->get_options( true )['display_errors_mode'] );
+
+$config_ability = wp_get_ability( 'gdc/get-wp-config' )->execute( array() );
+gdc_itest_check(
+	'MCP get-wp-config reads debug constants',
+	! is_wp_error( $config_ability ) && isset( $config_ability['constants']['WP_DEBUG'] )
+);
 
 // ---------------------------------------------------------------------------
 // Summary
