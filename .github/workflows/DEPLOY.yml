@@ -5,6 +5,17 @@ on:
     branches:
       - main
 
+env:
+  # --- WordPress.org SVN release switches -------------------------------
+  # Publishing only happens when RELEASE_MODE and PUBLISH_WPORG are both
+  # "true". Bump the version before flipping them:
+  #   globus-debug-control/globus-debug-control.php  -> Version: X.Y.Z
+  #   globus-debug-control/readme.txt                -> Stable tag: X.Y.Z
+  # The workflow fails if the two values differ.
+  RELEASE_MODE: "false"
+  PUBLISH_WPORG: "false"
+  WPORG_DRY_RUN: "false"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -28,3 +39,50 @@ jobs:
           rsync -e "sshpass -e ssh -p ${{ secrets.SSH_PORT }} -i $HOME/.ssh/key -o StrictHostKeyChecking=no" \
             --archive --compress --update . \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}"
+
+      # --- WordPress.org release ------------------------------------------
+      # Builds a clean package from globus-debug-control/, then commits it to
+      # SVN trunk, copies trunk to tags/<version>, and syncs the plugin assets
+      # (screenshots and icons) to SVN assets/.
+
+      - name: Verify release version
+        if: env.RELEASE_MODE == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          set -eu
+          VERSION=$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([0-9][0-9.]*\).*/\1/p' \
+            globus-debug-control/globus-debug-control.php | head -1)
+          STABLE=$(sed -n 's/^Stable tag:[[:space:]]*\([0-9][0-9.]*\).*/\1/p' \
+            globus-debug-control/readme.txt | head -1)
+          test -n "$VERSION"
+          test -n "$STABLE"
+          if [ "$VERSION" != "$STABLE" ]; then
+            echo "Version mismatch: header $VERSION != readme Stable tag $STABLE"
+            exit 1
+          fi
+          echo "WPORG_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Stage WordPress.org package
+        if: env.RELEASE_MODE == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          set -eux
+          rm -rf "$RUNNER_TEMP/wporg" "$GITHUB_WORKSPACE/.wordpress-org"
+          mkdir -p "$RUNNER_TEMP/wporg/globus-debug-control" "$GITHUB_WORKSPACE/.wordpress-org"
+          rsync -a \
+            --exclude '.git*' --exclude '.svn' --exclude '.DS_Store' --exclude 'node_modules' \
+            globus-debug-control/ "$RUNNER_TEMP/wporg/globus-debug-control/"
+          cp docs/screenshots/screenshot-*.jpg "$GITHUB_WORKSPACE/.wordpress-org/"
+          cp docs/wordpress-org/*.png "$GITHUB_WORKSPACE/.wordpress-org/"
+          ls -l "$GITHUB_WORKSPACE/.wordpress-org" "$RUNNER_TEMP/wporg/globus-debug-control"
+
+      - name: Deploy to WordPress.org
+        if: env.PUBLISH_WPORG == 'true' && env.RELEASE_MODE == 'true' && github.ref == 'refs/heads/main'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          dry-run: ${{ env.WPORG_DRY_RUN }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: globus-debug-control
+          BUILD_DIR: ${{ runner.temp }}/wporg/globus-debug-control
+          ASSETS_DIR: .wordpress-org
+          VERSION: ${{ env.WPORG_VERSION }}

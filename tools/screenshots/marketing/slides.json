@@ -1,0 +1,129 @@
+{
+	"canvas": { "width": 1600, "height": 1000, "bulletIcon": 22 },
+	"brandline": "Debug control for WordPress",
+	"footer": { "left": "GLOBUS Debug Control", "right": "wordpress.org/plugins/globus-debug-control" },
+	"slides": [
+		{
+			"id": "settings",
+			"file": "screenshot-1",
+			"shot": "settings",
+			"maxHeight": 666,
+			"theme": "dark",
+			"eyebrow": "Error filtering",
+			"headline": "Stop drowning in debug noise",
+			"lead": "Choose the PHP error types you care about and silence everything else.",
+			"bullets": [
+				"Notices, deprecations, warnings and strict errors - each on its own switch",
+				"Display mode: inherit, always on, or always off",
+				"Optional MU-plugin dropin filters errors before other plugins load"
+			],
+			"address": "example.com/wp-admin - Settings - GLOBUS Debug Control"
+		},
+		{
+			"id": "wp-debug",
+			"file": "screenshot-2",
+			"shot": "wp-debug",
+			"theme": "dark",
+			"eyebrow": "WP_DEBUG tab",
+			"headline": "Toggle debug constants without FTP",
+			"lead": "Flip WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG and SAVEQUERIES from the admin.",
+			"bullets": [
+				"wp-config.php is patched in place",
+				"Timestamped backup before every write",
+				"Commented-out defines are never touched"
+			],
+			"address": "example.com/wp-admin - Settings - WP_DEBUG"
+		},
+		{
+			"id": "error-log",
+			"file": "screenshot-3",
+			"shot": "error-log",
+			"theme": "dark",
+			"eyebrow": "Error log",
+			"headline": "Read debug.log inside wp-admin",
+			"lead": "Color-coded log with pagination, live polling, download and one-click clear.",
+			"bullets": [
+				"Severity colors for fatal, warning, notice and cron lines",
+				"Tail-read keeps multi-megabyte files light",
+				"Download or clear the log in one click"
+			],
+			"address": "example.com/wp-admin - Settings - Error Log"
+		},
+		{
+			"id": "cron",
+			"file": "screenshot-4",
+			"shot": "cron",
+			"theme": "dark",
+			"eyebrow": "Cron tasks",
+			"headline": "See every cron event at a glance",
+			"lead": "Find overdue events, orphaned hooks and duplicate schedules in one table.",
+			"bullets": [
+				"Run any event immediately",
+				"Delete orphaned hooks safely",
+				"Source detection shows which plugin scheduled it"
+			],
+			"address": "example.com/wp-admin - Settings - Cron Tasks"
+		},
+		{
+			"id": "transients",
+			"file": "screenshot-5",
+			"shot": "transients",
+			"theme": "dark",
+			"eyebrow": "Transients",
+			"headline": "Find the transients bloating your options table",
+			"lead": "Every database transient with size and expiry, plus a bulk purge for expired rows.",
+			"bullets": [
+				"Sort by size and expiration",
+				"Delete single transients",
+				"Purge all expired rows in one click"
+			],
+			"address": "example.com/wp-admin - Settings - Transients"
+		},
+		{
+			"id": "autoloaded",
+			"file": "screenshot-6",
+			"shot": "autoloaded",
+			"theme": "dark",
+			"eyebrow": "Autoloaded options",
+			"headline": "Find what slows down every request",
+			"lead": "The heaviest autoloaded options, sorted by size, with warning thresholds.",
+			"bullets": [
+				"Top 200 autoloaded rows",
+				"Size warnings above 800 KB or 100 rows",
+				"Spot plugin bloat before it hurts response time"
+			],
+			"address": "example.com/wp-admin - Settings - Autoloaded"
+		},
+		{
+			"id": "http-log",
+			"file": "screenshot-7",
+			"shot": "http-log",
+			"theme": "dark",
+			"eyebrow": "HTTP log",
+			"headline": "See every outgoing HTTP call",
+			"lead": "Capture WordPress HTTP API requests with status, transport and duration.",
+			"bullets": [
+				"Captures wp_remote_get and wp_remote_post via http_api_debug",
+				"Sensitive query parameters are masked automatically",
+				"Up to 100 entries with a 6-hour TTL"
+			],
+			"address": "example.com/wp-admin - Settings - HTTP Log"
+		},
+		{
+			"id": "constants",
+			"file": "screenshot-8",
+			"shot": "constants",
+			"maxHeight": 950,
+			"theme": "dark",
+			"eyebrow": "Constants",
+			"headline": "Every runtime constant in one place",
+			"lead": "Debug, security, database, auth and path constants grouped by category.",
+			"bullets": [
+				"Database passwords, auth keys and salts stay masked",
+				"Grouped by category for fast scanning",
+				"Read-only reference - nothing is changed"
+			],
+			"address": "example.com/wp-admin - Settings - Constants"
+		}
+	]
+}

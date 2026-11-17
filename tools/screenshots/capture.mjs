@@ -1,16 +1,23 @@
 /**
  * Renders the GLOBUS Debug Control admin screens from the HTML templates in
- * `templates/` and captures WordPress.org screenshots with Playwright.
+ * `templates/` and captures the plugin page with Playwright.
+ *
+ * The capture is the raw material for `marketing/render.mjs`, which composes
+ * the 1600x1000 WordPress.org listing images. Templates are rendered with the
+ * real plugin stylesheet and a vendored copy of the WordPress admin CSS, so no
+ * WordPress install or database is needed.
  *
  * Usage:
  *   npm install
- *   npm run capture             # render templates + write docs/screenshots/*.png
+ *   npm run capture             # render templates + write raw/*.png
  *   npm run capture -- --only=settings
  *   npm run render              # render HTML only, no browser
+ *   npm run marketing           # capture + compose docs/screenshots/*.jpg
+ *   npm run brand               # banners and the Open Graph card
  *
  * Output:
- *   out/                      rendered HTML previews (gitignored)
- *   ../../docs/screenshots/   screenshot-N.png, ready for the wp.org SVN assets
+ *   out/     rendered HTML previews (gitignored)
+ *   raw/     element captures of the plugin page (gitignored)
  */
 
 import { chromium } from 'playwright';
@@ -23,10 +30,16 @@ const here = path.dirname( fileURLToPath( import.meta.url ) );
 const repoRoot = path.resolve( here, '../..' );
 const pluginCss = path.join( repoRoot, 'globus-debug-control', 'assets', 'css', 'admin.css' );
 const previewDir = path.join( here, 'out' );
-const shotDir = path.join( repoRoot, 'docs', 'screenshots' );
+const rawDir = path.join( here, 'raw' );
 
-const VIEWPORT = { width: 1200, height: 900 };
+const VIEWPORT = { width: 1500, height: 2400 };
 const SCALE = 1;
+const SHOT_SELECTOR = '.wrap.gdc-page';
+
+// Optional per-slide crop height, used to stop long tabs at a card boundary.
+const MANIFEST = path.join( here, 'marketing', 'slides.json' );
+const SLIDES = JSON.parse( await readFile( MANIFEST, 'utf8' ) ).slides || [];
+const MAX_HEIGHTS = Object.fromEntries( SLIDES.map( ( slide ) => [ slide.shot, slide.maxHeight || 1000 ] ) );
 
 const SCREENS = [
 	{
@@ -136,7 +149,7 @@ async function renderPages( options ) {
 }
 
 async function capture( rendered ) {
-	await mkdir( shotDir, { recursive: true } );
+	await mkdir( rawDir, { recursive: true } );
 
 	const browser = await chromium.launch();
 	const page = await browser.newPage( {
@@ -145,28 +158,33 @@ async function capture( rendered ) {
 		reducedMotion: 'reduce',
 	} );
 
-	for ( const screen of rendered ) {
+	for ( const [ index, screen ] of rendered.entries() ) {
 		await page.goto( `file://${ screen.file.replace( /\\/g, '/' ) }`, { waitUntil: 'load' } );
 		await page.evaluate( () => document.fonts.ready );
 		await page.waitForTimeout( 150 );
 
-		const target = path.join( shotDir, `screenshot-${ screen.number }.png` );
-		await page.screenshot( { path: target, fullPage: false } );
-		console.log( `screenshot-${ screen.number }.png  ${ screen.caption }` );
+		const target = path.join( rawDir, `${ screen.slug }.png` );
+		const panel = page.locator( SHOT_SELECTOR );
+		const box = await panel.boundingBox();
+		if ( ! box ) {
+			throw new Error( `selector ${ SHOT_SELECTOR } not found on ${ screen.slug }` );
+		}
+		// Very long tabs (Settings) are cropped at a card boundary so the
+		// composed marketing frame stays legible at 950px wide.
+		const maxHeight = MAX_HEIGHTS[ screen.slug ] || 1000;
+		await page.screenshot( {
+			path: target,
+			clip: {
+				x: box.x,
+				y: box.y,
+				width: box.width,
+				height: Math.min( box.height, maxHeight ),
+			},
+		} );
+		console.log( `${ String( index + 1 ).padStart( 2, '0' ) }-${ screen.slug }.png  ${ screen.caption }` );
 	}
 
 	await browser.close();
-
-	const manifest = SCREENS.map( ( { slug, caption }, index ) => ( {
-		file: `screenshot-${ index + 1 }.png`,
-		slug,
-		caption,
-	} ) );
-	await writeFile(
-		path.join( shotDir, 'screenshots.json' ),
-		`${ JSON.stringify( manifest, null, '\t' ) }\n`,
-		'utf8'
-	);
 }
 
 const options = parseArgs( process.argv.slice( 2 ) );
@@ -176,5 +194,5 @@ if ( options.renderOnly ) {
 	console.log( `Rendered ${ rendered.length } page(s) to ${ path.relative( repoRoot, previewDir ) }/` );
 } else {
 	await capture( rendered );
-	console.log( `\nWritten to ${ path.relative( repoRoot, shotDir ) }/` );
+	console.log( `\nWritten to ${ path.relative( repoRoot, rawDir ) }/` );
 }

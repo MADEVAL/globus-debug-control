@@ -1,11 +1,22 @@
-# Screenshot tool
+# Screenshot and brand tool
 
-Renders the eight WordPress.org screenshots from static HTML templates with
-Playwright, so the images can be regenerated after any UI change.
+Renders the WordPress.org listing images with Playwright from static HTML
+templates, so every image can be regenerated after a UI or copy change. No
+WordPress install or database is needed.
+
+Two steps:
+
+1. `capture.mjs` renders each tab and saves a PNG of the plugin page to `raw/`
+   (gitignored).
+2. `marketing/render.mjs` composes those captures into 1600x1000 marketing
+   frames and writes `docs/screenshots/screenshot-N.jpg`.
+
+Banners and the social card are separate: `marketing/render-brand.mjs` draws the
+WordPress.org banners and the Open Graph image from the plugin icon.
 
 The templates reproduce the real admin markup and load the actual plugin
 stylesheet (`globus-debug-control/assets/css/admin.css`) plus a vendored copy of
-the WordPress admin CSS. No WordPress install or database is needed.
+the WordPress admin CSS.
 
 ## Requirements
 
@@ -17,47 +28,78 @@ the WordPress admin CSS. No WordPress install or database is needed.
 ```sh
 cd tools/screenshots
 npm install
-npm run capture
+
+npm run marketing   # capture + compose docs/screenshots/screenshot-N.jpg
+npm run capture     # capture only, into raw/ (gitignored)
+npm run brand       # banners into docs/wordpress-org/, OG card into docs/social/
 ```
-
-Output goes to `../../docs/screenshots/`:
-
-- `screenshot-1.png` ... `screenshot-8.png` - 1200x900, in WordPress.org order
-- `screenshots.json` - file names and captions
 
 Useful flags:
 
 ```sh
-npm run capture -- --only=settings   # one screen
-npm run render                       # HTML previews in out/, no browser
+node capture.mjs --only=settings                 # one tab
+npm run render                                   # HTML previews in out/, no browser
+node marketing/render.mjs --only=cron --no-preview
+node marketing/render.mjs --format png --quality 95
+node marketing/render-brand.mjs --only banner --no-locales
+node marketing/render-brand.mjs --locale ru_RU,uk
 ```
 
-Open `out/*.html` in a browser to inspect a template without capturing PNGs.
+After a run, open `out/preview.html` for a contact sheet of the composed
+screenshots and `out/*.html` for a single template without the marketing frame.
 
 ## Layout
 
 ```
-templates/        per-tab page content (the .wrap body only)
-layout.mjs        WordPress admin bar, menu, and tab chrome
-capture.mjs       renders templates and takes screenshots
-mock.css          screenshot-only fixes and the static log editor
-vendor/wp/        WordPress admin CSS, dashicons, colour scheme (GPLv2)
-out/              rendered HTML previews (gitignored)
+templates/            per-tab page content (the .wrap body only)
+layout.mjs            WordPress admin bar, menu, and tab chrome
+capture.mjs           renders templates and captures raw/<shot>.png
+mock.css              screenshot-only fixes and the static log editor
+marketing/slides.json  slide order, file names, themes and all copy
+marketing/render.mjs   marketing frame composer
+marketing/render-brand.mjs  WordPress.org banners and the Open Graph card
+raw/                  element captures (gitignored)
+out/                  rendered previews (gitignored)
+vendor/wp/            WordPress admin CSS, dashicons, colour scheme (GPLv2)
 ```
+
+`slides.json` is the single source of truth for listing copy. `maxHeight` on a
+slide crops a very long tab at a readable point; `theme` switches the frame
+between `dark` (default) and `light`.
+
+## Output
+
+| Path | Size | Use |
+| --- | --- | --- |
+| `docs/screenshots/screenshot-1.jpg` ... `screenshot-8.jpg` | 1600x1000 | WordPress.org listing screenshots |
+| `docs/wordpress-org/banner-772x250.png` | 772x250 | WordPress.org plugin banner |
+| `docs/wordpress-org/banner-1544x500.png` | 1544x500 | Retina banner |
+| `docs/wordpress-org/banner-*-<locale>.png` | both sizes | Localized banners |
+| `docs/social/globus-debug-control-1200x630.png` | 1200x630 | Social sharing card |
+
+Banner locales follow the WordPress.org convention: `ru_RU`, `uk`, `de_DE`,
+`fr_FR`, `es_ES`. WordPress.org serves the matching file on a localized plugin
+page. Locale copy lives in `marketing/render-brand.mjs`.
 
 ## Publishing to WordPress.org
 
-Screenshots live in the plugin's SVN `assets` directory:
+`.github/workflows/DEPLOY.yml` copies the screenshots, banners and icons into the
+SVN `assets` directory on every release, so a normal release needs no manual SVN
+work. The action syncs `assets/` with `--delete`: anything that must stay on the
+plugin page has to live in `docs/screenshots/` or `docs/wordpress-org/`.
+
+Manual fallback, only when assets must be updated without a version bump:
 
 ```sh
 svn checkout https://plugins.svn.wordpress.org/globus-debug-control/assets assets
-cp ../../docs/screenshots/screenshot-*.png assets/
-svn add assets/screenshot-*.png --force
-svn ci assets -m "Update screenshots"
+cp ../../docs/screenshots/screenshot-*.jpg assets/
+cp ../../docs/wordpress-org/*.png assets/
+svn add assets/* --force
+svn ci assets -m "Update screenshots and banners"
 ```
 
 Captions are defined in `globus-debug-control/readme.txt` under
-`== Screenshots ==`; keep the same order as the file names.
+`== Screenshots ==`; keep the same order as `slides.json`.
 
 ## Updating the vendored WordPress CSS
 

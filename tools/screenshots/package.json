@@ -2,10 +2,12 @@
 	"name": "gdc-screenshots",
 	"private": true,
 	"type": "module",
-	"description": "Renders WordPress.org plugin screenshots from HTML templates with Playwright.",
+	"description": "Renders the GLOBUS Debug Control WordPress.org screenshots, banners and Open Graph card with Playwright.",
 	"scripts": {
 		"capture": "node capture.mjs",
-		"render": "node capture.mjs --render-only"
+		"render": "node capture.mjs --render-only",
+		"marketing": "node capture.mjs && node marketing/render.mjs",
+		"brand": "node marketing/render-brand.mjs"
 	},
 	"devDependencies": {
 		"playwright": "^1.64.0"
