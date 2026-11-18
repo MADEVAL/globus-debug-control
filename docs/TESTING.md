@@ -148,11 +148,12 @@ wsl -e bash -lc "php -m | grep -Ei 'redis|memcach'"
 Create a disposable database copy and serve the same WordPress files from WSL:
 
 ```sh
-# Dump the Windows/MySQL database
-mysqldump -uroot -proot --databases gdc_wp_test > gdc_wp_test.sql
+# Dump the Windows/MySQL database (enter the local DB password when prompted)
+mysqldump -u root -p --databases gdc_wp_test > gdc_wp_test.sql
 
-# Import into the WSL MySQL
-wsl -e bash -lc "mysql -uroot -proot -e 'CREATE DATABASE gdc_wp_test' && mysql -uroot -proot gdc_wp_test < /mnt/c/path/to/gdc_wp_test.sql"
+# Create the database in WSL MySQL, then import
+wsl -e bash -lc "mysql -u root -p -e 'CREATE DATABASE gdc_wp_test'"
+wsl -e bash -lc "mysql -u root -p gdc_wp_test < /mnt/c/path/to/gdc_wp_test.sql"
 
 # WSL PHP server
 wsl -e bash -lc "cd /mnt/d/path/to/wordpress-parent && php -S 0.0.0.0:8088 -t wordpress"
