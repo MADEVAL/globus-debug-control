@@ -4,6 +4,7 @@
 /wordpress/
 /wp-cli.phar
 /.opencode/
+/todo/
 
 # Local env and editor files
 /.env
