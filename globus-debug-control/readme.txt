@@ -144,7 +144,7 @@ When you need to check what debug, performance, or security constants are active
 2. WP_DEBUG - toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG and SAVEQUERIES without editing files.
 3. Error Log - color-coded debug.log with pagination, live polling, download and one-click clear.
 4. Cron Tasks - overdue events, orphaned hooks, source detection and immediate runs.
-5. Transients - every database transient with size and expiry, plus a bulk purge of expired rows.
+5. Transients - database and network transients with size and expiry, plus a bulk purge of expired rows.
 6. Autoloaded - the heaviest autoloaded options, sorted by size, with warning thresholds.
 7. HTTP Log - outgoing WordPress HTTP API calls with status, transport and duration.
 8. Constants - every runtime constant, including plugin and theme constants, with secrets masked.
