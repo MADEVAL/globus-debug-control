@@ -107,6 +107,10 @@ On WordPress 6.9+ the plugin registers abilities for MCP and REST clients:
 * `gdc/clear-log` - truncate the log file, requires `confirm=true`
 * `gdc/get-wp-config` - current values of `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY`, `SCRIPT_DEBUG`, `SAVEQUERIES`
 * `gdc/update-wp-config` - write those constants into `wp-config.php`, requires `confirm=true`
+* `gdc/enable-debug-logging` - one-click enable `WP_DEBUG` + `WP_DEBUG_LOG`, requires `confirm=true`
+* `gdc/get-transients` - database transients with summary and storage diagnostics
+* `gdc/purge-expired-transients` - delete expired transients, requires `confirm=true`
+* `gdc/get-constants` - every runtime constant grouped by category, with secrets masked
 
 All abilities require the `manage_options` capability. The early-loader dropin is regenerated automatically after a plugin update - no manual re-save is needed. `gdc/update-wp-config` keeps a timestamped backup of `wp-config.php` before writing.
 
@@ -208,6 +212,8 @@ It is an admin-only tool in the **Error Log** tab. It requires `manage_options` 
 * Added: Transients tab diagnostics for persistent object caches, database query errors, and transient-like rows that could not be listed
 * Changed: Constants tab lists every user-defined constant, including plugin and theme constants, with a name filter and collapsible groups
 * Added: broader secret masking for constants whose names contain PASSWORD, SECRET, TOKEN, API_KEY and similar markers
+* Added abilities: `gdc/enable-debug-logging`, `gdc/get-transients`, `gdc/purge-expired-transients`, and `gdc/get-constants`
+* Changed: `gdc/get-log` also returns the effective debug and logging state, so MCP clients can explain an empty log
 
 = 2.3.0 =
 * Added MCP and REST abilities: get/update/reset options, read/clear the error log, and read/update wp-config debug constants

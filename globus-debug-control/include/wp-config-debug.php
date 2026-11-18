@@ -337,11 +337,54 @@ final class GDC_WpConfig_Debug {
 	}
 
 	/**
-	 * Handles the one-click "enable debug logging" form.
+	 * Enables WP_DEBUG and WP_DEBUG_LOG in wp-config.php.
 	 *
-	 * Enables WP_DEBUG and WP_DEBUG_LOG in wp-config.php, and turns
-	 * WP_DEBUG_DISPLAY off when debug mode is being enabled for the first
-	 * time, so visitors never see raw PHP errors.
+	 * Shared by the admin one-click action and the MCP ability. Creates a
+	 * timestamped backup first, preserves an existing custom WP_DEBUG_LOG
+	 * path, and turns WP_DEBUG_DISPLAY off only on the initial switch.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public static function enable_debug_logging() {
+		$config_path = self::find_wp_config();
+
+		if ( '' === $config_path || ! wp_is_writable( $config_path ) ) {
+			return new \WP_Error( 'gdc_wp_config_not_writable', __( 'wp-config.php is missing or not writable.', 'globus-debug-control' ) );
+		}
+
+		$was_debug_on = self::is_wp_debug_on();
+		$log_was_on   = self::is_wp_debug_log_on();
+		$backup       = self::backup_wp_config( $config_path );
+		$updated      = array();
+
+		if ( ! self::set_constant( $config_path, 'WP_DEBUG', 'true' ) ) {
+			return new \WP_Error( 'gdc_wp_config_write_failed', __( 'Could not update WP_DEBUG in wp-config.php.', 'globus-debug-control' ) );
+		}
+		$updated['WP_DEBUG'] = true;
+
+		if ( ! $log_was_on ) {
+			if ( ! self::set_constant( $config_path, 'WP_DEBUG_LOG', 'true' ) ) {
+				return new \WP_Error( 'gdc_wp_config_write_failed', __( 'Could not update WP_DEBUG_LOG in wp-config.php.', 'globus-debug-control' ) );
+			}
+			$updated['WP_DEBUG_LOG'] = true;
+		}
+
+		// Only hide on-screen errors on the initial switch. Do not overwrite an
+		// explicit WP_DEBUG_DISPLAY choice the user already made.
+		if ( ! $was_debug_on && self::set_constant( $config_path, 'WP_DEBUG_DISPLAY', 'false' ) ) {
+			$updated['WP_DEBUG_DISPLAY'] = false;
+		}
+
+		return array(
+			'path'      => $config_path,
+			'backup'    => $backup,
+			'updated'   => $updated,
+			'constants' => self::read_constants( $config_path ),
+		);
+	}
+
+	/**
+	 * Handles the one-click "enable debug logging" form.
 	 */
 	public static function handle_quick_enable_action(): void {
 		if ( ! isset( $_POST['gdc_quick_debug'] ) ) {
@@ -359,47 +402,17 @@ final class GDC_WpConfig_Debug {
 			$return_tab = 'wpcfg';
 		}
 
-		$config_path = self::find_wp_config();
-
-		if ( empty( $config_path ) || ! wp_is_writable( $config_path ) ) {
-			wp_safe_redirect(
-				add_query_arg(
-					array(
-						'page'          => 'globus-debug-control',
-						'tab'           => 'wpcfg',
-						'gdc_cfg_error' => 'nowrite',
-					),
-					admin_url( 'options-general.php' )
-				)
-			);
-			exit;
-		}
-
-		self::backup_wp_config( $config_path );
-
-		$was_debug_on = self::is_wp_debug_on();
-		$log_was_on   = self::is_wp_debug_log_on();
-
-		$saved_debug = self::set_constant( $config_path, 'WP_DEBUG', 'true' );
-		// Keep an existing custom log path; only write `true` when logging is off.
-		$saved_log = $log_was_on ? true : self::set_constant( $config_path, 'WP_DEBUG_LOG', 'true' );
-		$saved     = $saved_debug && $saved_log;
-
-		// Only hide on-screen errors on the initial switch. Do not overwrite an
-		// explicit WP_DEBUG_DISPLAY choice the user already made.
-		if ( ! $was_debug_on ) {
-			self::set_constant( $config_path, 'WP_DEBUG_DISPLAY', 'false' );
-		}
+		$result = self::enable_debug_logging();
 
 		$args = array(
 			'page' => 'globus-debug-control',
 			'tab'  => $return_tab,
 		);
 
-		if ( $saved ) {
-			$args['gdc_debug_enabled'] = '1';
-		} else {
+		if ( is_wp_error( $result ) ) {
 			$args['gdc_cfg_error'] = 'nowrite';
+		} else {
+			$args['gdc_debug_enabled'] = '1';
 		}
 
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );

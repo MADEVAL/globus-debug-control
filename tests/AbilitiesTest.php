@@ -66,6 +66,10 @@ final class AbilitiesTest extends WordPressTestCase {
 			'gdc/clear-log',
 			'gdc/get-wp-config',
 			'gdc/update-wp-config',
+			'gdc/enable-debug-logging',
+			'gdc/get-transients',
+			'gdc/purge-expired-transients',
+			'gdc/get-constants',
 		];
 
 		foreach ($expected as $name) {
@@ -109,7 +113,7 @@ final class AbilitiesTest extends WordPressTestCase {
 
 		$this->assertSame(['inherit', 'on', 'off'], $options['display_errors_mode']['enum']);
 		$this->assertArrayHasKey('WP_DEBUG_LOG', $result['constants']);
-		$this->assertCount(8, $result['abilities']);
+		$this->assertCount(12, $result['abilities']);
 	}
 
 	public function testEveryPluginOptionCanBeChangedThroughAbility(): void {
@@ -269,6 +273,8 @@ final class AbilitiesTest extends WordPressTestCase {
 		$this->assertSame('gdc-log-notice', $result['lines'][1]['level']);
 		$this->assertSame('gdc-log-cron', $result['lines'][2]['level']);
 		$this->assertTrue($result['truncated']);
+		$this->assertArrayHasKey('debug', $result);
+		$this->assertTrue($result['debug']['wp_debug']);
 	}
 
 	public function testGetLogFiltersByContains(): void {
@@ -487,5 +493,87 @@ final class AbilitiesTest extends WordPressTestCase {
 		$this->assertArrayHasKey('mu_dropin_installed', $result['runtime']);
 		$this->assertArrayHasKey('api_context', $result['runtime']);
 		$this->assertSame(E_WARNING, $result['runtime']['suppress_mask'] & E_WARNING);
+	}
+
+	public function testGetTransientsAbilityReturnsSummaryAndDiagnostics(): void {
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [
+			['option_name' => '_transient_foo', 'value_size' => '100', 'timeout' => (string) (time() + 3600)],
+			['option_name' => '_transient_old', 'value_size' => '50', 'timeout' => '1000'],
+		];
+
+		$result = $this->execute('gdc/get-transients');
+
+		$this->assertSame(2, $result['summary']['total']);
+		$this->assertSame(1, $result['summary']['expired']);
+		$this->assertSame(2, $result['total']);
+		$this->assertFalse($result['truncated']);
+		$this->assertCount(2, $result['transients']);
+		$this->assertArrayHasKey('external_cache', $result['diagnostics']);
+	}
+
+	public function testGetTransientsAbilityFiltersExpiredRows(): void {
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [
+			['option_name' => '_transient_foo', 'value_size' => '100', 'timeout' => (string) (time() + 3600)],
+			['option_name' => '_transient_old', 'value_size' => '50', 'timeout' => '1000'],
+		];
+
+		$result = $this->execute('gdc/get-transients', ['only_expired' => true]);
+
+		$this->assertSame(1, $result['total']);
+		$this->assertSame('old', $result['transients'][0]['key']);
+	}
+
+	public function testPurgeExpiredTransientsAbilityRequiresConfirm(): void {
+		$denied = $this->execute('gdc/purge-expired-transients', []);
+		$this->assertInstanceOf(\WP_Error::class, $denied);
+		$this->assertSame('gdc_confirm_required', $denied->get_error_code());
+
+		$result = $this->execute('gdc/purge-expired-transients', ['confirm' => true]);
+		$this->assertTrue($result['purged']);
+		$this->assertArrayHasKey('rows_deleted', $result);
+		$this->assertNotEmpty($GLOBALS['gdc_test_state']['wpdb_queries']);
+	}
+
+	public function testGetConstantsAbilityIncludesPluginConstantsAndMasksSecrets(): void {
+		if (! defined('GDC_ABILITY_TEST_SECRET')) {
+			define('GDC_ABILITY_TEST_SECRET', 'super-secret-value');
+		}
+
+		$result = $this->execute('gdc/get-constants');
+		$this->assertArrayHasKey('Debug', $result['groups']);
+		$this->assertArrayHasKey('Plugin & Theme', $result['groups']);
+		$this->assertSame('*** (masked)', $result['groups']['Plugin & Theme']['GDC_ABILITY_TEST_SECRET']);
+
+		$filtered = $this->execute('gdc/get-constants', ['group' => 'Debug', 'search' => 'DEBUG']);
+		$this->assertSame(['Debug'], array_keys($filtered['groups']));
+		$this->assertNotEmpty($filtered['groups']['Debug']);
+		foreach (array_keys($filtered['groups']['Debug']) as $name) {
+			$this->assertStringContainsString('DEBUG', $name);
+		}
+	}
+
+	public function testEnableDebugLoggingAbilityRequiresConfirmAndWritesConstants(): void {
+		if (! is_dir(ABSPATH)) {
+			mkdir(ABSPATH, 0777, true);
+		}
+
+		$config = rtrim(ABSPATH, '/\\') . '/wp-config.php';
+		file_put_contents($config, "<?php\ndefine( 'WP_DEBUG', false );\n");
+
+		$denied = $this->execute('gdc/enable-debug-logging', []);
+		$this->assertInstanceOf(\WP_Error::class, $denied);
+		$this->assertSame('gdc_confirm_required', $denied->get_error_code());
+
+		$result = $this->execute('gdc/enable-debug-logging', ['confirm' => true]);
+
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('WP_DEBUG', $result['updated']);
+		$this->assertArrayHasKey('WP_DEBUG_LOG', $result['updated']);
+		$this->assertNotSame('', $result['backup']);
+		$this->assertFileExists($result['backup']);
+
+		$content = (string) file_get_contents($config);
+		$this->assertStringContainsString("define( 'WP_DEBUG', true );", $content);
+		$this->assertStringContainsString("define( 'WP_DEBUG_LOG', true );", $content);
 	}
 }

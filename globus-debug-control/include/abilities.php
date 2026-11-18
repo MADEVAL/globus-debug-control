@@ -71,6 +71,10 @@ final class GDC_Abilities {
 							'gdc/clear-log',
 							'gdc/get-wp-config',
 							'gdc/update-wp-config',
+							'gdc/enable-debug-logging',
+							'gdc/get-transients',
+							'gdc/purge-expired-transients',
+							'gdc/get-constants',
 						),
 						'log_lines' => self::MAX_LOG_LINES,
 					);
@@ -205,6 +209,7 @@ final class GDC_Abilities {
 						'mtime'     => file_exists( $path ) ? (int) @filemtime( $path ) : 0,
 						'lines'     => $lines,
 						'truncated' => $read[1],
+						'debug'     => \GDC_Log_Viewer::get_debug_state(),
 					);
 				},
 				'meta'             => self::meta( true ),
@@ -367,6 +372,187 @@ final class GDC_Abilities {
 					);
 				},
 				'meta'             => self::meta( false, false, true ),
+			)
+		);
+
+		self::add(
+			'gdc/enable-debug-logging',
+			array(
+				'label'            => __( 'Enable debug logging', 'globus-debug-control' ),
+				'description'      => __( 'One-click debug setup: enables WP_DEBUG and WP_DEBUG_LOG in wp-config.php after a timestamped backup. Preserves a custom WP_DEBUG_LOG path and turns WP_DEBUG_DISPLAY off when debug mode was previously off. Requires confirm=true.', 'globus-debug-control' ),
+				'input_schema'     => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'confirm' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Must be true to modify wp-config.php.', 'globus-debug-control' ),
+						),
+					),
+					'required'             => array( 'confirm' ),
+					'additionalProperties' => false,
+					'default'              => array(),
+				),
+				'execute_callback' => static function ( $input = array() ) {
+					$input = is_array( $input ) ? $input : array();
+
+					if ( empty( $input['confirm'] ) ) {
+						return new \WP_Error( 'gdc_confirm_required', __( 'Pass confirm=true to enable debug logging.', 'globus-debug-control' ) );
+					}
+
+					return \GDC_WpConfig_Debug::enable_debug_logging();
+				},
+				'meta'             => self::meta( false, false, true ),
+			)
+		);
+
+		self::add(
+			'gdc/get-transients',
+			array(
+				'label'            => __( 'List transients', 'globus-debug-control' ),
+				'description'      => __( 'Returns database-stored transients with size and expiry, aggregate summary, and storage diagnostics. Diagnostics explain an empty list: persistent object cache, database error, or transient-like rows that could not be read.', 'globus-debug-control' ),
+				'input_schema'     => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'limit'        => array(
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'maximum'     => 5000,
+							'default'     => 500,
+							'description' => __( 'Maximum number of rows to return.', 'globus-debug-control' ),
+						),
+						'only_expired' => array(
+							'type'        => 'boolean',
+							'default'     => false,
+							'description' => __( 'Return only transients whose timeout has passed.', 'globus-debug-control' ),
+						),
+					),
+					'additionalProperties' => false,
+					'default'              => array(),
+				),
+				'execute_callback' => static function ( $input = array() ) {
+					$input        = is_array( $input ) ? $input : array();
+					$limit        = isset( $input['limit'] ) ? (int) $input['limit'] : 500;
+					$limit        = max( 1, min( 5000, $limit ) );
+					$only_expired = ! empty( $input['only_expired'] );
+					$transients   = \GDC_Transient_Viewer::get_transients();
+
+					if ( $only_expired ) {
+						$transients = array_values(
+							array_filter(
+								$transients,
+								static function ( array $transient ): bool {
+									return ! empty( $transient['is_expired'] );
+								}
+							)
+						);
+					}
+
+					$summary = \GDC_Transient_Viewer::get_summary( $transients );
+
+					return array(
+						'summary'     => $summary,
+						'diagnostics' => \GDC_Transient_Viewer::get_diagnostics(),
+						'total'       => count( $transients ),
+						'truncated'   => count( $transients ) > $limit,
+						'transients'  => array_slice( $transients, 0, $limit ),
+					);
+				},
+				'meta'             => self::meta( true ),
+			)
+		);
+
+		self::add(
+			'gdc/purge-expired-transients',
+			array(
+				'label'            => __( 'Purge expired transients', 'globus-debug-control' ),
+				'description'      => __( 'Deletes every expired transient from the options table in one query. Requires confirm=true.', 'globus-debug-control' ),
+				'input_schema'     => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'confirm' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Must be true to delete expired transients.', 'globus-debug-control' ),
+						),
+					),
+					'required'             => array( 'confirm' ),
+					'additionalProperties' => false,
+					'default'              => array(),
+				),
+				'execute_callback' => static function ( $input = array() ) {
+					$input = is_array( $input ) ? $input : array();
+
+					if ( empty( $input['confirm'] ) ) {
+						return new \WP_Error( 'gdc_confirm_required', __( 'Pass confirm=true to purge expired transients.', 'globus-debug-control' ) );
+					}
+
+					$deleted = \GDC_Transient_Viewer::purge_expired();
+
+					if ( $deleted < 0 ) {
+						return new \WP_Error( 'gdc_transient_purge_failed', __( 'The purge query failed.', 'globus-debug-control' ) );
+					}
+
+					return array(
+						'purged'       => true,
+						'rows_deleted' => $deleted,
+					);
+				},
+				'meta'             => self::meta( false, true, true ),
+			)
+		);
+
+		self::add(
+			'gdc/get-constants',
+			array(
+				'label'            => __( 'List runtime constants', 'globus-debug-control' ),
+				'description'      => __( 'Returns all user-defined PHP constants grouped by category, including plugin and theme constants. Sensitive values are masked. Optionally filter by group and name substring.', 'globus-debug-control' ),
+				'input_schema'     => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'group'  => array(
+							'type'        => 'string',
+							'description' => __( 'Optional exact group label, e.g. Debug or Plugin & Theme.', 'globus-debug-control' ),
+						),
+						'search' => array(
+							'type'        => 'string',
+							'description' => __( 'Optional case-insensitive constant name filter.', 'globus-debug-control' ),
+						),
+					),
+					'additionalProperties' => false,
+					'default'              => array(),
+				),
+				'execute_callback' => static function ( $input = array() ) {
+					$input  = is_array( $input ) ? $input : array();
+					$group  = isset( $input['group'] ) ? strtolower( trim( (string) $input['group'] ) ) : '';
+					$search = isset( $input['search'] ) ? strtolower( trim( (string) $input['search'] ) ) : '';
+					$groups = \GDC_Constants_Viewer::get_wp_constants();
+					$result = array();
+
+					foreach ( $groups as $label => $constants ) {
+						if ( '' !== $group && strtolower( $label ) !== $group ) {
+							continue;
+						}
+
+						if ( '' !== $search ) {
+							$constants = array_filter(
+								$constants,
+								static function ( $value, $name ) use ( $search ): bool {
+									return false !== strpos( strtolower( (string) $name ), $search );
+								},
+								ARRAY_FILTER_USE_BOTH
+							);
+						}
+
+						if ( ! empty( $constants ) ) {
+							$result[ $label ] = $constants;
+						}
+					}
+
+					return array(
+						'total'  => (int) array_sum( array_map( 'count', $result ) ),
+						'groups' => $result,
+					);
+				},
+				'meta'             => self::meta( true ),
 			)
 		);
 	}

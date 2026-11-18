@@ -186,6 +186,27 @@ final class GDC_Transient_Viewer {
 	}
 
 	/**
+	 * Deletes all expired transients from the options table.
+	 *
+	 * @return int Number of deleted rows, or -1 when the query failed.
+	 */
+	public static function purge_expired(): int {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Bulk-delete expired transients; no safe prepared form for this JOIN DELETE.
+		$result = $wpdb->query(
+			"DELETE a, b
+			 FROM {$wpdb->options} a
+			 INNER JOIN {$wpdb->options} b
+			         ON b.option_name = REPLACE(a.option_name, '_transient_timeout_', '_transient_')
+			 WHERE a.option_name LIKE '_transient_timeout_%'
+			   AND CAST(a.option_value AS UNSIGNED) < UNIX_TIMESTAMP()"
+		);
+
+		return false === $result ? -1 : (int) $result;
+	}
+
+	/**
 	 * AJAX handler: purges all expired transients via a single bulk DELETE JOIN.
 	 */
 	public static function ajax_purge_expired(): void {
@@ -195,19 +216,18 @@ final class GDC_Transient_Viewer {
 			wp_send_json_error( 'Forbidden', 403 );
 		}
 
-		global $wpdb;
+		$deleted = self::purge_expired();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Bulk-delete expired transients; no safe prepared form for this JOIN DELETE.
-		$wpdb->query(
-			"DELETE a, b
-			 FROM {$wpdb->options} a
-			 INNER JOIN {$wpdb->options} b
-			         ON b.option_name = REPLACE(a.option_name, '_transient_timeout_', '_transient_')
-			 WHERE a.option_name LIKE '_transient_timeout_%'
-			   AND CAST(a.option_value AS UNSIGNED) < UNIX_TIMESTAMP()"
+		if ( $deleted < 0 ) {
+			wp_send_json_error( 'The purge query failed.', 500 );
+		}
+
+		wp_send_json_success(
+			array(
+				'purged'       => true,
+				'rows_deleted' => $deleted,
+			)
 		);
-
-		wp_send_json_success( array( 'purged' => true ) );
 	}
 
 	/**
