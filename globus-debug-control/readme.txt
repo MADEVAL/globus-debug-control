@@ -124,7 +124,7 @@ WordPress cron runs silently. When events are overdue, hooks are orphaned, or sc
 
 = Transients tab =
 
-Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This tab displays database-stored WordPress transients from the options table with key name, data size, and expiration time. Transients stored in an external object cache (Redis, Memcached) are not shown; when such a cache is detected, the tab says so instead of showing a bare empty state. Database errors and unexpected transient-like rows are also surfaced in the notice area. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click. Summary cards show total count, expired count, and total data size.
+Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This tab displays database-stored WordPress transients from the options table with key name, data size, and expiration time. On multisite, network transients from the sitemeta table are included too. Transients stored in an external object cache (Redis, Memcached) are not shown; when such a cache is detected, the tab says so instead of showing a bare empty state. Database errors and unexpected transient-like rows are also surfaced in the notice area. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click, including network site transients. Summary cards show total count, expired count, and total data size.
 
 = Autoloaded tab =
 
@@ -210,6 +210,7 @@ It is an admin-only tool in the **Error Log** tab. It requires `manage_options` 
 * Fixed: the generate-test-error AJAX endpoint now refuses to run when logging is inactive
 * Fixed: WP_DEBUG / wp-config status pills were misaligned with their checkboxes
 * Added: Transients tab diagnostics for persistent object caches, database query errors, and transient-like rows that could not be listed
+* Fixed: "Purge expired" on multisite now also deletes expired network site transients from sitemeta
 * Changed: Constants tab lists every user-defined constant, including plugin and theme constants, with a name filter and collapsible groups
 * Added: broader secret masking for constants whose names contain PASSWORD, SECRET, TOKEN, API_KEY and similar markers
 * Added abilities: `gdc/enable-debug-logging`, `gdc/get-transients`, `gdc/purge-expired-transients`, and `gdc/get-constants`

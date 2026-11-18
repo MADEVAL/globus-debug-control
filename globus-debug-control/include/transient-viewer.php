@@ -203,7 +203,31 @@ final class GDC_Transient_Viewer {
 			   AND CAST(a.option_value AS UNSIGNED) < UNIX_TIMESTAMP()"
 		);
 
-		return false === $result ? -1 : (int) $result;
+		if ( false === $result ) {
+			return -1;
+		}
+
+		$deleted = (int) $result;
+
+		if ( function_exists( 'is_multisite' ) && is_multisite() && ! empty( $wpdb->sitemeta ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Bulk-delete expired site transients; no safe prepared form for this JOIN DELETE.
+			$site_result = $wpdb->query(
+				"DELETE a, b
+				 FROM {$wpdb->sitemeta} a
+				 INNER JOIN {$wpdb->sitemeta} b
+				         ON b.meta_key = REPLACE(a.meta_key, '_site_transient_timeout_', '_site_transient_')
+				 WHERE a.meta_key LIKE '_site_transient_timeout_%'
+				   AND CAST(a.meta_value AS UNSIGNED) < UNIX_TIMESTAMP()"
+			);
+
+			if ( false === $site_result ) {
+				return -1;
+			}
+
+			$deleted += (int) $site_result;
+		}
+
+		return $deleted;
 	}
 
 	/**

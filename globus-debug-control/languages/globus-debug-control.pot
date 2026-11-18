@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-18T13:19:16+00:00\n"
+"POT-Creation-Date: 2026-11-18T13:43:33+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: globus-debug-control\n"
@@ -664,7 +664,7 @@ msgid "Option name"
 msgstr ""
 
 #: include/options-viewer.php:131
-#: include/transient-viewer.php:381
+#: include/transient-viewer.php:405
 msgid "Size"
 msgstr ""
 
@@ -1003,78 +1003,78 @@ msgstr ""
 msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
 msgstr ""
 
-#: include/transient-viewer.php:290
+#: include/transient-viewer.php:314
 msgid "Transient query failed:"
 msgstr ""
 
-#: include/transient-viewer.php:299
+#: include/transient-viewer.php:323
 msgid "A persistent object cache is active."
 msgstr ""
 
-#: include/transient-viewer.php:300
+#: include/transient-viewer.php:324
 msgid "Transients are stored in the object cache (for example Redis or Memcached), not in the wp_options table. This viewer lists database rows only, so an empty table is expected and is not an error."
 msgstr ""
 
-#: include/transient-viewer.php:314
+#: include/transient-viewer.php:338
 msgid "Total"
 msgstr ""
 
-#: include/transient-viewer.php:321
-#: include/transient-viewer.php:396
+#: include/transient-viewer.php:345
+#: include/transient-viewer.php:420
 msgid "Expired"
 msgstr ""
 
-#: include/transient-viewer.php:328
+#: include/transient-viewer.php:352
 msgid "Total size"
 msgstr ""
 
-#: include/transient-viewer.php:336
+#: include/transient-viewer.php:360
 msgid "Purge expired"
 msgstr ""
 
-#: include/transient-viewer.php:347
+#: include/transient-viewer.php:371
 msgid "No database-stored transients. Transients are kept in the active object cache."
 msgstr ""
 
 #. translators: %d: number of database rows
-#: include/transient-viewer.php:354
+#: include/transient-viewer.php:378
 #, php-format
 msgid "Found %d transient-like option but could not list it. Check the database error above."
 msgid_plural "Found %d transient-like options but could not list them. Check the database error above."
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/transient-viewer.php:361
+#: include/transient-viewer.php:385
 msgid "No transients found in the database. Expired entries may already have been removed, or the site may not use database transients."
 msgstr ""
 
 #. translators: %d: number of database rows
-#: include/transient-viewer.php:367
+#: include/transient-viewer.php:391
 #, php-format
 msgid "Database check: %d row with a transient prefix."
 msgid_plural "Database check: %d rows with a transient prefix."
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/transient-viewer.php:380
+#: include/transient-viewer.php:404
 msgid "Key"
 msgstr ""
 
-#: include/transient-viewer.php:382
+#: include/transient-viewer.php:406
 msgid "Expires"
 msgstr ""
 
-#: include/transient-viewer.php:394
+#: include/transient-viewer.php:418
 msgid "No expiry"
 msgstr ""
 
 #. translators: %s: human-readable time difference
-#: include/transient-viewer.php:401
+#: include/transient-viewer.php:425
 #, php-format
 msgid "in %s"
 msgstr ""
 
-#: include/transient-viewer.php:410
+#: include/transient-viewer.php:434
 msgid "Delete"
 msgstr ""
 

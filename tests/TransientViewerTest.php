@@ -272,6 +272,27 @@ final class TransientViewerTest extends WordPressTestCase {
 		$this->assertFalse($GLOBALS['gdc_test_state']['json_response']['success']);
 	}
 
+	public function testPurgeExpiredAlsoCleansSiteTransientsOnMultisite(): void {
+		$GLOBALS['gdc_test_state']['is_multisite'] = true;
+
+		$deleted = \GDC_Transient_Viewer::purge_expired();
+		$queries = $GLOBALS['gdc_test_state']['wpdb_queries'];
+
+		$this->assertSame(2, $deleted);
+		$this->assertCount(2, $queries);
+		$this->assertStringContainsString('wp_options', $queries[0]);
+		$this->assertStringContainsString('wp_sitemeta', $queries[1]);
+		$this->assertStringContainsString('_site_transient_timeout_', $queries[1]);
+	}
+
+	public function testPurgeExpiredStaysOptionsOnlyOnSingleSite(): void {
+		$GLOBALS['gdc_test_state']['is_multisite'] = false;
+
+		\GDC_Transient_Viewer::purge_expired();
+
+		$this->assertCount(1, $GLOBALS['gdc_test_state']['wpdb_queries']);
+	}
+
 	// -------------------------------------------------------------------------
 	// render()
 	// -------------------------------------------------------------------------
