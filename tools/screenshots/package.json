@@ -10,6 +10,6 @@
 		"brand": "node marketing/render-brand.mjs"
 	},
 	"devDependencies": {
-		"playwright": "^1.64.0"
+		"playwright": "^1.65.1"
 	}
 }
