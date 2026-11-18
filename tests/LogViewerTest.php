@@ -680,4 +680,60 @@ final class LogViewerTest extends WordPressTestCase {
 		$this->assertDoesNotMatchRegularExpression('/value="\w+"[^>]*>[^<]*suppressed/i', $html);
 		$this->assertStringNotContainsString('gdc-suppress-warn', $html);
 	}
+
+	public function testGetDebugStateReportsActiveLogging(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+		]);
+
+		$state = \GDC_Log_Viewer::get_debug_state();
+
+		$this->assertTrue($state['wp_debug']);
+		$this->assertTrue($state['plugin_enabled']);
+		$this->assertTrue($state['log_enabled']);
+		$this->assertTrue($state['logging_active']);
+	}
+
+	public function testGetDebugStateReportsInactiveLoggingWhenPluginDisabled(): void {
+		$this->refreshOptions([
+			'enabled'     => 0,
+			'log_enabled' => 1,
+		]);
+
+		$state = \GDC_Log_Viewer::get_debug_state();
+
+		$this->assertFalse($state['plugin_enabled']);
+		$this->assertFalse($state['logging_active']);
+	}
+
+	public function testRenderShowsDependencyNoticeWhenWpDebugLogOff(): void {
+		$this->refreshOptions([
+			'enabled'     => 1,
+			'log_enabled' => 1,
+		]);
+
+		ob_start();
+		\GDC_Log_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-debug-dependency', $html);
+		$this->assertStringContainsString('WP_DEBUG_LOG is off', $html);
+	}
+
+	public function testAjaxGenerateErrorRejectsWhenLoggingInactive(): void {
+		$this->refreshOptions([
+			'enabled'     => 0,
+			'log_enabled' => 1,
+		]);
+		$_POST['type']        = 'notice';
+		$_POST['_ajax_nonce'] = 'test_nonce';
+
+		try {
+			\GDC_Log_Viewer::ajax_generate_error();
+		} catch (\GDC_Test_WpDieException $e) {
+		}
+
+		$this->assertFalse($GLOBALS['gdc_test_state']['json_response']['success']);
+	}
 }

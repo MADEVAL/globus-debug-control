@@ -230,6 +230,14 @@ trait GDC_Admin_Settings {
 			<strong><?php esc_html_e( 'Enable debug control', 'globus-debug-control' ); ?></strong>
 		</label>
 		<p class="description"><?php esc_html_e( 'When disabled, the plugin does not affect PHP or WordPress settings.', 'globus-debug-control' ); ?></p>
+		<div class="gdc-debug-status-row">
+			<?php GDC_WpConfig_Debug::render_status_badges(); ?>
+			<?php if ( ! GDC_WpConfig_Debug::is_wp_debug_on() ) : ?>
+				<span class="gdc-text-warning">
+					<?php esc_html_e( 'Error filtering has no effect while WP_DEBUG is off.', 'globus-debug-control' ); ?>
+				</span>
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 

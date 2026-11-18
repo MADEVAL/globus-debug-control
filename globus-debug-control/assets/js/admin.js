@@ -506,6 +506,45 @@
 	}
 
 	// -------------------------------------------------------------------------
+	// Constants viewer: filter by name
+	// -------------------------------------------------------------------------
+
+	var constantsFilter = document.getElementById( 'gdc-constants-filter' );
+	if ( constantsFilter ) {
+		var constantGroups = document.querySelectorAll( '.gdc-constants-group' );
+
+		var applyConstantsFilter = function () {
+			var term = constantsFilter.value.trim().toLowerCase();
+
+			constantGroups.forEach(
+				function ( group ) {
+					var rows = group.querySelectorAll( '.gdc-constant-row' );
+					var visible = 0;
+
+					rows.forEach(
+						function ( row ) {
+							var match = ! term || ( row.getAttribute( 'data-name' ) || '' ).indexOf( term ) !== -1;
+							row.hidden = ! match;
+							if ( match ) {
+								visible++;
+							}
+						}
+					);
+
+					group.hidden = visible === 0;
+					if ( term ) {
+						group.open = visible > 0;
+					} else {
+						group.open = group.getAttribute( 'data-default-open' ) === '1';
+					}
+				}
+			);
+		};
+
+		constantsFilter.addEventListener( 'input', applyConstantsFilter );
+	}
+
+	// -------------------------------------------------------------------------
 	// HTTP log: toggle capturing
 	// -------------------------------------------------------------------------
 

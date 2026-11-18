@@ -211,11 +211,46 @@ final class GDC_Transient_Viewer {
 	}
 
 	/**
+	 * Returns storage diagnostics that explain an empty transient list.
+	 *
+	 * @return array{external_cache: bool, cache_class: string, db_error: string, transient_like_rows: int}
+	 */
+	public static function get_diagnostics(): array {
+		global $wpdb;
+
+		$external_cache = function_exists( 'wp_using_ext_object_cache' )
+			? (bool) wp_using_ext_object_cache()
+			: file_exists( WP_CONTENT_DIR . '/object-cache.php' );
+
+		$cache_class = '';
+		if ( isset( $GLOBALS['wp_object_cache'] ) && is_object( $GLOBALS['wp_object_cache'] ) ) {
+			$cache_class = get_class( $GLOBALS['wp_object_cache'] );
+		}
+
+		$db_error = isset( $wpdb->last_error ) ? (string) $wpdb->last_error : '';
+
+		$transient_like_rows = 0;
+		if ( ! empty( $wpdb->options ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin diagnostic count.
+			$count               = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
+					$wpdb->esc_like( '_transient' ) . '%'
+				)
+			);
+			$transient_like_rows = null === $count ? 0 : (int) $count;
+		}
+
+		return compact( 'external_cache', 'cache_class', 'db_error', 'transient_like_rows' );
+	}
+
+	/**
 	 * Renders the transient viewer UI.
 	 */
 	public static function render(): void {
-		$transients = self::get_transients();
-		$summary    = self::get_summary( $transients );
+		$transients  = self::get_transients();
+		$summary     = self::get_summary( $transients );
+		$diagnostics = self::get_diagnostics();
 		?>
 		<script>var gdcTransient=
 		<?php
@@ -228,6 +263,27 @@ final class GDC_Transient_Viewer {
 		);
 		?>
 									;</script>
+
+		<?php if ( $diagnostics['db_error'] ) : ?>
+			<div class="notice notice-error inline">
+				<p>
+					<strong><?php esc_html_e( 'Transient query failed:', 'globus-debug-control' ); ?></strong>
+					<code><?php echo esc_html( $diagnostics['db_error'] ); ?></code>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $diagnostics['external_cache'] ) : ?>
+			<div class="notice notice-info inline gdc-transient-cache-notice">
+				<p>
+					<strong><?php esc_html_e( 'A persistent object cache is active.', 'globus-debug-control' ); ?></strong>
+					<?php esc_html_e( 'Transients are stored in the object cache (for example Redis or Memcached), not in the wp_options table. This viewer lists database rows only, so an empty table is expected and is not an error.', 'globus-debug-control' ); ?>
+					<?php if ( '' !== $diagnostics['cache_class'] ) : ?>
+						<code><?php echo esc_html( $diagnostics['cache_class'] ); ?></code>
+					<?php endif; ?>
+				</p>
+			</div>
+		<?php endif; ?>
 
 		<div class="gdc-tool-header">
 			<div class="gdc-cron-summary">
@@ -267,7 +323,34 @@ final class GDC_Transient_Viewer {
 		<?php if ( empty( $transients ) ) : ?>
 			<div class="gdc-empty-state">
 				<span class="dashicons dashicons-database" aria-hidden="true"></span>
-				<p><?php esc_html_e( 'No transients found.', 'globus-debug-control' ); ?></p>
+				<?php if ( $diagnostics['external_cache'] ) : ?>
+					<p><?php esc_html_e( 'No database-stored transients. Transients are kept in the active object cache.', 'globus-debug-control' ); ?></p>
+				<?php elseif ( $diagnostics['transient_like_rows'] > 0 ) : ?>
+					<p>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d: number of database rows */
+								_n( 'Found %d transient-like option but could not list it. Check the database error above.', 'Found %d transient-like options but could not list them. Check the database error above.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
+								$diagnostics['transient_like_rows']
+							)
+						);
+						?>
+					</p>
+				<?php else : ?>
+					<p><?php esc_html_e( 'No transients found in the database. Expired entries may already have been removed, or the site may not use database transients.', 'globus-debug-control' ); ?></p>
+					<p class="description">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d: number of database rows */
+								_n( 'Database check: %d row with a transient prefix.', 'Database check: %d rows with a transient prefix.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
+								$diagnostics['transient_like_rows']
+							)
+						);
+						?>
+					</p>
+				<?php endif; ?>
 			</div>
 		<?php else : ?>
 			<div class="gdc-table-scroll">

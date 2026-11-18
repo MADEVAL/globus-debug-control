@@ -133,6 +133,35 @@ final class ConstantsViewerTest extends WordPressTestCase {
 		}
 	}
 
+	public function testGetWpConstantsIncludesPluginAndThemeConstants(): void {
+		if (! defined('GDC_TEST_PLUGIN_CONSTANT')) {
+			define('GDC_TEST_PLUGIN_CONSTANT', 'plugin-value');
+		}
+
+		$groups = \GDC_Constants_Viewer::get_wp_constants();
+
+		$this->assertArrayHasKey('Plugin & Theme', $groups);
+		$this->assertSame('plugin-value', $groups['Plugin & Theme']['GDC_TEST_PLUGIN_CONSTANT']);
+	}
+
+	public function testGetWpConstantsSortsEachGroup(): void {
+		$groups = \GDC_Constants_Viewer::get_wp_constants();
+
+		foreach ($groups as $constants) {
+			$names = array_keys($constants);
+			$sorted = $names;
+			sort($sorted, SORT_NATURAL | SORT_FLAG_CASE);
+			$this->assertSame($sorted, $names);
+		}
+	}
+
+	public function testFormatValueMasksHeuristicSecretNames(): void {
+		$this->assertSame('*** (masked)', \GDC_Constants_Viewer::format_value('STRIPE_SECRET_KEY', 'sk_live_x', []));
+		$this->assertSame('*** (masked)', \GDC_Constants_Viewer::format_value('MY_API_KEY', 'abc', []));
+		$this->assertSame('*** (masked)', \GDC_Constants_Viewer::format_value('SMTP_PASSWORD', 'pw', []));
+		$this->assertSame('visible', \GDC_Constants_Viewer::format_value('SITE_NAME', 'visible', []));
+	}
+
 	// -------------------------------------------------------------------------
 	// render()
 	// -------------------------------------------------------------------------

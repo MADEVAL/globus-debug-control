@@ -370,4 +370,75 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		$content = file_get_contents($this->config_path);
 		$this->assertStringContainsString('false', $content);
 	}
+
+	public function testIsWpDebugHelpersReflectRuntimeConstants(): void {
+		$this->assertTrue(\GDC_WpConfig_Debug::is_wp_debug_on());
+		$this->assertFalse(\GDC_WpConfig_Debug::is_wp_debug_log_on());
+		$this->assertFalse(\GDC_WpConfig_Debug::get_wp_debug_log_value());
+	}
+
+	public function testHandleQuickEnableActionSkipsWithoutPOSTFlag(): void {
+		$this->writeConfig("<?php\n");
+
+		\GDC_WpConfig_Debug::handle_quick_enable_action();
+
+		$this->assertStringNotContainsString( 'WP_DEBUG_LOG', (string) file_get_contents( $this->config_path ) );
+	}
+
+	public function testHandleQuickEnableActionWritesDebugConstantsAndRedirects(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', false );\n");
+
+		$_POST['gdc_quick_debug'] = '1';
+		$_POST['gdc_return_tab']  = 'log';
+		$_POST['_wpnonce']        = 'test_nonce';
+
+		try {
+			\GDC_WpConfig_Debug::handle_quick_enable_action();
+		} catch (\GDC_Test_RedirectException $e) {
+			$this->assertStringContainsString('tab=log', $e->location);
+			$this->assertStringContainsString('gdc_debug_enabled=1', $e->location);
+		}
+
+		$content = (string) file_get_contents($this->config_path);
+		$this->assertStringContainsString("define( 'WP_DEBUG', true );", $content);
+		$this->assertStringContainsString("define( 'WP_DEBUG_LOG', true );", $content);
+		$this->assertNotEmpty(glob($this->config_path . '.gdc-backup-*'));
+	}
+
+	public function testHandleQuickEnableRedirectsToWpcfgWhenNotWritable(): void {
+		if (file_exists($this->config_path)) {
+			unlink($this->config_path);
+		}
+
+		$_POST['gdc_quick_debug'] = '1';
+		$_POST['_wpnonce']        = 'test_nonce';
+
+		try {
+			\GDC_WpConfig_Debug::handle_quick_enable_action();
+		} catch (\GDC_Test_RedirectException $e) {
+			$this->assertStringContainsString('tab=wpcfg', $e->location);
+			$this->assertStringContainsString('gdc_cfg_error=nowrite', $e->location);
+		}
+	}
+
+	public function testRenderDependencyNoticeOffersQuickFixWhenLogDisabled(): void {
+		$this->writeConfig("<?php\ndefine( 'WP_DEBUG', true );\n");
+
+		ob_start();
+		\GDC_WpConfig_Debug::render_dependency_notice( 'log' );
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-debug-dependency', $html);
+		$this->assertStringContainsString('gdc_quick_debug', $html);
+		$this->assertStringContainsString('gdc_return_tab', $html);
+	}
+
+	public function testRenderStatusBadgesShowsBothConstants(): void {
+		ob_start();
+		\GDC_WpConfig_Debug::render_status_badges();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('WP_DEBUG:', $html);
+		$this->assertStringContainsString('WP_DEBUG_LOG:', $html);
+	}
 }

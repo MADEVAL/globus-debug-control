@@ -80,6 +80,7 @@ function gdc_test_default_state(): array {
 		'doing_ajax' => false,
 		'json_request' => false,
 		'is_multisite' => false,
+		'external_object_cache' => false,
 		'transients'  => [],
 		'site_transients' => [],
 		'deleted_site_transients' => [],
@@ -624,6 +625,12 @@ if (! function_exists('is_multisite')) {
 	}
 }
 
+if (! function_exists('wp_using_ext_object_cache')) {
+	function wp_using_ext_object_cache(): bool {
+		return (bool) $GLOBALS['gdc_test_state']['external_object_cache'];
+	}
+}
+
 if (! function_exists('delete_site_transient')) {
 	function delete_site_transient(string $transient): bool {
 		$GLOBALS['gdc_test_state']['deleted_site_transients'][] = $transient;
@@ -797,6 +804,7 @@ if (! class_exists('GDC_Test_Wpdb')) {
 		public string $prefix  = 'wp_';
 		public string $options = 'wp_options';
 		public string $sitemeta = 'wp_sitemeta';
+		public string $last_error = '';
 
 		public function get_results(string $query, $output = 'OBJECT'): array {
 			$queue = &$GLOBALS['gdc_test_state']['wpdb_results_queue'];

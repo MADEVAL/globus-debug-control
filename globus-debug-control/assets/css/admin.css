@@ -482,7 +482,45 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
+	min-height: 26px;
 	cursor: pointer;
+}
+
+/* WordPress core shifts standalone checkboxes up; inside the flex label that
+   leaves the status pill sitting visibly higher. Reset it so both are centred. */
+.gdc-wpcfg-table .gdc-toggle-label > input[type="checkbox"] {
+	margin: 0;
+	flex: 0 0 auto;
+	position: static;
+}
+
+.gdc-wpcfg-table .gdc-status-badge {
+	line-height: 1.7;
+	flex: 0 0 auto;
+}
+
+.gdc-wpcfg-table .gdc-status-badge .dashicons {
+	vertical-align: middle;
+}
+
+.gdc-debug-status-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.gdc-debug-dependency .gdc-quick-debug-form {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 12px;
+}
+
+.gdc-debug-dependency .gdc-quick-debug-form .description {
+	margin: 0;
 }
 
 .gdc-wpcfg-logpath {
@@ -1168,29 +1206,83 @@
    Constants
    ========================================================================== */
 
-.gdc-constants-table {
-	table-layout: fixed;
-	min-width: 560px;
-	margin: 0 0 20px;
+.gdc-constants-toolbar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 12px;
 }
 
-.gdc-constants-table .gdc-col-name {
-	width: 38%;
+.gdc-constants-toolbar input[type="search"] {
+	max-width: 320px;
+}
+
+.gdc-constants-total {
+	color: var(--gdc-muted);
+	font-size: 12px;
+}
+
+.gdc-constants-group {
+	margin: 0 0 10px;
+	border: 1px solid var(--gdc-border);
+	border-radius: var(--gdc-radius);
+	background: var(--gdc-surface);
+	overflow: hidden;
+}
+
+.gdc-constants-group > summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 12px;
+	background: var(--gdc-surface-alt);
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+
+.gdc-constants-group > summary::-webkit-details-marker {
+	display: none;
+}
+
+.gdc-constants-group > summary::before {
+	content: "\25B8";
+	color: var(--gdc-muted);
+	font-size: 11px;
+	line-height: 1;
+	transition: transform 0.15s ease;
+}
+
+.gdc-constants-group[open] > summary::before {
+	transform: rotate(90deg);
+}
+
+.gdc-constants-group[hidden] {
+	display: none;
 }
 
 .gdc-constant-group-heading {
-	padding: 10px 12px !important;
-	background: var(--gdc-surface-alt) !important;
-	border-top: 1px solid var(--gdc-border-soft);
-	font-size: 11px !important;
+	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
-	color: var(--gdc-muted) !important;
+	color: var(--gdc-muted);
 }
 
-.gdc-constant-group:first-child .gdc-constant-group-heading {
-	border-top: 0;
+.gdc-constants-group .gdc-table-scroll {
+	border: 0;
+	border-radius: 0;
+}
+
+.gdc-constants-table {
+	table-layout: fixed;
+	min-width: 560px;
+	margin: 0;
+}
+
+.gdc-constants-table td:first-child {
+	width: 38%;
 }
 
 .gdc-constant-name code {

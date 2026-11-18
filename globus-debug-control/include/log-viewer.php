@@ -126,6 +126,28 @@ final class GDC_Log_Viewer {
 	}
 
 	/**
+	 * Returns the effective debug/log state used by the viewer UI.
+	 *
+	 * @return array{wp_debug: bool, wp_debug_log: bool|string|null, plugin_enabled: bool, log_enabled: bool, logging_active: bool, log_path: string}
+	 */
+	public static function get_debug_state(): array {
+		$opts = Globus_Debug_Control::instance()->get_options();
+
+		$wp_debug       = GDC_WpConfig_Debug::is_wp_debug_on();
+		$plugin_enabled = ! empty( $opts['enabled'] );
+		$log_enabled    = ! empty( $opts['log_enabled'] );
+
+		return array(
+			'wp_debug'       => $wp_debug,
+			'wp_debug_log'   => GDC_WpConfig_Debug::get_wp_debug_log_value(),
+			'plugin_enabled' => $plugin_enabled,
+			'log_enabled'    => $log_enabled,
+			'logging_active' => $wp_debug && $plugin_enabled && $log_enabled,
+			'log_path'       => self::get_log_path(),
+		);
+	}
+
+	/**
 	 * Registers AJAX action hooks for the log viewer.
 	 */
 	public static function register_ajax_hooks(): void {
@@ -165,6 +187,10 @@ final class GDC_Log_Viewer {
 
 		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
 			wp_send_json_error( 'Forbidden', 403 );
+		}
+
+		if ( ! self::get_debug_state()['logging_active'] ) {
+			wp_send_json_error( 'Error logging is inactive. Enable WP_DEBUG and error logging first.', 409 );
 		}
 
 		$type = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : 'notice';
@@ -209,8 +235,10 @@ final class GDC_Log_Viewer {
 	 * Renders the full log viewer UI with pagination, toolbar, and line list.
 	 */
 	public static function render(): void {
-		$path = self::get_log_path();
-		$page = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$path         = self::get_log_path();
+		$debug_state  = self::get_debug_state();
+		$can_generate = $debug_state['logging_active'];
+		$page         = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		$exists = file_exists( $path );
 		$size   = $exists ? @filesize( $path ) : 0;
@@ -245,6 +273,18 @@ final class GDC_Log_Viewer {
 
 		if ( isset( $_GET['cleared'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Log file cleared.', 'globus-debug-control' ) . '</p></div>';
+		}
+
+		GDC_WpConfig_Debug::render_dependency_notice( 'log' );
+
+		if ( ! $can_generate ) {
+			?>
+			<div class="notice notice-info inline gdc-log-generate-disabled">
+				<p>
+					<?php esc_html_e( 'Test errors are disabled because WP_DEBUG or error logging is off. Enable both to confirm that log writing works.', 'globus-debug-control' ); ?>
+				</p>
+			</div>
+			<?php
 		}
 
 		$last_fatal = get_option( 'gdc_last_fatal', null );
@@ -342,12 +382,12 @@ final class GDC_Log_Viewer {
 						);
 						?>
 						<span class="gdc-toolbar-label"><?php esc_html_e( 'Test error', 'globus-debug-control' ); ?></span>
-						<select id="gdc-error-type" class="gdc-select-small">
+						<select id="gdc-error-type" class="gdc-select-small" <?php disabled( ! $can_generate ); ?>>
 							<?php foreach ( $error_type_options as $val => $label ) : ?>
 								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' - suppressed' : $label ); ?></option>
 							<?php endforeach; ?>
 						</select>
-						<button type="button" id="gdc-generate-error" class="button button-secondary">
+						<button type="button" id="gdc-generate-error" class="button button-secondary" <?php disabled( ! $can_generate ); ?> <?php echo $can_generate ? '' : 'title="' . esc_attr( __( 'Enable WP_DEBUG and error logging first.', 'globus-debug-control' ) ) . '"'; ?>>
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>
 					</div>
@@ -419,7 +459,13 @@ final class GDC_Log_Viewer {
 			<?php else : ?>
 			<div class="gdc-log-empty-state">
 				<span class="dashicons dashicons-media-text" aria-hidden="true"></span>
-				<p><?php esc_html_e( 'Log file is empty.', 'globus-debug-control' ); ?></p>
+				<?php if ( ! $debug_state['wp_debug'] ) : ?>
+					<p><?php esc_html_e( 'Log file is empty. WP_DEBUG is off, so PHP does not report new errors.', 'globus-debug-control' ); ?></p>
+				<?php elseif ( ! $debug_state['log_enabled'] ) : ?>
+					<p><?php esc_html_e( 'Log file is empty. Error logging is disabled in the plugin settings.', 'globus-debug-control' ); ?></p>
+				<?php else : ?>
+					<p><?php esc_html_e( 'Log file is empty.', 'globus-debug-control' ); ?></p>
+				<?php endif; ?>
 			</div>
 			<?php endif; ?>
 		</div>

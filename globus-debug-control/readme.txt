@@ -4,7 +4,7 @@ Tags: debug, error-log, cron, wp-config, transients
 Requires at least: 5.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.3.0
+Stable tag: 2.4.0
 License: MIT
 License URI: https://opensource.org/license/mit
 
@@ -112,7 +112,7 @@ All abilities require the `manage_options` capability. The early-loader dropin i
 
 = Error Log tab =
 
-Your debug.log file can grow to hundreds of megabytes without you noticing. This tab displays it directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low.
+Your debug.log file can grow to hundreds of megabytes without you noticing. This tab displays it directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low. When `WP_DEBUG` is off, the tab explains why no new lines arrive, disables the test-error generator, and offers a one-click fix that writes the debug constants to `wp-config.php`.
 
 = Cron Tasks tab =
 
@@ -120,7 +120,7 @@ WordPress cron runs silently. When events are overdue, hooks are orphaned, or sc
 
 = Transients tab =
 
-Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This tab displays database-stored WordPress transients from the options table with key name, data size, and expiration time. Transients stored in an external object cache (Redis, Memcached) are not shown. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click. Summary cards show total count, expired count, and total data size.
+Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This tab displays database-stored WordPress transients from the options table with key name, data size, and expiration time. Transients stored in an external object cache (Redis, Memcached) are not shown; when such a cache is detected, the tab says so instead of showing a bare empty state. Database errors and unexpected transient-like rows are also surfaced in the notice area. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click. Summary cards show total count, expired count, and total data size.
 
 = Autoloaded tab =
 
@@ -132,7 +132,7 @@ Plugins and themes silently make outgoing HTTP calls - license checks, update pi
 
 = Constants tab =
 
-When you need to check what debug, performance, or security constants are active at runtime, you normally have to grep through wp-config.php and hope nothing is overridden elsewhere. This tab displays all WordPress-related PHP constants defined at runtime, grouped by category: Debug, Performance, Security, Database, Auth and Salts, Paths, and Other WP_* constants. Sensitive values (database password, auth keys, salts) are automatically masked.
+When you need to check what debug, performance, or security constants are active at runtime, you normally have to grep through wp-config.php and hope nothing is overridden elsewhere. This tab displays every user-defined PHP constant at runtime, grouped by category: Debug, Performance, Security, Database, Auth and Salts, Paths, Other WP_* constants, and Plugin & Theme constants from plugins, themes and custom code. A name filter and collapsible groups keep large lists manageable. Sensitive values (database password, auth keys, salts, and names containing PASSWORD, SECRET, TOKEN, API_KEY, and similar markers) are automatically masked.
 
 == Screenshots ==
 
@@ -143,7 +143,7 @@ When you need to check what debug, performance, or security constants are active
 5. Transients - every database transient with size and expiry, plus a bulk purge of expired rows.
 6. Autoloaded - the heaviest autoloaded options, sorted by size, with warning thresholds.
 7. HTTP Log - outgoing WordPress HTTP API calls with status, transport and duration.
-8. Constants - runtime WordPress constants grouped by category, with secrets masked.
+8. Constants - every runtime constant, including plugin and theme constants, with secrets masked.
 
 == Installation ==
 
@@ -167,7 +167,7 @@ Use the **WP_DEBUG** tab. It reads and writes debug constants directly in your `
 
 = Does the plugin require WP_DEBUG to be enabled? =
 
-The plugin is always active, but error filtering only takes effect when `WP_DEBUG` is `true`. Error display and logging settings work independently of `WP_DEBUG`. You can toggle it from the **WP_DEBUG** tab at any time.
+The plugin is always active, but error filtering and test errors only take effect when `WP_DEBUG` is `true`. The **Settings** and **Error Log** tabs show the current `WP_DEBUG` and `WP_DEBUG_LOG` state and offer a one-click fix that writes the constants to `wp-config.php` after creating a backup. You can also toggle them from the **WP_DEBUG** tab at any time.
 
 = I still see errors from plugins that load before this one. =
 
@@ -191,13 +191,23 @@ The plugin is a debug control panel, so it intentionally sets `error_reporting`,
 
 = Is wp-config.php backed up before changes? =
 
-Yes. Before the plugin writes a debug constant it creates a timestamped `wp-config.php.gdc-backup-YYYYMMDD-HHMMSS` copy next to the file. The plugin does not restore it automatically: rename the backup over `wp-config.php` if you need to roll back. The same backup runs for the admin form and for the `gdc/update-wp-config` ability.
+Yes. Before the plugin writes a debug constant it creates a timestamped `wp-config.php.gdc-backup-YYYYMMDD-HHMMSS` copy next to the file. The plugin does not restore it automatically: rename the backup over `wp-config.php` if you need to roll back. The same backup runs for the admin form, the one-click debug fix, and the `gdc/update-wp-config` ability.
 
 = What does the "generate test error" button do? =
 
 It is an admin-only tool in the **Error Log** tab. It requires `manage_options` and a valid nonce, and writes one sample line so you can confirm that logging works. It is not available on the front end and never runs automatically.
 
 == Changelog ==
+
+= 2.4.0 =
+* Changed: the Settings tab now shows live WP_DEBUG and WP_DEBUG_LOG badges next to "Enable debug control", with a warning when error filtering cannot take effect
+* Added: one-click "Enable WP_DEBUG + WP_DEBUG_LOG" action that writes the constants to wp-config.php after a timestamped backup; first-time enabling also turns WP_DEBUG_DISPLAY off
+* Changed: the Error Log tab explains when WP_DEBUG is off, disables the test-error generator, and offers the same one-click fix
+* Fixed: the generate-test-error AJAX endpoint now refuses to run when logging is inactive
+* Fixed: WP_DEBUG / wp-config status pills were misaligned with their checkboxes
+* Added: Transients tab diagnostics for persistent object caches, database query errors, and transient-like rows that could not be listed
+* Changed: Constants tab lists every user-defined constant, including plugin and theme constants, with a name filter and collapsible groups
+* Added: broader secret masking for constants whose names contain PASSWORD, SECRET, TOKEN, API_KEY and similar markers
 
 = 2.3.0 =
 * Added MCP and REST abilities: get/update/reset options, read/clear the error log, and read/update wp-config debug constants
@@ -274,6 +284,9 @@ It is an admin-only tool in the **Error Log** tab. It requires `manage_options` 
 * Added automatic log file rotation
 
 == Upgrade Notice ==
+
+= 2.4.0 =
+Clearer debug-state handling: live WP_DEBUG badges, a one-click wp-config fix, transient-cache diagnostics, and a complete constants viewer with plugin and theme constants.
 
 = 2.3.0 =
 Adds MCP/REST abilities for options, log and wp-config constants. The early-loader dropin updates itself after the upgrade.

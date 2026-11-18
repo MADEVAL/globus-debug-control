@@ -1,15 +1,15 @@
 # Copyright (C) 2026 Yevhen Leonidov
-# This file is distributed under the GPLv2 or later.
+# This file is distributed under the MIT.
 msgid ""
 msgstr ""
-"Project-Id-Version: GLOBUS Debug Control 2.3.0\n"
+"Project-Id-Version: GLOBUS Debug Control 2.4.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/globus-debug-control\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-17T12:39:13+00:00\n"
+"POT-Creation-Date: 2026-11-18T13:11:43+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: globus-debug-control\n"
@@ -39,7 +39,7 @@ msgstr ""
 msgid "https://leonidov.dev"
 msgstr ""
 
-#: globus-debug-control.php:158
+#: globus-debug-control.php:159
 #: include/trait-admin-page.php:81
 msgid "Settings"
 msgstr ""
@@ -226,23 +226,31 @@ msgstr ""
 msgid "Install the early-loader mu-plugin dropin so settings apply before regular plugins load."
 msgstr ""
 
-#: include/constants-viewer.php:177
+#: include/constants-viewer.php:215
 msgid "WP_DEBUG settings"
 msgstr ""
 
-#: include/constants-viewer.php:184
-msgid "No WP constants found."
+#: include/constants-viewer.php:222
+msgid "No constants found."
 msgstr ""
 
-#: include/constants-viewer.php:191
-msgid "Constant"
+#: include/constants-viewer.php:229
+msgid "Filter constants"
 msgstr ""
 
-#: include/constants-viewer.php:192
-msgid "Value"
+#: include/constants-viewer.php:230
+msgid "Filter by constant name..."
 msgstr ""
 
-#: include/constants-viewer.php:205
+#. translators: %s: number of constants
+#: include/constants-viewer.php:236
+#, php-format
+msgid "%s constant"
+msgid_plural "%s constants"
+msgstr[0] ""
+msgstr[1] ""
+
+#: include/constants-viewer.php:260
 msgid "*** (masked)"
 msgstr ""
 
@@ -338,11 +346,11 @@ msgid "Delete event"
 msgstr ""
 
 #: include/cron-viewer.php:217
-#: include/trait-admin-page.php:170
-#: include/trait-admin-page.php:174
-#: include/trait-admin-page.php:178
-#: include/trait-admin-page.php:372
-#: include/wp-config-debug.php:397
+#: include/trait-admin-page.php:185
+#: include/trait-admin-page.php:189
+#: include/trait-admin-page.php:193
+#: include/trait-admin-page.php:387
+#: include/wp-config-debug.php:589
 msgid "Disabled"
 msgstr ""
 
@@ -351,11 +359,11 @@ msgid "Alternate"
 msgstr ""
 
 #: include/cron-viewer.php:221
-#: include/trait-admin-page.php:170
-#: include/trait-admin-page.php:174
-#: include/trait-admin-page.php:178
-#: include/trait-admin-page.php:371
-#: include/wp-config-debug.php:392
+#: include/trait-admin-page.php:185
+#: include/trait-admin-page.php:189
+#: include/trait-admin-page.php:193
+#: include/trait-admin-page.php:386
+#: include/wp-config-debug.php:584
 msgid "Enabled"
 msgstr ""
 
@@ -489,65 +497,81 @@ msgstr ""
 msgid "Log file not found."
 msgstr ""
 
-#: include/log-viewer.php:247
+#: include/log-viewer.php:275
 msgid "Log file cleared."
 msgstr ""
 
-#: include/log-viewer.php:258
+#: include/log-viewer.php:284
+msgid "Test errors are disabled because WP_DEBUG or error logging is off. Enable both to confirm that log writing works."
+msgstr ""
+
+#: include/log-viewer.php:298
 #: include/trait-admin-page.php:55
 msgid "Last fatal error:"
 msgstr ""
 
 #. translators: %s: number of log lines
-#: include/log-viewer.php:290
-#: include/log-viewer.php:397
+#: include/log-viewer.php:330
+#: include/log-viewer.php:437
 #, php-format
 msgid "%s line"
 msgid_plural "%s lines"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/log-viewer.php:292
+#: include/log-viewer.php:332
 msgid "Log file does not exist."
 msgstr ""
 
-#: include/log-viewer.php:299
+#: include/log-viewer.php:339
 msgid "Word wrap"
 msgstr ""
 
-#: include/log-viewer.php:318
+#: include/log-viewer.php:358
 msgid "Download"
 msgstr ""
 
-#: include/log-viewer.php:323
+#: include/log-viewer.php:363
 msgid "Clear the log file?"
 msgstr ""
 
-#: include/log-viewer.php:324
+#: include/log-viewer.php:364
 msgid "Clear Log"
 msgstr ""
 
-#: include/log-viewer.php:344
+#: include/log-viewer.php:384
 msgid "Test error"
 msgstr ""
 
-#: include/log-viewer.php:351
+#: include/log-viewer.php:390
+msgid "Enable WP_DEBUG and error logging first."
+msgstr ""
+
+#: include/log-viewer.php:391
 msgid "Generate"
 msgstr ""
 
-#: include/log-viewer.php:355
+#: include/log-viewer.php:395
 msgid "Auto-refresh when log file changes"
 msgstr ""
 
-#: include/log-viewer.php:357
+#: include/log-viewer.php:397
 msgid "Live tail"
 msgstr ""
 
-#: include/log-viewer.php:367
+#: include/log-viewer.php:407
 msgid "The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything."
 msgstr ""
 
-#: include/log-viewer.php:422
+#: include/log-viewer.php:463
+msgid "Log file is empty. WP_DEBUG is off, so PHP does not report new errors."
+msgstr ""
+
+#: include/log-viewer.php:465
+msgid "Log file is empty. Error logging is disabled in the plugin settings."
+msgstr ""
+
+#: include/log-viewer.php:467
 msgid "Log file is empty."
 msgstr ""
 
@@ -574,7 +598,7 @@ msgid "Option name"
 msgstr ""
 
 #: include/options-viewer.php:131
-#: include/transient-viewer.php:278
+#: include/transient-viewer.php:361
 msgid "Size"
 msgstr ""
 
@@ -630,73 +654,81 @@ msgstr ""
 msgid "OFF"
 msgstr ""
 
-#: include/trait-admin-page.php:154
+#: include/trait-admin-page.php:122
+msgid "WP_DEBUG and WP_DEBUG_LOG are enabled in wp-config.php."
+msgstr ""
+
+#: include/trait-admin-page.php:128
+msgid "wp-config.php could not be updated. Check that it is writable, then try again."
+msgstr ""
+
+#: include/trait-admin-page.php:169
 msgid "System Information"
 msgstr ""
 
-#: include/trait-admin-page.php:155
+#: include/trait-admin-page.php:170
 msgid "Runtime values reported by WordPress and PHP."
 msgstr ""
 
-#: include/trait-admin-page.php:161
+#: include/trait-admin-page.php:176
 msgid "Plugin version:"
 msgstr ""
 
-#: include/trait-admin-page.php:165
+#: include/trait-admin-page.php:180
 msgid "PHP version:"
 msgstr ""
 
-#: include/trait-admin-page.php:181
+#: include/trait-admin-page.php:196
 msgid "Current error_reporting:"
 msgstr ""
 
-#: include/trait-admin-page.php:194
-#: include/trait-admin-settings.php:299
+#: include/trait-admin-page.php:209
+#: include/trait-admin-settings.php:307
 msgid "Log file path:"
 msgstr ""
 
-#: include/trait-admin-page.php:202
+#: include/trait-admin-page.php:217
 msgid "size:"
 msgstr ""
 
-#: include/trait-admin-page.php:204
+#: include/trait-admin-page.php:219
 msgid "file does not exist"
 msgstr ""
 
-#: include/trait-admin-page.php:207
+#: include/trait-admin-page.php:222
 msgid "Not configured"
 msgstr ""
 
-#: include/trait-admin-page.php:213
+#: include/trait-admin-page.php:228
 msgid "Execution context:"
 msgstr ""
 
-#: include/trait-admin-page.php:214
+#: include/trait-admin-page.php:229
 msgid "API context"
 msgstr ""
 
-#: include/trait-admin-page.php:214
+#: include/trait-admin-page.php:229
 msgid "Normal"
 msgstr ""
 
-#: include/trait-admin-page.php:217
+#: include/trait-admin-page.php:232
 msgid "MU-plugin dropin:"
 msgstr ""
 
-#: include/trait-admin-page.php:218
-#: include/trait-admin-settings.php:360
+#: include/trait-admin-page.php:233
+#: include/trait-admin-settings.php:368
 msgid "Installed"
 msgstr ""
 
-#: include/trait-admin-page.php:218
+#: include/trait-admin-page.php:233
 msgid "Not installed - early interception disabled"
 msgstr ""
 
-#: include/trait-admin-page.php:224
+#: include/trait-admin-page.php:239
 msgid "Version"
 msgstr ""
 
-#: include/trait-admin-page.php:244
+#: include/trait-admin-page.php:259
 msgid "View all WP constants →"
 msgstr ""
 
@@ -784,216 +816,298 @@ msgstr ""
 msgid "When disabled, the plugin does not affect PHP or WordPress settings."
 msgstr ""
 
-#: include/trait-admin-settings.php:246
+#: include/trait-admin-settings.php:237
+msgid "Error filtering has no effect while WP_DEBUG is off."
+msgstr ""
+
+#: include/trait-admin-settings.php:254
 msgid "Suppress E_NOTICE"
 msgstr ""
 
-#: include/trait-admin-settings.php:246
+#: include/trait-admin-settings.php:254
 msgid "and E_USER_NOTICE"
 msgstr ""
 
-#: include/trait-admin-settings.php:250
+#: include/trait-admin-settings.php:258
 msgid "Suppress E_DEPRECATED"
 msgstr ""
 
-#: include/trait-admin-settings.php:250
+#: include/trait-admin-settings.php:258
 msgid "and E_USER_DEPRECATED"
 msgstr ""
 
-#: include/trait-admin-settings.php:254
+#: include/trait-admin-settings.php:262
 msgid "Suppress E_WARNING"
 msgstr ""
 
-#: include/trait-admin-settings.php:254
+#: include/trait-admin-settings.php:262
 msgid "and E_USER_WARNING (use with caution!)"
 msgstr ""
 
-#: include/trait-admin-settings.php:259
-#: include/trait-admin-settings.php:264
+#: include/trait-admin-settings.php:267
+#: include/trait-admin-settings.php:272
 msgid "Suppress E_STRICT"
 msgstr ""
 
-#: include/trait-admin-settings.php:264
+#: include/trait-admin-settings.php:272
 msgid "(not available in PHP 8.0+)"
 msgstr ""
 
-#: include/trait-admin-settings.php:268
+#: include/trait-admin-settings.php:276
 msgid "Selected error types will not be displayed or logged. Fatal errors (E_ERROR) are always visible."
 msgstr ""
 
-#: include/trait-admin-settings.php:279
+#: include/trait-admin-settings.php:287
 msgid "Inherit from WP_DEBUG_DISPLAY"
 msgstr ""
 
-#: include/trait-admin-settings.php:280
+#: include/trait-admin-settings.php:288
 msgid "Always on"
 msgstr ""
 
-#: include/trait-admin-settings.php:281
+#: include/trait-admin-settings.php:289
 msgid "Always off"
 msgstr ""
 
-#: include/trait-admin-settings.php:283
+#: include/trait-admin-settings.php:291
 msgid "Controls error output on screen. In API contexts, display is automatically disabled."
 msgstr ""
 
-#: include/trait-admin-settings.php:296
+#: include/trait-admin-settings.php:304
 msgid "Enable error logging"
 msgstr ""
 
-#: include/trait-admin-settings.php:300
+#: include/trait-admin-settings.php:308
 msgid "Leave empty for auto-detection"
 msgstr ""
 
-#: include/trait-admin-settings.php:301
+#: include/trait-admin-settings.php:309
 msgid "If empty: uses WP_DEBUG_LOG (usually wp-content/debug.log)."
 msgstr ""
 
-#: include/trait-admin-settings.php:301
+#: include/trait-admin-settings.php:309
 msgid "You can specify an absolute or relative (from wp-content) path."
 msgstr ""
 
-#: include/trait-admin-settings.php:303
+#: include/trait-admin-settings.php:311
 msgid "Maximum log size (MB):"
 msgstr ""
 
-#: include/trait-admin-settings.php:305
+#: include/trait-admin-settings.php:313
 msgid "When exceeded, the file will be renamed with a date suffix and a new one created. Range: 1-100 MB."
 msgstr ""
 
 #. translators: 1: CSS class name, 2: HTML tag name
-#: include/trait-admin-settings.php:322
+#: include/trait-admin-settings.php:330
 #, php-format
 msgid "Remove %1$s class from %2$s"
 msgstr ""
 
-#: include/trait-admin-settings.php:330
+#: include/trait-admin-settings.php:338
 msgid "WordPress adds this class when errors are detected. It can interfere with styling."
 msgstr ""
 
-#: include/trait-admin-settings.php:342
+#: include/trait-admin-settings.php:350
 msgid "Show errors in API contexts"
 msgstr ""
 
-#: include/trait-admin-settings.php:344
+#: include/trait-admin-settings.php:352
 msgid "By default, error display is disabled in AJAX, REST API, Cron, and CLI for proper operation."
 msgstr ""
 
-#: include/trait-admin-settings.php:344
+#: include/trait-admin-settings.php:352
 msgid "Enable only for API debugging."
 msgstr ""
 
-#: include/trait-admin-settings.php:357
+#: include/trait-admin-settings.php:365
 msgid "Install mu-plugin for early interception"
 msgstr ""
 
-#: include/trait-admin-settings.php:362
+#: include/trait-admin-settings.php:370
 msgid "Not installed"
 msgstr ""
 
-#: include/trait-admin-settings.php:365
+#: include/trait-admin-settings.php:373
 msgid "WordPress loads plugins alphabetically. Errors from plugins loaded earlier (e.g. Elementor) occur before GLOBUS Debug Control initializes."
 msgstr ""
 
 #. translators: 1: mu-plugin filename, 2: directory path
-#: include/trait-admin-settings.php:369
+#: include/trait-admin-settings.php:377
 #, php-format
 msgid "The mu-plugin loads first and intercepts such errors. File: %1$s in %2$s"
 msgstr ""
 
-#: include/transient-viewer.php:238
-msgid "Total"
-msgstr ""
-
-#: include/transient-viewer.php:245
-#: include/transient-viewer.php:293
-msgid "Expired"
-msgstr ""
-
-#: include/transient-viewer.php:252
-msgid "Total size"
-msgstr ""
-
-#: include/transient-viewer.php:260
-msgid "Purge expired"
-msgstr ""
-
 #: include/transient-viewer.php:270
-msgid "No transients found."
-msgstr ""
-
-#: include/transient-viewer.php:277
-msgid "Key"
+msgid "Transient query failed:"
 msgstr ""
 
 #: include/transient-viewer.php:279
+msgid "A persistent object cache is active."
+msgstr ""
+
+#: include/transient-viewer.php:280
+msgid "Transients are stored in the object cache (for example Redis or Memcached), not in the wp_options table. This viewer lists database rows only, so an empty table is expected and is not an error."
+msgstr ""
+
+#: include/transient-viewer.php:294
+msgid "Total"
+msgstr ""
+
+#: include/transient-viewer.php:301
+#: include/transient-viewer.php:376
+msgid "Expired"
+msgstr ""
+
+#: include/transient-viewer.php:308
+msgid "Total size"
+msgstr ""
+
+#: include/transient-viewer.php:316
+msgid "Purge expired"
+msgstr ""
+
+#: include/transient-viewer.php:327
+msgid "No database-stored transients. Transients are kept in the active object cache."
+msgstr ""
+
+#. translators: %d: number of database rows
+#: include/transient-viewer.php:334
+#, php-format
+msgid "Found %d transient-like option but could not list it. Check the database error above."
+msgid_plural "Found %d transient-like options but could not list them. Check the database error above."
+msgstr[0] ""
+msgstr[1] ""
+
+#: include/transient-viewer.php:341
+msgid "No transients found in the database. Expired entries may already have been removed, or the site may not use database transients."
+msgstr ""
+
+#. translators: %d: number of database rows
+#: include/transient-viewer.php:347
+#, php-format
+msgid "Database check: %d row with a transient prefix."
+msgid_plural "Database check: %d rows with a transient prefix."
+msgstr[0] ""
+msgstr[1] ""
+
+#: include/transient-viewer.php:360
+msgid "Key"
+msgstr ""
+
+#: include/transient-viewer.php:362
 msgid "Expires"
 msgstr ""
 
-#: include/transient-viewer.php:291
+#: include/transient-viewer.php:374
 msgid "No expiry"
 msgstr ""
 
 #. translators: %s: human-readable time difference
-#: include/transient-viewer.php:298
+#: include/transient-viewer.php:381
 #, php-format
 msgid "in %s"
 msgstr ""
 
-#: include/transient-viewer.php:307
+#: include/transient-viewer.php:390
 msgid "Delete"
 msgstr ""
 
-#: include/wp-config-debug.php:318
+#: include/wp-config-debug.php:439
+msgid "WP_DEBUG is off."
+msgstr ""
+
+#: include/wp-config-debug.php:441
+msgid "WP_DEBUG_LOG is off."
+msgstr ""
+
+#: include/wp-config-debug.php:447
+msgid "PHP does not report debug errors, so error filtering and test errors have no effect until WP_DEBUG is enabled."
+msgstr ""
+
+#: include/wp-config-debug.php:449
+msgid "WordPress does not write debug.log on its own. The plugin can still log to the path configured below."
+msgstr ""
+
+#: include/wp-config-debug.php:461
+msgid "Enable WP_DEBUG + WP_DEBUG_LOG"
+msgstr ""
+
+#: include/wp-config-debug.php:463
+msgid "Enable WP_DEBUG_LOG"
+msgstr ""
+
+#: include/wp-config-debug.php:468
+msgid "Writes to wp-config.php after creating a backup. WP_DEBUG_DISPLAY is switched off when debug mode is enabled for the first time."
+msgstr ""
+
+#: include/wp-config-debug.php:474
+msgid "Open WP_DEBUG settings"
+msgstr ""
+
+#: include/wp-config-debug.php:476
+msgid "wp-config.php is not writable, so the constants must be enabled manually."
+msgstr ""
+
+#: include/wp-config-debug.php:492
+#: include/wp-config-debug.php:495
+msgid "On"
+msgstr ""
+
+#: include/wp-config-debug.php:492
+#: include/wp-config-debug.php:495
+msgid "Off"
+msgstr ""
+
+#: include/wp-config-debug.php:510
 msgid "wp-config.php updated."
 msgstr ""
 
-#: include/wp-config-debug.php:322
+#: include/wp-config-debug.php:514
 msgid "wp-config.php is not writable."
 msgstr ""
 
-#: include/wp-config-debug.php:328
+#: include/wp-config-debug.php:520
 msgid "wp-config.php not found."
 msgstr ""
 
 #. translators: %s: file path
-#: include/wp-config-debug.php:336
+#: include/wp-config-debug.php:528
 #, php-format
 msgid "<strong>%s</strong> is not writable. Changes cannot be saved."
 msgstr ""
 
-#: include/wp-config-debug.php:349
+#: include/wp-config-debug.php:541
 msgid "wp-config.php constants"
 msgstr ""
 
-#: include/wp-config-debug.php:352
+#: include/wp-config-debug.php:544
 msgid "Editing:"
 msgstr ""
 
-#: include/wp-config-debug.php:359
+#: include/wp-config-debug.php:551
 msgid "Writable"
 msgstr ""
 
-#: include/wp-config-debug.php:359
+#: include/wp-config-debug.php:551
 msgid "Read-only"
 msgstr ""
 
-#: include/wp-config-debug.php:403
+#: include/wp-config-debug.php:595
 msgid "(not defined, will be added)"
 msgstr ""
 
-#: include/wp-config-debug.php:405
+#: include/wp-config-debug.php:597
 msgid "Current:"
 msgstr ""
 
-#: include/wp-config-debug.php:411
+#: include/wp-config-debug.php:603
 msgid "Custom log file path (relative to wp-content or absolute):"
 msgstr ""
 
-#: include/wp-config-debug.php:419
+#: include/wp-config-debug.php:611
 msgid "e.g. custom/debug.log - leave empty for true"
 msgstr ""
 
-#: include/wp-config-debug.php:432
+#: include/wp-config-debug.php:624
 msgid "Save to wp-config.php"
 msgstr ""

@@ -40,6 +40,33 @@ final class GDC_Constants_Viewer {
 	}
 
 	/**
+	 * Returns true when a constant name looks like it holds a secret.
+	 *
+	 * Exact names from sensitive_keys() are always masked. Additional
+	 * heuristics catch credentials defined by plugins and custom code.
+	 *
+	 * @param string   $name      Constant name.
+	 * @param string[] $sensitive Exact names to mask.
+	 * @return bool
+	 */
+	public static function is_sensitive_name( string $name, array $sensitive ): bool {
+		if ( in_array( $name, $sensitive, true ) ) {
+			return true;
+		}
+
+		$upper    = strtoupper( $name );
+		$patterns = array( 'PASSWORD', 'SECRET', 'PRIVATE_KEY', 'ACCESS_KEY', 'API_KEY', 'AUTH_KEY', 'SALT', 'TOKEN' );
+
+		foreach ( $patterns as $pattern ) {
+			if ( false !== strpos( $upper, $pattern ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Formats a single constant value for display, masking sensitive ones.
 	 *
 	 * @param string   $name      Constant name.
@@ -48,7 +75,7 @@ final class GDC_Constants_Viewer {
 	 * @return string
 	 */
 	public static function format_value( string $name, $value, array $sensitive ): string {
-		if ( in_array( $name, $sensitive, true ) ) {
+		if ( self::is_sensitive_name( $name, $sensitive ) ) {
 			return '*** (masked)';
 		}
 		if ( is_bool( $value ) ) {
@@ -67,7 +94,10 @@ final class GDC_Constants_Viewer {
 	}
 
 	/**
-	 * Returns WP-related constants grouped by category.
+	 * Returns all user-defined constants grouped by category.
+	 *
+	 * WordPress core constants get dedicated groups; constants defined by
+	 * plugins, themes, and custom code land in "Plugin & Theme".
 	 *
 	 * @return array<string, array<string, string>> Group label => [constant_name => display_value]
 	 */
@@ -77,13 +107,14 @@ final class GDC_Constants_Viewer {
 		$sensitive     = self::sensitive_keys();
 
 		$groups = array(
-			'Debug'        => array(),
-			'Performance'  => array(),
-			'Security'     => array(),
-			'Database'     => array(),
-			'Auth & Salts' => array(),
-			'Paths'        => array(),
-			'Other WP_*'   => array(),
+			'Debug'          => array(),
+			'Performance'    => array(),
+			'Security'       => array(),
+			'Database'       => array(),
+			'Auth & Salts'   => array(),
+			'Paths'          => array(),
+			'Other WP_*'     => array(),
+			'Plugin & Theme' => array(),
 		);
 
 		$debug_names = array(
@@ -152,8 +183,15 @@ final class GDC_Constants_Viewer {
 				$groups['Paths'][ $name ] = $display;
 			} elseif ( 0 === strpos( $name, 'WP_' ) ) {
 				$groups['Other WP_*'][ $name ] = $display;
+			} else {
+				$groups['Plugin & Theme'][ $name ] = $display;
 			}
 		}
+
+		foreach ( $groups as &$constants ) {
+			ksort( $constants, SORT_NATURAL | SORT_FLAG_CASE );
+		}
+		unset( $constants );
 
 		return array_filter( $groups );
 	}
@@ -181,37 +219,56 @@ final class GDC_Constants_Viewer {
 		<?php if ( empty( $groups ) ) : ?>
 			<div class="gdc-empty-state">
 				<span class="dashicons dashicons-editor-code" aria-hidden="true"></span>
-				<p><?php esc_html_e( 'No WP constants found.', 'globus-debug-control' ); ?></p>
+				<p><?php esc_html_e( 'No constants found.', 'globus-debug-control' ); ?></p>
 			</div>
 		<?php else : ?>
-			<div class="gdc-table-scroll">
-				<table class="wp-list-table widefat striped gdc-constants-table">
-					<thead>
-						<tr>
-							<th class="gdc-col-name"><?php esc_html_e( 'Constant', 'globus-debug-control' ); ?></th>
-							<th><?php esc_html_e( 'Value', 'globus-debug-control' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $groups as $group_label => $constants ) : ?>
-							<tr class="gdc-constant-group">
-								<th colspan="2" class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></th>
-							</tr>
-							<?php foreach ( $constants as $const_name => $const_value ) : ?>
-								<tr>
-									<td class="gdc-constant-name"><code><?php echo esc_html( $const_name ); ?></code></td>
-									<td>
-										<?php if ( '*** (masked)' === $const_value ) : ?>
-											<span class="gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
-										<?php else : ?>
-											<code><?php echo esc_html( $const_value ); ?></code>
-										<?php endif; ?>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
+			<?php
+			$total_constants = array_sum( array_map( 'count', $groups ) );
+			?>
+			<div class="gdc-constants-toolbar">
+				<label class="screen-reader-text" for="gdc-constants-filter"><?php esc_html_e( 'Filter constants', 'globus-debug-control' ); ?></label>
+				<input type="search" id="gdc-constants-filter" class="regular-text" placeholder="<?php esc_attr_e( 'Filter by constant name...', 'globus-debug-control' ); ?>">
+				<span class="gdc-constants-total">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: number of constants */
+							_n( '%s constant', '%s constants', $total_constants, 'globus-debug-control' ),
+							number_format_i18n( $total_constants )
+						)
+					);
+					?>
+				</span>
+			</div>
+
+			<div class="gdc-constants-groups">
+				<?php foreach ( $groups as $group_label => $constants ) : ?>
+					<?php $is_open = 'Plugin & Theme' !== $group_label; ?>
+					<details class="gdc-constants-group" data-default-open="<?php echo $is_open ? '1' : '0'; ?>" <?php echo $is_open ? 'open' : ''; ?>>
+						<summary>
+							<span class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></span>
+							<span class="gdc-badge"><?php echo esc_html( number_format_i18n( count( $constants ) ) ); ?></span>
+						</summary>
+						<div class="gdc-table-scroll">
+							<table class="wp-list-table widefat striped gdc-constants-table">
+								<tbody>
+									<?php foreach ( $constants as $const_name => $const_value ) : ?>
+										<tr class="gdc-constant-row" data-name="<?php echo esc_attr( strtolower( $const_name ) ); ?>">
+											<td class="gdc-constant-name"><code><?php echo esc_html( $const_name ); ?></code></td>
+											<td>
+												<?php if ( '*** (masked)' === $const_value ) : ?>
+													<span class="gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
+												<?php else : ?>
+													<code><?php echo esc_html( $const_value ); ?></code>
+												<?php endif; ?>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					</details>
+				<?php endforeach; ?>
 			</div>
 		<?php endif; ?>
 		<?php

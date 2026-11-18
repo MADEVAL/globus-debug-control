@@ -348,4 +348,51 @@ final class TransientViewerTest extends WordPressTestCase {
 		$this->assertStringContainsString('gdcTransient', $html);
 		$this->assertStringContainsString('gdc-cron-summary', $html);
 	}
+
+	public function testGetDiagnosticsReturnsExpectedShape(): void {
+		$diagnostics = \GDC_Transient_Viewer::get_diagnostics();
+
+		$this->assertArrayHasKey('external_cache', $diagnostics);
+		$this->assertArrayHasKey('cache_class', $diagnostics);
+		$this->assertArrayHasKey('db_error', $diagnostics);
+		$this->assertArrayHasKey('transient_like_rows', $diagnostics);
+		$this->assertFalse($diagnostics['external_cache']);
+	}
+
+	public function testRenderExplainsObjectCacheWhenExternalCacheIsActive(): void {
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [];
+		$GLOBALS['gdc_test_state']['external_object_cache'] = true;
+
+		ob_start();
+		\GDC_Transient_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('gdc-transient-cache-notice', $html);
+		$this->assertStringContainsString('persistent object cache', strtolower($html));
+		$this->assertStringContainsString('not an error', strtolower($html));
+	}
+
+	public function testRenderShowsDatabaseError(): void {
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [];
+		$GLOBALS['wpdb']->last_error = 'Table is marked as crashed';
+
+		ob_start();
+		\GDC_Transient_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('Transient query failed', $html);
+		$this->assertStringContainsString('Table is marked as crashed', $html);
+	}
+
+	public function testRenderExplainsTransientLikeRowsWhenListIsEmpty(): void {
+		$GLOBALS['gdc_test_state']['wpdb_results'] = [];
+		$GLOBALS['gdc_test_state']['wpdb_var_queue'] = ['3'];
+
+		ob_start();
+		\GDC_Transient_Viewer::render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('transient-like', $html);
+		$this->assertStringContainsString('3', $html);
+	}
 }

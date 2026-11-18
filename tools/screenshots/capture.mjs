@@ -88,7 +88,7 @@ const SCREENS = [
 		slug: 'constants',
 		template: '08-constants.html',
 		tab: 'constants',
-		caption: 'Constants tab: runtime WordPress constants grouped by category, with secrets masked.',
+		caption: 'Constants tab: every runtime constant, including plugin and theme constants, with filtering and secret masking.',
 	},
 ];
 

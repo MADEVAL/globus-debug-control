@@ -117,10 +117,10 @@
 			"theme": "dark",
 			"eyebrow": "Constants",
 			"headline": "Every runtime constant in one place",
-			"lead": "Debug, security, database, auth and path constants grouped by category.",
+			"lead": "Debug, security, database, auth, path, plugin and theme constants grouped by category.",
 			"bullets": [
-				"Database passwords, auth keys and salts stay masked",
-				"Grouped by category for fast scanning",
+				"Filter by name and collapse groups you do not need",
+				"Database passwords, auth keys, tokens and API keys stay masked",
 				"Read-only reference - nothing is changed"
 			],
 			"address": "example.com/wp-admin - Settings - Constants"

@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class GDC_WpConfig_Debug {
 
 	private const NONCE_ACTION = 'gdc_wp_config_debug';
+	private const QUICK_NONCE  = 'gdc_quick_debug_enable';
 
 	private const CONSTANTS = array(
 		'WP_DEBUG'         => array(
@@ -304,6 +305,197 @@ final class GDC_WpConfig_Debug {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Returns true when PHP currently reports errors, i.e. WP_DEBUG is on.
+	 *
+	 * @return bool
+	 */
+	public static function is_wp_debug_on(): bool {
+		return defined( 'WP_DEBUG' ) && WP_DEBUG;
+	}
+
+	/**
+	 * Returns the raw WP_DEBUG_LOG value, or null when the constant is absent.
+	 *
+	 * @return bool|string|null
+	 */
+	public static function get_wp_debug_log_value() {
+		return defined( 'WP_DEBUG_LOG' ) ? WP_DEBUG_LOG : null;
+	}
+
+	/**
+	 * Returns true when WP_DEBUG_LOG points at a file (true or a path).
+	 *
+	 * @return bool
+	 */
+	public static function is_wp_debug_log_on(): bool {
+		$value = self::get_wp_debug_log_value();
+
+		return true === $value || 1 === $value || ( is_string( $value ) && '' !== $value );
+	}
+
+	/**
+	 * Handles the one-click "enable debug logging" form.
+	 *
+	 * Enables WP_DEBUG and WP_DEBUG_LOG in wp-config.php, and turns
+	 * WP_DEBUG_DISPLAY off when debug mode is being enabled for the first
+	 * time, so visitors never see raw PHP errors.
+	 */
+	public static function handle_quick_enable_action(): void {
+		if ( ! isset( $_POST['gdc_quick_debug'] ) ) {
+			return;
+		}
+
+		check_admin_referer( self::QUICK_NONCE );
+
+		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
+			return;
+		}
+
+		$return_tab = isset( $_POST['gdc_return_tab'] ) ? sanitize_key( wp_unslash( $_POST['gdc_return_tab'] ) ) : 'wpcfg';
+		if ( ! in_array( $return_tab, array( 'settings', 'wpcfg', 'log' ), true ) ) {
+			$return_tab = 'wpcfg';
+		}
+
+		$config_path = self::find_wp_config();
+
+		if ( empty( $config_path ) || ! wp_is_writable( $config_path ) ) {
+			wp_safe_redirect(
+				add_query_arg(
+					array(
+						'page'          => 'globus-debug-control',
+						'tab'           => 'wpcfg',
+						'gdc_cfg_error' => 'nowrite',
+					),
+					admin_url( 'options-general.php' )
+				)
+			);
+			exit;
+		}
+
+		self::backup_wp_config( $config_path );
+
+		$was_debug_on = self::is_wp_debug_on();
+		$log_was_on   = self::is_wp_debug_log_on();
+
+		$saved_debug = self::set_constant( $config_path, 'WP_DEBUG', 'true' );
+		// Keep an existing custom log path; only write `true` when logging is off.
+		$saved_log = $log_was_on ? true : self::set_constant( $config_path, 'WP_DEBUG_LOG', 'true' );
+		$saved     = $saved_debug && $saved_log;
+
+		// Only hide on-screen errors on the initial switch. Do not overwrite an
+		// explicit WP_DEBUG_DISPLAY choice the user already made.
+		if ( ! $was_debug_on ) {
+			self::set_constant( $config_path, 'WP_DEBUG_DISPLAY', 'false' );
+		}
+
+		$args = array(
+			'page' => 'globus-debug-control',
+			'tab'  => $return_tab,
+		);
+
+		if ( $saved ) {
+			$args['gdc_debug_enabled'] = '1';
+		} else {
+			$args['gdc_cfg_error'] = 'nowrite';
+		}
+
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );
+		exit;
+	}
+
+	/**
+	 * Renders a warning plus a one-click fix when debug constants are missing.
+	 *
+	 * Safe to call outside the settings <form>: the action is its own form.
+	 *
+	 * @param string $return_tab Tab to return to after the action.
+	 */
+	public static function render_dependency_notice( string $return_tab = 'wpcfg' ): void {
+		$wp_debug     = self::is_wp_debug_on();
+		$wp_debug_log = self::is_wp_debug_log_on();
+
+		if ( $wp_debug && $wp_debug_log ) {
+			return;
+		}
+
+		$config_path = self::find_wp_config();
+		$writable    = ! empty( $config_path ) && wp_is_writable( $config_path );
+		$wpcfg_url   = add_query_arg(
+			array(
+				'page' => 'globus-debug-control',
+				'tab'  => 'wpcfg',
+			),
+			admin_url( 'options-general.php' )
+		);
+		?>
+		<div class="notice <?php echo $wp_debug ? 'notice-info' : 'notice-warning'; ?> gdc-debug-dependency">
+			<p>
+				<strong>
+					<?php
+					if ( ! $wp_debug ) {
+						esc_html_e( 'WP_DEBUG is off.', 'globus-debug-control' );
+					} else {
+						esc_html_e( 'WP_DEBUG_LOG is off.', 'globus-debug-control' );
+					}
+					?>
+				</strong>
+				<?php
+				if ( ! $wp_debug ) {
+					esc_html_e( 'PHP does not report debug errors, so error filtering and test errors have no effect until WP_DEBUG is enabled.', 'globus-debug-control' );
+				} else {
+					esc_html_e( 'WordPress does not write debug.log on its own. The plugin can still log to the path configured below.', 'globus-debug-control' );
+				}
+				?>
+			</p>
+			<?php if ( $writable ) : ?>
+				<form method="post" class="gdc-quick-debug-form">
+					<?php wp_nonce_field( self::QUICK_NONCE ); ?>
+					<input type="hidden" name="gdc_quick_debug" value="1">
+					<input type="hidden" name="gdc_return_tab" value="<?php echo esc_attr( $return_tab ); ?>">
+					<button type="submit" class="button button-primary">
+						<?php
+						if ( ! $wp_debug ) {
+							esc_html_e( 'Enable WP_DEBUG + WP_DEBUG_LOG', 'globus-debug-control' );
+						} else {
+							esc_html_e( 'Enable WP_DEBUG_LOG', 'globus-debug-control' );
+						}
+						?>
+					</button>
+					<span class="description">
+						<?php esc_html_e( 'Writes to wp-config.php after creating a backup. WP_DEBUG_DISPLAY is switched off when debug mode is enabled for the first time.', 'globus-debug-control' ); ?>
+					</span>
+				</form>
+			<?php else : ?>
+				<p>
+					<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="button button-secondary">
+						<?php esc_html_e( 'Open WP_DEBUG settings', 'globus-debug-control' ); ?>
+					</a>
+					<span class="description"><?php esc_html_e( 'wp-config.php is not writable, so the constants must be enabled manually.', 'globus-debug-control' ); ?></span>
+				</p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Prints compact WP_DEBUG / WP_DEBUG_LOG status badges.
+	 */
+	public static function render_status_badges(): void {
+		$wp_debug     = self::is_wp_debug_on();
+		$wp_debug_log = self::is_wp_debug_log_on();
+		?>
+		<span class="gdc-wpcfg-status">
+			<span class="gdc-badge <?php echo $wp_debug ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
+				WP_DEBUG: <?php echo $wp_debug ? esc_html__( 'On', 'globus-debug-control' ) : esc_html__( 'Off', 'globus-debug-control' ); ?>
+			</span>
+			<span class="gdc-badge <?php echo $wp_debug_log ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
+				WP_DEBUG_LOG: <?php echo $wp_debug_log ? esc_html__( 'On', 'globus-debug-control' ) : esc_html__( 'Off', 'globus-debug-control' ); ?>
+			</span>
+		</span>
+		<?php
 	}
 
 	/**

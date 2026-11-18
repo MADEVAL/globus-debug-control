@@ -116,6 +116,19 @@ trait GDC_Admin_Page {
 
 			<hr class="wp-header-end">
 
+			<?php
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flags after a nonce-verified redirect.
+			if ( isset( $_GET['gdc_debug_enabled'] ) ) {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'WP_DEBUG and WP_DEBUG_LOG are enabled in wp-config.php.', 'globus-debug-control' ) . '</p></div>';
+			}
+
+			// The WP_DEBUG tab renders its own error notice; avoid showing it twice.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag.
+			if ( isset( $_GET['gdc_cfg_error'] ) && 'wpcfg' !== $active_tab ) {
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'wp-config.php could not be updated. Check that it is writable, then try again.', 'globus-debug-control' ) . '</p></div>';
+			}
+			?>
+
 			<nav class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
 					<a
@@ -140,6 +153,8 @@ trait GDC_Admin_Page {
 			<div class="gdc-tab-content">
 
 			<?php if ( 'settings' === $active_tab ) : ?>
+
+				<?php GDC_WpConfig_Debug::render_dependency_notice( 'settings' ); ?>
 
 				<form action="options.php" method="post">
 					<?php
