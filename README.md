@@ -147,6 +147,7 @@ globus-debug-control/     deployable plugin (this is what ships)
   assets/                   admin CSS and JS
   languages/                translation template
 tests/                    PHPUnit tests
+tools/mcp-smoke-test.mjs  read-only MCP smoke test
 tools/screenshots/        Playwright renderer for screenshots, banners and the OG card
 docs/screenshots/         generated WordPress.org screenshots
 docs/wordpress-org/       icons and banners for the WordPress.org listing
@@ -160,7 +161,9 @@ composer cs-fix           # auto-fix with PHPCBF
 composer pot              # regenerate languages/globus-debug-control.pot (WP-CLI)
 ```
 
-Run `composer cs` and `composer test` before committing.
+Run `composer cs` and `composer test` before committing. For the live WordPress,
+MCP, Redis/Memcached, multisite and release procedures, see
+[`docs/TESTING.md`](docs/TESTING.md).
 
 ### Media
 
