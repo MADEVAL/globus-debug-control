@@ -187,7 +187,7 @@ final class ConstantsViewerTest extends WordPressTestCase {
 		\GDC_Constants_Viewer::render();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString('tab=wpcfg', $html);
+		$this->assertStringContainsString('page=gdc-wp-debug', $html);
 	}
 
 	public function testRenderMaskedValuesUseMaskedClass(): void {

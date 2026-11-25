@@ -66,6 +66,7 @@ function gdc_test_default_state(): array {
 		'settings_fields' => [],
 		'options_pages' => [],
 		'menu_pages' => [],
+		'submenu_pages' => [],
 		'dashboard_widgets' => [],
 		'registered_styles' => [],
 		'registered_scripts' => [],
@@ -452,8 +453,18 @@ if (! function_exists('add_options_page')) {
 }
 
 if (! function_exists('add_menu_page')) {
-	function add_menu_page($page_title, $menu_title, $capability, $menu_slug, $callback = '', $icon_url = '', $position = null): void {
-		$GLOBALS['gdc_test_state']['menu_pages'][] = compact('page_title', 'menu_title', 'capability', 'menu_slug', 'callback', 'icon_url', 'position');
+	function add_menu_page($page_title, $menu_title, $capability, $menu_slug, $callback = '', $icon_url = '', $position = null): string {
+		$hook = 'toplevel_page_' . $menu_slug;
+		$GLOBALS['gdc_test_state']['menu_pages'][] = compact('page_title', 'menu_title', 'capability', 'menu_slug', 'callback', 'icon_url', 'position', 'hook');
+		return $hook;
+	}
+}
+
+if (! function_exists('add_submenu_page')) {
+	function add_submenu_page($parent_slug, $page_title, $menu_title, $capability, $menu_slug, $callback = '', $position = null): string {
+		$hook = $parent_slug . '_page_' . $menu_slug;
+		$GLOBALS['gdc_test_state']['submenu_pages'][] = compact('parent_slug', 'page_title', 'menu_title', 'capability', 'menu_slug', 'callback', 'position', 'hook');
+		return $hook;
 	}
 }
 

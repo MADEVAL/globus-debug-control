@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-25T19:49:50+00:00\n"
+"POT-Creation-Date: 2026-11-25T19:58:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: globus-debug-control\n"
@@ -41,9 +41,9 @@ msgid "https://leonidov.dev"
 msgstr ""
 
 #: globus-debug-control.php:172
-#: include/trait-admin-page.php:240
-#: include/ui/class-gdc-ui.php:68
-#: include/ui/class-gdc-ui.php:194
+#: include/trait-admin-page.php:282
+#: include/ui/class-gdc-ui.php:97
+#: include/ui/class-gdc-ui.php:231
 #: include/ui/partials/header.php:41
 #: include/ui/partials/overview-tab.php:35
 #: include/ui/partials/settings-tab.php:43
@@ -178,7 +178,7 @@ msgid "No constants supplied."
 msgstr ""
 
 #: include/abilities.php:332
-#: include/wp-config-debug.php:352
+#: include/wp-config-debug.php:348
 msgid "wp-config.php is missing or not writable."
 msgstr ""
 
@@ -301,31 +301,31 @@ msgstr ""
 msgid "Install the early-loader mu-plugin dropin so settings apply before regular plugins load."
 msgstr ""
 
-#: include/constants-viewer.php:215
+#: include/constants-viewer.php:209
 msgid "WP_DEBUG settings"
 msgstr ""
 
-#: include/constants-viewer.php:222
+#: include/constants-viewer.php:216
 msgid "No constants found."
 msgstr ""
 
-#: include/constants-viewer.php:229
+#: include/constants-viewer.php:223
 msgid "Filter constants"
 msgstr ""
 
-#: include/constants-viewer.php:230
+#: include/constants-viewer.php:224
 msgid "Filter by constant name..."
 msgstr ""
 
 #. translators: %s: number of constants
-#: include/constants-viewer.php:236
+#: include/constants-viewer.php:230
 #, php-format
 msgid "%s constant"
 msgid_plural "%s constants"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/constants-viewer.php:260
+#: include/constants-viewer.php:254
 msgid "*** (masked)"
 msgstr ""
 
@@ -421,8 +421,8 @@ msgid "Delete event"
 msgstr ""
 
 #: include/cron-viewer.php:217
-#: include/trait-admin-page.php:418
-#: include/ui/class-gdc-ui.php:388
+#: include/trait-admin-page.php:471
+#: include/ui/class-gdc-ui.php:425
 #: include/ui/partials/overview-tab.php:232
 msgid "Disabled"
 msgstr ""
@@ -432,8 +432,8 @@ msgid "Alternate"
 msgstr ""
 
 #: include/cron-viewer.php:221
-#: include/trait-admin-page.php:417
-#: include/ui/class-gdc-ui.php:388
+#: include/trait-admin-page.php:470
+#: include/ui/class-gdc-ui.php:425
 msgid "Enabled"
 msgstr ""
 
@@ -561,30 +561,30 @@ msgstr ""
 msgid "Transport"
 msgstr ""
 
-#: include/log-viewer.php:88
+#: include/log-viewer.php:79
 msgid "Insufficient permissions."
 msgstr ""
 
-#: include/log-viewer.php:94
+#: include/log-viewer.php:85
 msgid "Log file not found."
 msgstr ""
 
-#: include/log-viewer.php:275
+#: include/log-viewer.php:266
 msgid "Log file cleared."
 msgstr ""
 
-#: include/log-viewer.php:284
+#: include/log-viewer.php:275
 msgid "Test errors are disabled because WP_DEBUG or error logging is off. Enable both to confirm that log writing works."
 msgstr ""
 
-#: include/log-viewer.php:298
-#: include/trait-admin-page.php:91
+#: include/log-viewer.php:289
+#: include/trait-admin-page.php:133
 msgid "Last fatal error:"
 msgstr ""
 
 #. translators: %s: number of log lines
-#: include/log-viewer.php:330
-#: include/log-viewer.php:437
+#: include/log-viewer.php:321
+#: include/log-viewer.php:421
 #: include/ui/partials/overview-tab.php:111
 #, php-format
 msgid "%s line"
@@ -592,59 +592,59 @@ msgid_plural "%s lines"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/log-viewer.php:332
+#: include/log-viewer.php:323
 msgid "Log file does not exist."
 msgstr ""
 
-#: include/log-viewer.php:339
+#: include/log-viewer.php:330
 msgid "Word wrap"
 msgstr ""
 
-#: include/log-viewer.php:358
+#: include/log-viewer.php:342
 msgid "Download"
 msgstr ""
 
-#: include/log-viewer.php:363
+#: include/log-viewer.php:347
 msgid "Clear the log file?"
 msgstr ""
 
-#: include/log-viewer.php:364
+#: include/log-viewer.php:348
 msgid "Clear Log"
 msgstr ""
 
-#: include/log-viewer.php:384
+#: include/log-viewer.php:368
 msgid "Test error"
 msgstr ""
 
-#: include/log-viewer.php:390
+#: include/log-viewer.php:374
 msgid "Enable WP_DEBUG and error logging first."
 msgstr ""
 
-#: include/log-viewer.php:391
+#: include/log-viewer.php:375
 msgid "Generate"
 msgstr ""
 
-#: include/log-viewer.php:395
+#: include/log-viewer.php:379
 msgid "Auto-refresh when log file changes"
 msgstr ""
 
-#: include/log-viewer.php:397
+#: include/log-viewer.php:381
 msgid "Live tail"
 msgstr ""
 
-#: include/log-viewer.php:407
+#: include/log-viewer.php:391
 msgid "The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything."
 msgstr ""
 
-#: include/log-viewer.php:463
+#: include/log-viewer.php:441
 msgid "Log file is empty. WP_DEBUG is off, so PHP does not report new errors."
 msgstr ""
 
-#: include/log-viewer.php:465
+#: include/log-viewer.php:443
 msgid "Log file is empty. Error logging is disabled in the plugin settings."
 msgstr ""
 
-#: include/log-viewer.php:467
+#: include/log-viewer.php:445
 msgid "Log file is empty."
 msgstr ""
 
@@ -738,7 +738,7 @@ msgid "The log is close to the rotation limit."
 msgstr ""
 
 #: include/overview.php:290
-#: include/ui/class-gdc-ui.php:135
+#: include/ui/class-gdc-ui.php:172
 msgid "Diagnostics"
 msgstr ""
 
@@ -826,78 +826,84 @@ msgstr ""
 msgid "Critical"
 msgstr ""
 
-#: include/trait-admin-page.php:27
+#: include/trait-admin-page.php:38
 msgid "GLOBUS Debug"
 msgstr ""
 
-#: include/trait-admin-page.php:76
+#. translators: %s: module label
+#: include/trait-admin-page.php:51
+#, php-format
+msgid "%s - GLOBUS Debug Control"
+msgstr ""
+
+#: include/trait-admin-page.php:118
 msgid "GLOBUS: Recent Errors"
 msgstr ""
 
-#: include/trait-admin-page.php:97
+#: include/trait-admin-page.php:139
 #: include/ui/partials/overview-tab.php:287
 msgid "No fatal errors recorded."
 msgstr ""
 
-#: include/trait-admin-page.php:101
+#: include/trait-admin-page.php:143
 msgid "Open Error Log"
 msgstr ""
 
-#: include/trait-admin-page.php:193
-#: include/trait-admin-page.php:207
-#: include/ui/class-gdc-ui.php:74
+#: include/trait-admin-page.php:235
+#: include/trait-admin-page.php:249
+#: include/ui/class-gdc-ui.php:104
 #: include/ui/partials/overview-tab.php:92
 msgid "WP_DEBUG"
 msgstr ""
 
-#: include/trait-admin-page.php:194
+#: include/trait-admin-page.php:236
 msgid "Toggle wp-config.php constants without editing files or using FTP."
 msgstr ""
 
-#: include/trait-admin-page.php:199
+#: include/trait-admin-page.php:241
 msgid "All constants"
 msgstr ""
 
-#: include/trait-admin-page.php:398
+#: include/trait-admin-page.php:451
 msgid "Nothing found"
 msgstr ""
 
-#: include/trait-admin-page.php:399
+#: include/trait-admin-page.php:452
 msgid "Please confirm"
 msgstr ""
 
-#: include/trait-admin-page.php:400
+#: include/trait-admin-page.php:453
 msgid "Cancel"
 msgstr ""
 
-#: include/trait-admin-page.php:401
+#: include/trait-admin-page.php:454
 msgid "Confirm"
 msgstr ""
 
-#: include/trait-admin-page.php:402
+#: include/trait-admin-page.php:455
 #: include/ui/partials/palette.php:17
 msgid "Close"
 msgstr ""
 
-#: include/trait-admin-page.php:403
+#: include/trait-admin-page.php:456
 msgid "Copied to clipboard."
 msgstr ""
 
-#: include/trait-admin-page.php:404
+#: include/trait-admin-page.php:457
 msgid "Saved."
 msgstr ""
 
-#: include/trait-admin-page.php:405
+#: include/trait-admin-page.php:458
 #: include/ui/partials/overview-tab.php:60
 msgid "Debug control is active"
 msgstr ""
 
-#: include/trait-admin-page.php:406
+#: include/trait-admin-page.php:459
 #: include/ui/partials/overview-tab.php:60
 msgid "Debug control is paused"
 msgstr ""
 
-#: include/trait-admin-page.php:407
+#: include/trait-admin-page.php:460
 msgid "Request failed. Please try again."
 msgstr ""
 
@@ -1167,134 +1173,134 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:62
+#: include/ui/class-gdc-ui.php:90
 #: include/ui/partials/overview-tab.php:29
 #: include/ui/partials/overview-tab.php:47
 msgid "Overview"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:63
+#: include/ui/class-gdc-ui.php:91
 msgid "Health, log and diagnostics at a glance."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:69
+#: include/ui/class-gdc-ui.php:98
 msgid "Filter PHP errors, control display and logging."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:75
+#: include/ui/class-gdc-ui.php:105
 msgid "Toggle wp-config.php constants without editing files."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:80
+#: include/ui/class-gdc-ui.php:111
 #: include/ui/partials/header.php:38
 msgid "Error Log"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:81
+#: include/ui/class-gdc-ui.php:112
 msgid "Read, search and clear the PHP error log."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:86
+#: include/ui/class-gdc-ui.php:118
 msgid "Cron Tasks"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:87
+#: include/ui/class-gdc-ui.php:119
 msgid "Inspect scheduled events and remove orphaned hooks."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:92
+#: include/ui/class-gdc-ui.php:125
 msgid "Transients"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:93
+#: include/ui/class-gdc-ui.php:126
 msgid "List stored transients and purge expired rows."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:98
+#: include/ui/class-gdc-ui.php:132
 msgid "Autoloaded Options"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:99
+#: include/ui/class-gdc-ui.php:133
 msgid "Find options that inflate every page load."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:104
+#: include/ui/class-gdc-ui.php:139
 msgid "HTTP Log"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:105
+#: include/ui/class-gdc-ui.php:140
 msgid "Review outgoing HTTP API requests and failures."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:110
+#: include/ui/class-gdc-ui.php:146
 msgid "Constants"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:111
+#: include/ui/class-gdc-ui.php:147
 msgid "Browse defined PHP constants with masked secrets."
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:131
+#: include/ui/class-gdc-ui.php:168
 msgid "Control"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:179
+#: include/ui/class-gdc-ui.php:216
 msgid "Enable plugin"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:180
+#: include/ui/class-gdc-ui.php:217
 msgid "Error type filtering"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:181
+#: include/ui/class-gdc-ui.php:218
 #: include/ui/partials/settings-tab.php:150
 msgid "display_errors mode"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:182
+#: include/ui/class-gdc-ui.php:219
 msgid "Error logging"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:183
+#: include/ui/class-gdc-ui.php:220
 #: include/ui/partials/settings-tab.php:203
 msgid "Log file path"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:184
+#: include/ui/class-gdc-ui.php:221
 #: include/ui/partials/settings-tab.php:218
 msgid "Maximum log size"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:185
+#: include/ui/class-gdc-ui.php:222
 msgid "php-error body class"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:186
+#: include/ui/class-gdc-ui.php:223
 msgid "API contexts"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:187
+#: include/ui/class-gdc-ui.php:224
 msgid "Early error interception"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:188
+#: include/ui/class-gdc-ui.php:225
 #: include/ui/partials/settings-tab.php:252
 msgid "System information"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:236
-#: include/wp-config-debug.php:505
-#: include/wp-config-debug.php:508
+#: include/ui/class-gdc-ui.php:273
+#: include/wp-config-debug.php:492
+#: include/wp-config-debug.php:495
 msgid "On"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:237
-#: include/wp-config-debug.php:505
-#: include/wp-config-debug.php:508
+#: include/ui/class-gdc-ui.php:274
+#: include/wp-config-debug.php:492
+#: include/wp-config-debug.php:495
 msgid "Off"
 msgstr ""
 
-#: include/ui/class-gdc-ui.php:281
+#: include/ui/class-gdc-ui.php:318
 msgid "Help"
 msgstr ""
 
@@ -1679,140 +1685,140 @@ msgstr ""
 msgid "Press Ctrl+K for search"
 msgstr ""
 
-#: include/wp-config-debug.php:361
+#: include/wp-config-debug.php:357
 msgid "Could not update WP_DEBUG in wp-config.php."
 msgstr ""
 
-#: include/wp-config-debug.php:367
+#: include/wp-config-debug.php:363
 msgid "Could not update WP_DEBUG_LOG in wp-config.php."
 msgstr ""
 
-#: include/wp-config-debug.php:452
+#: include/wp-config-debug.php:439
 msgid "WP_DEBUG is off."
 msgstr ""
 
-#: include/wp-config-debug.php:454
+#: include/wp-config-debug.php:441
 msgid "WP_DEBUG_LOG is off."
 msgstr ""
 
-#: include/wp-config-debug.php:460
+#: include/wp-config-debug.php:447
 msgid "PHP does not report debug errors, so error filtering and test errors have no effect until WP_DEBUG is enabled."
 msgstr ""
 
-#: include/wp-config-debug.php:462
+#: include/wp-config-debug.php:449
 msgid "WordPress does not write debug.log on its own. The plugin can still log to the path configured below."
 msgstr ""
 
-#: include/wp-config-debug.php:474
+#: include/wp-config-debug.php:461
 msgid "Enable WP_DEBUG + WP_DEBUG_LOG"
 msgstr ""
 
-#: include/wp-config-debug.php:476
+#: include/wp-config-debug.php:463
 msgid "Enable WP_DEBUG_LOG"
 msgstr ""
 
-#: include/wp-config-debug.php:481
+#: include/wp-config-debug.php:468
 msgid "Writes to wp-config.php after creating a backup. WP_DEBUG_DISPLAY is switched off when debug mode is enabled for the first time."
 msgstr ""
 
-#: include/wp-config-debug.php:487
+#: include/wp-config-debug.php:474
 msgid "Open WP_DEBUG settings"
 msgstr ""
 
-#: include/wp-config-debug.php:489
+#: include/wp-config-debug.php:476
 msgid "wp-config.php is not writable, so the constants must be enabled manually."
 msgstr ""
 
-#: include/wp-config-debug.php:524
+#: include/wp-config-debug.php:511
 msgid "wp-config.php updated."
 msgstr ""
 
-#: include/wp-config-debug.php:529
+#: include/wp-config-debug.php:516
 msgid "wp-config.php is not writable."
 msgstr ""
 
-#: include/wp-config-debug.php:540
+#: include/wp-config-debug.php:527
 msgid "wp-config.php not found. The constants cannot be read or changed."
 msgstr ""
 
 #. translators: %s: file path
-#: include/wp-config-debug.php:548
+#: include/wp-config-debug.php:535
 #, php-format
 msgid "%s is not writable. Changes cannot be saved until the file permissions are fixed."
 msgstr ""
 
-#: include/wp-config-debug.php:560
+#: include/wp-config-debug.php:547
 msgid "wp-config.php constants"
 msgstr ""
 
-#: include/wp-config-debug.php:565
+#: include/wp-config-debug.php:552
 msgid "Writable"
 msgstr ""
 
-#: include/wp-config-debug.php:565
+#: include/wp-config-debug.php:552
 msgid "Read-only"
 msgstr ""
 
-#: include/wp-config-debug.php:586
+#: include/wp-config-debug.php:573
 msgid "Not defined yet. It will be added on save."
 msgstr ""
 
-#: include/wp-config-debug.php:588
+#: include/wp-config-debug.php:575
 msgid "Current:"
 msgstr ""
 
-#: include/wp-config-debug.php:594
+#: include/wp-config-debug.php:581
 msgid "Custom log file path"
 msgstr ""
 
-#: include/wp-config-debug.php:594
+#: include/wp-config-debug.php:581
 msgid "Relative to wp-content or an absolute path. Leave empty to write to the default debug.log."
 msgstr ""
 
-#: include/wp-config-debug.php:601
+#: include/wp-config-debug.php:588
 msgid "e.g. custom/debug.log - leave empty for true"
 msgstr ""
 
-#: include/wp-config-debug.php:615
+#: include/wp-config-debug.php:602
 msgid "A timestamped backup is created before every write."
 msgstr ""
 
-#: include/wp-config-debug.php:618
+#: include/wp-config-debug.php:605
 msgid "Save to wp-config.php"
 msgstr ""
 
-#: include/wp-config-debug.php:627
+#: include/wp-config-debug.php:614
 msgid "How writes work"
 msgstr ""
 
-#: include/wp-config-debug.php:631
+#: include/wp-config-debug.php:618
 msgid "A backup copy named wp-config.php.gdc-backup-YYYYmmdd-HHMMSS is written next to the file."
 msgstr ""
 
-#: include/wp-config-debug.php:635
+#: include/wp-config-debug.php:622
 msgid "Commented-out defines are never touched. Only the first active define is updated."
 msgstr ""
 
-#: include/wp-config-debug.php:639
+#: include/wp-config-debug.php:626
 msgid "Missing constants are inserted before the \"stop editing\" marker."
 msgstr ""
 
-#: include/wp-config-debug.php:645
+#: include/wp-config-debug.php:632
 msgid "Related screens"
 msgstr ""
 
-#: include/wp-config-debug.php:647
+#: include/wp-config-debug.php:634
 msgid "Error log"
 msgstr ""
 
-#: include/wp-config-debug.php:648
+#: include/wp-config-debug.php:635
 msgid "All PHP constants"
 msgstr ""
 
-#: include/wp-config-debug.php:649
+#: include/wp-config-debug.php:636
 msgid "Plugin settings"
 msgstr ""
 
-#: include/wp-config-debug.php:652
+#: include/wp-config-debug.php:639
 msgid "Runtime values are read from the constants above, not from the plugin options."
 msgstr ""

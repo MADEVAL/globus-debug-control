@@ -253,13 +253,9 @@ final class GDC_WpConfig_Debug {
 
 		if ( empty( $config_path ) || ! wp_is_writable( $config_path ) ) {
 			wp_safe_redirect(
-				add_query_arg(
-					array(
-						'page'          => 'globus-debug-control',
-						'tab'           => 'wpcfg',
-						'gdc_cfg_error' => 'nowrite',
-					),
-					admin_url( 'admin.php' )
+				GDC_UI::module_url(
+					'wpcfg',
+					array( 'gdc_cfg_error' => 'nowrite' )
 				)
 			);
 			exit;
@@ -404,10 +400,7 @@ final class GDC_WpConfig_Debug {
 
 		$result = self::enable_debug_logging();
 
-		$args = array(
-			'page' => 'globus-debug-control',
-			'tab'  => $return_tab,
-		);
+		$args = array();
 
 		if ( is_wp_error( $result ) ) {
 			$args['gdc_cfg_error'] = 'nowrite';
@@ -415,7 +408,7 @@ final class GDC_WpConfig_Debug {
 			$args['gdc_debug_enabled'] = '1';
 		}
 
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( GDC_UI::module_url( $return_tab, $args ) );
 		exit;
 	}
 
@@ -436,13 +429,7 @@ final class GDC_WpConfig_Debug {
 
 		$config_path = self::find_wp_config();
 		$writable    = ! empty( $config_path ) && wp_is_writable( $config_path );
-		$wpcfg_url   = add_query_arg(
-			array(
-				'page' => 'globus-debug-control',
-				'tab'  => 'wpcfg',
-			),
-			admin_url( 'admin.php' )
-		);
+		$wpcfg_url   = GDC_UI::module_url( 'wpcfg' );
 		?>
 		<div class="notice <?php echo $wp_debug ? 'notice-info' : 'notice-warning'; ?> gdc-debug-dependency">
 			<p>

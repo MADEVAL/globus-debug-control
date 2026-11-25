@@ -41,7 +41,7 @@ final class GDC_Overview {
 			'size'     => $log_size,
 			'lines'    => self::count_lines( $log_path, $log_exists ),
 			'severity' => self::log_severity( $log_path, $log_exists ),
-			'writable' => '' !== $log_path && is_writable( dirname( $log_path ) ),
+			'writable' => '' !== $log_path && wp_is_writable( dirname( $log_path ) ),
 		);
 
 		$transients = GDC_Transient_Viewer::get_transients();

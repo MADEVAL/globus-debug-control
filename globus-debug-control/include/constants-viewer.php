@@ -201,13 +201,7 @@ final class GDC_Constants_Viewer {
 	 */
 	public static function render(): void {
 		$groups    = self::get_wp_constants();
-		$wpcfg_url = add_query_arg(
-			array(
-				'page' => 'globus-debug-control',
-				'tab'  => 'wpcfg',
-			),
-			admin_url( 'admin.php' )
-		);
+		$wpcfg_url = GDC_UI::module_url( 'wpcfg' );
 		?>
 		<p>
 			<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="button button-secondary">

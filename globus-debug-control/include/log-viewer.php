@@ -61,16 +61,7 @@ final class GDC_Log_Viewer {
 			file_put_contents( $path, '' );
 		}
 
-		wp_safe_redirect(
-			add_query_arg(
-				array(
-					'page'    => 'globus-debug-control',
-					'tab'     => 'log',
-					'cleared' => '1',
-				),
-				admin_url( 'admin.php' )
-			)
-		);
+		wp_safe_redirect( GDC_UI::module_url( 'log', array( 'cleared' => '1' ) ) );
 		exit;
 	}
 
@@ -342,14 +333,7 @@ final class GDC_Log_Viewer {
 							<?php
 							echo esc_url(
 								wp_nonce_url(
-									add_query_arg(
-										array(
-											'page'   => 'globus-debug-control',
-											'tab'    => 'log',
-											'gdc_dl' => '1',
-										),
-										admin_url( 'admin.php' )
-									),
+									GDC_UI::module_url( 'log', array( 'gdc_dl' => '1' ) ),
 									'gdc_log_download'
 								)
 							);
@@ -437,13 +421,7 @@ final class GDC_Log_Viewer {
 					<span class="displaying-num">					<?php /* translators: %s: number of log lines */ ?>						<?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?>
 					</span>
 					<?php
-					$base_url = add_query_arg(
-						array(
-							'page' => 'globus-debug-control',
-							'tab'  => 'log',
-						),
-						admin_url( 'admin.php' )
-					);
+					$base_url = GDC_UI::module_url( 'log' );
 					if ( $page > 1 ) {
 						echo '<a class="prev-page button" href="' . esc_url( add_query_arg( 'logpage', $page - 1, $base_url ) ) . '">‹</a>';
 					}

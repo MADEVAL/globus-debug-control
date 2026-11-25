@@ -405,15 +405,26 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertContains('globus-debug-control', $slugs);
 	}
 
+	public function testAddSettingsPageRegistersOnePagePerModule(): void {
+		$this->plugin()->add_settings_page();
+
+		$submenus = $this->state('submenu_pages');
+		$slugs    = array_column($submenus, 'menu_slug');
+
+		$this->assertSame(array_map(array('\GDC_UI', 'module_slug'), array_keys(\GDC_UI::modules())), $slugs);
+		$this->assertCount(9, $slugs);
+		$this->assertSame(array('globus-debug-control'), array_values(array_unique(array_column($submenus, 'parent_slug'))));
+	}
+
 	public function testRenderSettingsPageRendersShellAndSettingsModule(): void {
 		$this->refreshOptions(['enabled' => 1]);
-		$_GET['tab'] = 'settings';
+		$_GET['page'] = 'gdc-settings';
 
 		ob_start();
 		$this->plugin()->render_settings_page();
 		$html = ob_get_clean();
 
-		unset($_GET['tab']);
+		unset($_GET['page']);
 
 		$this->assertStringContainsString('gdc-app', $html);
 		$this->assertStringContainsString('gdc-snav', $html);
@@ -446,6 +457,35 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertContains('gdc-ui', $this->state('enqueued_styles'));
 		$scripts = array_column($this->state('enqueued_scripts'), 'handle');
 		$this->assertContains('gdc-admin', $scripts);
+	}
+
+	public function testAdminEnqueueSettingsAssetsEnqueuesOnModulePages(): void {
+		$this->plugin()->add_settings_page();
+
+		$hooks = array_column($this->state('submenu_pages'), 'hook');
+
+		$this->plugin()->admin_enqueue_settings_assets($hooks[3]);
+
+		$this->assertContains('gdc-ui', $this->state('enqueued_styles'));
+	}
+
+	public function testRenderSettingsPageDispatchesLegacyModuleByPageSlug(): void {
+		$_GET['page'] = 'gdc-constants';
+
+		ob_start();
+		$this->plugin()->render_settings_page();
+		$html = ob_get_clean();
+
+		unset($_GET['page']);
+
+		$this->assertStringContainsString('gdc-legacy', $html);
+		$this->assertStringContainsString('Constants', $html);
+	}
+
+	public function testAdminEnqueueSettingsAssetsSkipsUnknownModulePage(): void {
+		$this->plugin()->admin_enqueue_settings_assets('globus-debug-control_page_other-plugin');
+
+		$this->assertEmpty($this->state('enqueued_styles'));
 	}
 
 	public function testAdminEnqueuePhpErrorAssetsDoesNothingWhenDisabled(): void {
@@ -575,7 +615,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$html = ob_get_clean();
 
 		$this->assertStringContainsString('Out of memory', $html);
-		$this->assertStringContainsString('globus-debug-control', $html);
+		$this->assertStringContainsString('page=gdc-log', $html);
 	}
 
 	public function testRenderDashboardWidgetShowsNothingWhenNoFatal(): void {

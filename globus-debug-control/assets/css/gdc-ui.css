@@ -7,22 +7,28 @@
 /* ------------------------------------------------------------
    Full-bleed screen: the shell owns the viewport.
    ------------------------------------------------------------ */
-body.wp-admin.toplevel_page_globus-debug-control #wpcontent {
+body.wp-admin.toplevel_page_globus-debug-control #wpcontent,
+body.wp-admin[class*="_page_gdc-"] #wpcontent {
 	padding-left: 0;
 }
 
-body.wp-admin.toplevel_page_globus-debug-control #wpbody-content {
+body.wp-admin.toplevel_page_globus-debug-control #wpbody-content,
+body.wp-admin[class*="_page_gdc-"] #wpbody-content {
 	padding-bottom: 0;
 }
 
-body.wp-admin.toplevel_page_globus-debug-control #wpfooter {
+body.wp-admin.toplevel_page_globus-debug-control #wpfooter,
+body.wp-admin[class*="_page_gdc-"] #wpfooter {
 	display: none;
 }
 
 /* WordPress prints admin notices above the shell - keep them usable. */
 body.wp-admin.toplevel_page_globus-debug-control #wpbody-content > .notice,
 body.wp-admin.toplevel_page_globus-debug-control #wpbody-content > .updated,
-body.wp-admin.toplevel_page_globus-debug-control #wpbody-content > .error {
+body.wp-admin.toplevel_page_globus-debug-control #wpbody-content > .error,
+body.wp-admin[class*="_page_gdc-"] #wpbody-content > .notice,
+body.wp-admin[class*="_page_gdc-"] #wpbody-content > .updated,
+body.wp-admin[class*="_page_gdc-"] #wpbody-content > .error {
 	margin: var(--gdc-sp-4) var(--gdc-content-pad-x) 0;
 }
 

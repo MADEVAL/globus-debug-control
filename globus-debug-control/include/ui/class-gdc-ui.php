@@ -28,27 +28,55 @@ final class GDC_UI {
 	}
 
 	/**
-	 * Returns the admin page URL, optionally with extra query arguments.
+	 * Returns the Overview screen URL, optionally with extra query arguments.
 	 *
 	 * @param array<string, mixed> $args Extra query arguments.
 	 * @return string
 	 */
 	public static function page_url( array $args = array() ): string {
-		return add_query_arg(
-			array_merge( array( 'page' => 'globus-debug-control' ), $args ),
-			admin_url( 'admin.php' )
-		);
+		return self::module_url( 'overview', $args );
 	}
 
 	/**
-	 * Returns the URL of a specific module tab.
+	 * Returns the URL of a module screen.
 	 *
 	 * @param string               $module Module id.
 	 * @param array<string, mixed> $args   Extra query arguments.
 	 * @return string
 	 */
 	public static function module_url( string $module, array $args = array() ): string {
-		return self::page_url( array_merge( array( 'tab' => $module ), $args ) );
+		return add_query_arg(
+			array_merge( array( 'page' => self::module_slug( $module ) ), $args ),
+			admin_url( 'admin.php' )
+		);
+	}
+
+	/**
+	 * Returns the admin page slug of a module.
+	 *
+	 * @param string $module Module id.
+	 * @return string
+	 */
+	public static function module_slug( string $module ): string {
+		$modules = self::modules();
+
+		return isset( $modules[ $module ] ) ? (string) $modules[ $module ]['slug'] : 'globus-debug-control';
+	}
+
+	/**
+	 * Maps an admin page slug back to a module id.
+	 *
+	 * @param string $page Admin page slug.
+	 * @return string
+	 */
+	public static function module_from_page( string $page ): string {
+		foreach ( self::modules() as $id => $module ) {
+			if ( (string) $module['slug'] === $page ) {
+				return (string) $id;
+			}
+		}
+
+		return 'overview';
 	}
 
 	/**
@@ -63,54 +91,63 @@ final class GDC_UI {
 				'desc'  => __( 'Health, log and diagnostics at a glance.', 'globus-debug-control' ),
 				'icon'  => 'gauge',
 				'group' => 'overview',
+				'slug'  => 'globus-debug-control',
 			),
 			'settings'   => array(
 				'label' => __( 'Settings', 'globus-debug-control' ),
 				'desc'  => __( 'Filter PHP errors, control display and logging.', 'globus-debug-control' ),
 				'icon'  => 'gear',
 				'group' => 'control',
+				'slug'  => 'gdc-settings',
 			),
 			'wpcfg'      => array(
 				'label' => __( 'WP_DEBUG', 'globus-debug-control' ),
 				'desc'  => __( 'Toggle wp-config.php constants without editing files.', 'globus-debug-control' ),
 				'icon'  => 'debug',
 				'group' => 'control',
+				'slug'  => 'gdc-wp-debug',
 			),
 			'log'        => array(
 				'label' => __( 'Error Log', 'globus-debug-control' ),
 				'desc'  => __( 'Read, search and clear the PHP error log.', 'globus-debug-control' ),
 				'icon'  => 'code',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-log',
 			),
 			'cron'       => array(
 				'label' => __( 'Cron Tasks', 'globus-debug-control' ),
 				'desc'  => __( 'Inspect scheduled events and remove orphaned hooks.', 'globus-debug-control' ),
 				'icon'  => 'clock',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-cron',
 			),
 			'transients' => array(
 				'label' => __( 'Transients', 'globus-debug-control' ),
 				'desc'  => __( 'List stored transients and purge expired rows.', 'globus-debug-control' ),
 				'icon'  => 'transient',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-transients',
 			),
 			'autoloaded' => array(
 				'label' => __( 'Autoloaded Options', 'globus-debug-control' ),
 				'desc'  => __( 'Find options that inflate every page load.', 'globus-debug-control' ),
 				'icon'  => 'database',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-autoloaded',
 			),
 			'http'       => array(
 				'label' => __( 'HTTP Log', 'globus-debug-control' ),
 				'desc'  => __( 'Review outgoing HTTP API requests and failures.', 'globus-debug-control' ),
 				'icon'  => 'globe',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-http',
 			),
 			'constants'  => array(
 				'label' => __( 'Constants', 'globus-debug-control' ),
 				'desc'  => __( 'Browse defined PHP constants with masked secrets.', 'globus-debug-control' ),
 				'icon'  => 'list',
 				'group' => 'diagnostics',
+				'slug'  => 'gdc-constants',
 			),
 		);
 	}
