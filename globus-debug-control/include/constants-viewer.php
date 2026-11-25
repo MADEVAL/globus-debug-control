@@ -203,68 +203,68 @@ final class GDC_Constants_Viewer {
 		$groups    = self::get_wp_constants();
 		$wpcfg_url = GDC_UI::module_url( 'wpcfg' );
 		?>
-		<p>
-			<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="button button-secondary">
-				<span class="dashicons dashicons-arrow-left-alt" aria-hidden="true"></span>
-				<?php esc_html_e( 'WP_DEBUG settings', 'globus-debug-control' ); ?>
-			</a>
-		</p>
+		<div class="gdc-constants-viewer">
 
-		<?php if ( empty( $groups ) ) : ?>
-			<div class="gdc-empty-state">
-				<span class="dashicons dashicons-editor-code" aria-hidden="true"></span>
-				<p><?php esc_html_e( 'No constants found.', 'globus-debug-control' ); ?></p>
-			</div>
-		<?php else : ?>
-			<?php
-			$total_constants = array_sum( array_map( 'count', $groups ) );
-			?>
-			<div class="gdc-constants-toolbar">
-				<label class="screen-reader-text" for="gdc-constants-filter"><?php esc_html_e( 'Filter constants', 'globus-debug-control' ); ?></label>
-				<input type="search" id="gdc-constants-filter" class="regular-text" placeholder="<?php esc_attr_e( 'Filter by constant name...', 'globus-debug-control' ); ?>">
-				<span class="gdc-constants-total">
-					<?php
-					echo esc_html(
-						sprintf(
-							/* translators: %s: number of constants */
-							_n( '%s constant', '%s constants', $total_constants, 'globus-debug-control' ),
-							number_format_i18n( $total_constants )
-						)
-					);
-					?>
-				</span>
-			</div>
+			<?php if ( empty( $groups ) ) : ?>
+				<div class="gdc-empty-state">
+					<?php echo GDC_UI::empty_state( __( 'No constants found.', 'globus-debug-control' ), 'code' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
+				</div>
+			<?php else : ?>
+				<?php $total_constants = array_sum( array_map( 'count', $groups ) ); ?>
 
-			<div class="gdc-constants-groups">
-				<?php foreach ( $groups as $group_label => $constants ) : ?>
-					<?php $is_open = 'Plugin & Theme' !== $group_label; ?>
-					<details class="gdc-constants-group" data-default-open="<?php echo $is_open ? '1' : '0'; ?>" <?php echo $is_open ? 'open' : ''; ?>>
-						<summary>
-							<span class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></span>
-							<span class="gdc-badge"><?php echo esc_html( number_format_i18n( count( $constants ) ) ); ?></span>
-						</summary>
-						<div class="gdc-table-scroll">
-							<table class="wp-list-table widefat striped gdc-constants-table">
-								<tbody>
-									<?php foreach ( $constants as $const_name => $const_value ) : ?>
-										<tr class="gdc-constant-row" data-name="<?php echo esc_attr( strtolower( $const_name ) ); ?>">
-											<td class="gdc-constant-name"><code><?php echo esc_html( $const_name ); ?></code></td>
-											<td>
-												<?php if ( '*** (masked)' === $const_value ) : ?>
-													<span class="gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
-												<?php else : ?>
-													<code><?php echo esc_html( $const_value ); ?></code>
-												<?php endif; ?>
-											</td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						</div>
-					</details>
-				<?php endforeach; ?>
-			</div>
-		<?php endif; ?>
+				<div class="gdc-toolbar gdc-constants-toolbar">
+					<div class="gdc-toolbar-group">
+						<label class="screen-reader-text" for="gdc-constants-filter"><?php esc_html_e( 'Filter constants', 'globus-debug-control' ); ?></label>
+						<input type="search" id="gdc-constants-filter" class="gdc-input" placeholder="<?php esc_attr_e( 'Filter by constant name...', 'globus-debug-control' ); ?>">
+						<span class="gdc-chip">
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: %s: number of constants */
+									_n( '%s constant', '%s constants', $total_constants, 'globus-debug-control' ),
+									number_format_i18n( $total_constants )
+								)
+							);
+							?>
+						</span>
+					</div>
+					<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="gdc-btn gdc-btn--surface">
+						<?php echo GDC_UI::icon( 'arrowL', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<?php esc_html_e( 'WP_DEBUG settings', 'globus-debug-control' ); ?>
+					</a>
+				</div>
+
+				<div class="gdc-constants-groups">
+					<?php foreach ( $groups as $group_label => $constants ) : ?>
+						<?php $is_open = 'Plugin & Theme' !== $group_label; ?>
+						<details class="gdc-accordion gdc-constants-group" data-default-open="<?php echo $is_open ? '1' : '0'; ?>" <?php echo $is_open ? 'open' : ''; ?>>
+							<summary>
+								<span class="gdc-constant-group-heading"><?php echo esc_html( $group_label ); ?></span>
+								<span class="gdc-accordion-count"><?php echo esc_html( number_format_i18n( count( $constants ) ) ); ?></span>
+							</summary>
+							<div class="gdc-accordion-body">
+								<table class="gdc-table gdc-constants-table">
+									<tbody>
+										<?php foreach ( $constants as $const_name => $const_value ) : ?>
+											<tr class="gdc-constant-row" data-name="<?php echo esc_attr( strtolower( $const_name ) ); ?>">
+												<td class="gdc-constant-name"><code><?php echo esc_html( $const_name ); ?></code></td>
+												<td>
+													<?php if ( '*** (masked)' === $const_value ) : ?>
+														<span class="gdc-chip gdc-constant-masked"><?php esc_html_e( '*** (masked)', 'globus-debug-control' ); ?></span>
+													<?php else : ?>
+														<code><?php echo esc_html( $const_value ); ?></code>
+													<?php endif; ?>
+												</td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</div>
+						</details>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 }

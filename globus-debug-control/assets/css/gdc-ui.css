@@ -836,7 +836,6 @@ a.gdc-kpi:hover .gdc-kpi-label { color: var(--gdc-wp-blue); }
 /* WordPress forms.css styles bare input types - keep the design system on top. */
 body.wp-admin .gdc-app input.gdc-input,
 body.wp-admin .gdc-app textarea.gdc-input {
-	width: 100%;
 	padding: var(--gdc-sp-2h) var(--gdc-sp-3);
 	background: var(--gdc-s2);
 	border: 1px solid transparent;
@@ -1808,17 +1807,6 @@ body.wp-admin #wpbody-content .gdc-snav.has-search .gdc-snav-search-clear { disp
 .gdc-notif-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .gdc-notif-title { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gdc-notif-msg { line-height: 1.35; }
-
-/* ------------------------------------------------------------
-   Legacy tab wrapper (scoped old styles)
-   ------------------------------------------------------------ */
-.gdc-legacy {
-	font-size: var(--gdc-fs-sm);
-	color: var(--gdc-tx);
-}
-
-.gdc-legacy > .notice:first-child,
-.gdc-legacy > .notice.inline:first-child { margin-top: 0; }
 
 /* ------------------------------------------------------------
    Responsive shell

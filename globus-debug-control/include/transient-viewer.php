@@ -306,140 +306,157 @@ final class GDC_Transient_Viewer {
 			)
 		);
 		?>
-									;</script>
+								;</script>
 
-		<?php if ( $diagnostics['db_error'] ) : ?>
-			<div class="notice notice-error inline">
-				<p>
-					<strong><?php esc_html_e( 'Transient query failed:', 'globus-debug-control' ); ?></strong>
-					<code><?php echo esc_html( $diagnostics['db_error'] ); ?></code>
-				</p>
-			</div>
-		<?php endif; ?>
+		<div class="gdc-transient-viewer">
 
-		<?php if ( $diagnostics['external_cache'] ) : ?>
-			<div class="notice notice-info inline gdc-transient-cache-notice">
-				<p>
-					<strong><?php esc_html_e( 'A persistent object cache is active.', 'globus-debug-control' ); ?></strong>
-					<?php esc_html_e( 'Transients are stored in the object cache (for example Redis or Memcached), not in the wp_options table. This viewer lists database rows only, so an empty table is expected and is not an error.', 'globus-debug-control' ); ?>
-					<?php if ( '' !== $diagnostics['cache_class'] ) : ?>
-						<code><?php echo esc_html( $diagnostics['cache_class'] ); ?></code>
-					<?php endif; ?>
-				</p>
-			</div>
-		<?php endif; ?>
+			<?php if ( $diagnostics['db_error'] ) : ?>
+				<div class="gdc-alert gdc-alert--danger gdc-mb-3h">
+					<p><strong><?php esc_html_e( 'Transient query failed:', 'globus-debug-control' ); ?></strong> <code><?php echo esc_html( $diagnostics['db_error'] ); ?></code></p>
+				</div>
+			<?php endif; ?>
 
-		<div class="gdc-tool-header">
-			<div class="gdc-cron-summary">
-				<div class="gdc-cron-summary-card">
-					<span class="dashicons dashicons-database"></span>
-					<div>
-						<strong><?php echo esc_html( $summary['total'] ); ?></strong>
-						<span><?php esc_html_e( 'Total', 'globus-debug-control' ); ?></span>
-					</div>
+			<?php if ( $diagnostics['external_cache'] ) : ?>
+				<div class="gdc-alert gdc-alert--info gdc-mb-3h gdc-transient-cache-notice">
+					<p>
+						<strong><?php esc_html_e( 'A persistent object cache is active.', 'globus-debug-control' ); ?></strong>
+						<?php esc_html_e( 'Transients are stored in the object cache (for example Redis or Memcached), not in the wp_options table. This viewer lists database rows only, so an empty table is expected and is not an error.', 'globus-debug-control' ); ?>
+						<?php if ( '' !== $diagnostics['cache_class'] ) : ?>
+							<code><?php echo esc_html( $diagnostics['cache_class'] ); ?></code>
+						<?php endif; ?>
+					</p>
 				</div>
-				<div class="gdc-cron-summary-card <?php echo $summary['expired'] > 0 ? 'gdc-card-warning' : 'gdc-card-ok'; ?>">
-					<span class="dashicons dashicons-clock"></span>
-					<div>
-						<strong><?php echo esc_html( $summary['expired'] ); ?></strong>
-						<span><?php esc_html_e( 'Expired', 'globus-debug-control' ); ?></span>
+			<?php endif; ?>
+
+			<div class="gdc-cron-summary gdc-grid gdc-grid--auto gdc-mb-3h">
+				<div class="gdc-card gdc-kpi">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Total', 'globus-debug-control' ); ?></span>
+						<span class="gdc-tx-blue"><?php echo GDC_UI::icon( 'database', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
 					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo esc_html( number_format_i18n( (int) $summary['total'] ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Stored transients', 'globus-debug-control' ); ?></div>
 				</div>
-				<div class="gdc-cron-summary-card">
-					<span class="dashicons dashicons-chart-area"></span>
-					<div>
-						<strong><?php echo esc_html( size_format( $summary['total_size'] ) ); ?></strong>
-						<span><?php esc_html_e( 'Total size', 'globus-debug-control' ); ?></span>
+
+				<div class="gdc-card gdc-kpi <?php echo $summary['expired'] > 0 ? 'gdc-card-warning' : 'gdc-card-ok'; ?>">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Expired', 'globus-debug-control' ); ?></span>
+						<span class="<?php echo $summary['expired'] > 0 ? 'gdc-tx-amber' : 'gdc-tx-green'; ?>"><?php echo GDC_UI::icon( 'clock', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
 					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm <?php echo $summary['expired'] > 0 ? 'gdc-tx-amber' : ''; ?>"><?php echo esc_html( number_format_i18n( (int) $summary['expired'] ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Can be purged', 'globus-debug-control' ); ?></div>
+				</div>
+
+				<div class="gdc-card gdc-kpi">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Total size', 'globus-debug-control' ); ?></span>
+						<span class="gdc-tx2"><?php echo GDC_UI::icon( 'chart', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
+					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo esc_html( size_format( (int) $summary['total_size'] ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Database rows', 'globus-debug-control' ); ?></div>
 				</div>
 			</div>
+
 			<?php if ( $summary['expired'] > 0 ) : ?>
-				<div class="gdc-tool-actions">
-					<button type="button" id="gdc-transient-purge" class="button button-secondary">
-						<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+				<div class="gdc-bulkbar">
+					<?php echo GDC_UI::icon( 'clock', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+					<span>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: number of expired transients */
+								_n( '%s expired transient can be removed.', '%s expired transients can be removed.', (int) $summary['expired'], 'globus-debug-control' ),
+								number_format_i18n( (int) $summary['expired'] )
+							)
+						);
+						?>
+					</span>
+					<button type="button" id="gdc-transient-purge" class="gdc-btn gdc-btn--sm gdc-btn--danger gdc-ml-auto">
+						<?php echo GDC_UI::icon( 'trash', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 						<?php esc_html_e( 'Purge expired', 'globus-debug-control' ); ?>
-						<span class="gdc-badge gdc-badge-warning"><?php echo esc_html( (string) $summary['expired'] ); ?></span>
 					</button>
 				</div>
 			<?php endif; ?>
-		</div>
 
-		<?php if ( empty( $transients ) ) : ?>
-			<div class="gdc-empty-state">
-				<span class="dashicons dashicons-database" aria-hidden="true"></span>
-				<?php if ( $diagnostics['external_cache'] ) : ?>
-					<p><?php esc_html_e( 'No database-stored transients. Transients are kept in the active object cache.', 'globus-debug-control' ); ?></p>
-				<?php elseif ( $diagnostics['transient_like_rows'] > 0 ) : ?>
-					<p>
-						<?php
-						echo esc_html(
-							sprintf(
-								/* translators: %d: number of database rows */
-								_n( 'Found %d transient-like option but could not list it. Check the database error above.', 'Found %d transient-like options but could not list them. Check the database error above.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
-								$diagnostics['transient_like_rows']
-							)
+			<?php if ( empty( $transients ) ) : ?>
+				<div class="gdc-empty-state">
+					<?php
+					if ( $diagnostics['external_cache'] ) {
+						$gdc_empty = __( 'No database-stored transients. Transients are kept in the active object cache.', 'globus-debug-control' );
+					} elseif ( $diagnostics['transient_like_rows'] > 0 ) {
+						$gdc_empty = sprintf(
+							/* translators: %d: number of database rows */
+							_n( 'Found %d transient-like option but could not list it. Check the database error above.', 'Found %d transient-like options but could not list them. Check the database error above.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
+							$diagnostics['transient_like_rows']
 						);
-						?>
-					</p>
-				<?php else : ?>
-					<p><?php esc_html_e( 'No transients found in the database. Expired entries may already have been removed, or the site may not use database transients.', 'globus-debug-control' ); ?></p>
-					<p class="description">
-						<?php
-						echo esc_html(
-							sprintf(
-								/* translators: %d: number of database rows */
-								_n( 'Database check: %d row with a transient prefix.', 'Database check: %d rows with a transient prefix.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
-								$diagnostics['transient_like_rows']
-							)
-						);
-						?>
-					</p>
-				<?php endif; ?>
-			</div>
-		<?php else : ?>
-			<div class="gdc-table-scroll">
-				<table class="wp-list-table widefat striped gdc-transient-table">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Key', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-expires"><?php esc_html_e( 'Expires', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-actions"></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $transients as $t ) : ?>
-							<tr class="gdc-transient-row<?php echo $t['is_expired'] ? ' gdc-transient-expired' : ''; ?>" data-key="<?php echo esc_attr( $t['key'] ); ?>">
-								<td><code class="gdc-transient-key" title="<?php echo esc_attr( $t['key'] ); ?>"><?php echo esc_html( $t['key'] ); ?></code></td>
-								<td><?php echo esc_html( size_format( $t['value_size'] ) ); ?></td>
-								<td>
-									<?php
-									if ( null === $t['expires_in'] ) {
-										esc_html_e( 'No expiry', 'globus-debug-control' );
-									} elseif ( $t['is_expired'] ) {
-										echo '<span class="gdc-badge-expired">' . esc_html__( 'Expired', 'globus-debug-control' ) . '</span>';
-									} else {
-										echo esc_html(
-											sprintf(
-												/* translators: %s: human-readable time difference */
-												__( 'in %s', 'globus-debug-control' ),
-												human_time_diff( time(), time() + (int) $t['expires_in'] )
-											)
-										);
-									}
-									?>
-								</td>
-								<td>
-									<button type="button" class="button button-small gdc-transient-delete">
-										<?php esc_html_e( 'Delete', 'globus-debug-control' ); ?>
-									</button>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			</div>
-		<?php endif; ?>
+					} else {
+						$gdc_empty = __( 'No transients found in the database. Expired entries may already have been removed, or the site may not use database transients.', 'globus-debug-control' );
+					}
+
+					echo GDC_UI::empty_state( $gdc_empty, 'transient' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
+					?>
+					<?php if ( ! $diagnostics['external_cache'] && $diagnostics['transient_like_rows'] <= 0 ) : ?>
+						<p class="gdc-dim gdc-fs-xs gdc-mt-2">
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: %d: number of database rows */
+									_n( 'Database check: %d row with a transient prefix.', 'Database check: %d rows with a transient prefix.', $diagnostics['transient_like_rows'], 'globus-debug-control' ),
+									$diagnostics['transient_like_rows']
+								)
+							);
+							?>
+						</p>
+					<?php endif; ?>
+				</div>
+			<?php else : ?>
+				<div class="gdc-card">
+					<div class="gdc-table-wrap">
+						<table class="gdc-table gdc-transient-table">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Key', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-expires"><?php esc_html_e( 'Expires', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-actions"></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $transients as $t ) : ?>
+									<tr class="gdc-transient-row<?php echo $t['is_expired'] ? ' gdc-transient-expired' : ''; ?>" data-key="<?php echo esc_attr( $t['key'] ); ?>">
+										<td><code class="gdc-transient-key" title="<?php echo esc_attr( $t['key'] ); ?>"><?php echo esc_html( $t['key'] ); ?></code></td>
+										<td class="gdc-col-num"><?php echo esc_html( size_format( $t['value_size'] ) ); ?></td>
+										<td>
+											<?php
+											if ( null === $t['expires_in'] ) {
+												echo '<span class="gdc-dim gdc-fs-xs">' . esc_html__( 'No expiry', 'globus-debug-control' ) . '</span>';
+											} elseif ( $t['is_expired'] ) {
+												echo '<span class="gdc-chip gdc-chip--red gdc-badge-expired">' . esc_html__( 'Expired', 'globus-debug-control' ) . '</span>';
+											} else {
+												echo '<span class="gdc-chip">' . esc_html(
+													sprintf(
+														/* translators: %s: human-readable time difference */
+														__( 'in %s', 'globus-debug-control' ),
+														human_time_diff( time(), time() + (int) $t['expires_in'] )
+													)
+												) . '</span>';
+											}
+											?>
+										</td>
+										<td class="gdc-cron-actions">
+											<button type="button" class="gdc-btn gdc-btn--sm gdc-btn--danger gdc-transient-delete">
+												<?php echo GDC_UI::icon( 'trash', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+												<?php esc_html_e( 'Delete', 'globus-debug-control' ); ?>
+											</button>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 }

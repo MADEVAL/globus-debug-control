@@ -469,7 +469,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertContains('gdc-ui', $this->state('enqueued_styles'));
 	}
 
-	public function testRenderSettingsPageDispatchesLegacyModuleByPageSlug(): void {
+	public function testRenderSettingsPageDispatchesModuleByPageSlug(): void {
 		$_GET['page'] = 'gdc-constants';
 
 		ob_start();
@@ -478,7 +478,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 
 		unset($_GET['page']);
 
-		$this->assertStringContainsString('gdc-legacy', $html);
+		$this->assertStringContainsString('gdc-constants-table', $html);
 		$this->assertStringContainsString('Constants', $html);
 	}
 

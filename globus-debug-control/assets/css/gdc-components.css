@@ -97,6 +97,8 @@
 
 .gdc-toolbar-group { display: flex; align-items: center; gap: var(--gdc-sp-2); flex-wrap: wrap; }
 .gdc-toolbar-label { font-size: var(--gdc-fs-xs); color: var(--gdc-tx2); }
+.gdc-toolbar .gdc-input { width: auto; }
+.gdc-toolbar select.gdc-input { min-width: 220px; }
 
 /* ------------------------------------------------------------
    Accordion (details/summary) for grouped constants
@@ -180,3 +182,160 @@
    ------------------------------------------------------------ */
 .gdc-dependency { margin-bottom: var(--gdc-sp-3h); }
 .gdc-dependency .notice { margin: 0; }
+
+/* ------------------------------------------------------------
+   Log viewer helpers
+   ------------------------------------------------------------ */
+#gdc-live-toggle.gdc-live-active {
+	background: var(--gdc-green-dim);
+	border-color: var(--gdc-green);
+	color: var(--gdc-green);
+}
+
+/* Visible until CodeMirror replaces it, so there is no white flash. */
+.gdc-console textarea {
+	display: block;
+	width: 100%;
+	min-height: 420px;
+	margin: 0;
+	padding: var(--gdc-sp-3);
+	background: #1e1e1e;
+	color: #abb2bf;
+	border: 0;
+	border-radius: 0;
+	font-family: var(--gdc-mono);
+	font-size: 12px;
+	line-height: 1.65;
+	resize: vertical;
+	box-shadow: none;
+}
+
+.gdc-pager-prev .gdc-ico { transform: rotate(180deg); }
+.gdc-inline { display: inline; }
+
+/* ------------------------------------------------------------
+   Busy / result states for table action buttons
+   ------------------------------------------------------------ */
+@keyframes gdc-spin {
+	to { transform: rotate(360deg); }
+}
+
+.gdc-btn.is-busy { pointer-events: none; opacity: .7; }
+.gdc-btn.is-busy .gdc-ico { animation: gdc-spin .8s linear infinite; }
+.gdc-btn.is-ok { background: var(--gdc-green-dim); border-color: var(--gdc-green); color: var(--gdc-green); }
+.gdc-btn.is-error { background: var(--gdc-red-dim); border-color: var(--gdc-red); color: var(--gdc-red); }
+
+/* ------------------------------------------------------------
+   Cron table
+   ------------------------------------------------------------ */
+.gdc-cron-callbacks { margin: var(--gdc-sp-1) 0 0; padding-left: var(--gdc-sp-4h); }
+.gdc-cron-callbacks li { margin: 0; }
+.gdc-cron-callbacks code { font-size: var(--gdc-fs-2xs); color: var(--gdc-tx2); }
+.gdc-cron-cb-toggle .gdc-ico { transition: transform var(--gdc-t-fast); }
+.gdc-cron-cb-toggle.is-open .gdc-ico { transform: rotate(180deg); }
+.gdc-cron-actions { white-space: nowrap; text-align: right; }
+.gdc-cron-actions .gdc-btn { margin-left: var(--gdc-sp-1); }
+.gdc-cron-source .spinner { float: none; margin: 0; }
+.gdc-cron-hook-name { word-break: break-all; }
+.gdc-card > .gdc-table-wrap { border-radius: var(--gdc-r-md); overflow: hidden; }
+
+.gdc-cron-table .gdc-col-when { width: 22%; }
+.gdc-cron-table .gdc-col-schedule { width: 18%; }
+.gdc-cron-table .gdc-col-actions { width: 108px; }
+
+.gdc-source-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--gdc-sp-h) var(--gdc-sp-2);
+	border-radius: var(--gdc-r-pill);
+	font-size: var(--gdc-fs-2xs);
+	font-weight: var(--gdc-fw-semibold);
+	line-height: 1.7;
+	background: var(--gdc-s3);
+	color: var(--gdc-tx2);
+}
+
+.gdc-source-core { background: var(--gdc-blue-dim); color: var(--gdc-blue); }
+.gdc-source-plugin { background: var(--gdc-green-dim); color: var(--gdc-green); }
+.gdc-source-theme { background: var(--gdc-amber-dim); color: var(--gdc-amber-d); }
+
+/* ------------------------------------------------------------
+   Autoloaded options: relative size bars
+   ------------------------------------------------------------ */
+.gdc-size-bar-wrap {
+	height: 8px;
+	background: var(--gdc-s3);
+	border-radius: var(--gdc-r-pill);
+	overflow: hidden;
+	min-width: 120px;
+}
+
+.gdc-size-bar {
+	display: block;
+	height: 100%;
+	border-radius: var(--gdc-r-pill);
+	background: var(--gdc-wp-blue);
+}
+
+.gdc-bar-ok { background: var(--gdc-green); }
+.gdc-bar-warning { background: var(--gdc-amber); }
+.gdc-bar-danger { background: var(--gdc-red); }
+.gdc-options-table .gdc-col-bar { width: 42%; }
+
+/* ------------------------------------------------------------
+   HTTP log
+   ------------------------------------------------------------ */
+.gdc-http-url {
+	word-break: break-all;
+	white-space: normal;
+	font-size: var(--gdc-fs-2xs);
+	line-height: 1.45;
+}
+
+.gdc-http-method {
+	font-family: var(--gdc-mono);
+	font-size: var(--gdc-fs-nano);
+	font-weight: var(--gdc-fw-bold);
+	letter-spacing: .03em;
+	padding: 0 var(--gdc-sp-1h);
+}
+
+.gdc-http-method-get { background: var(--gdc-blue-dim); color: var(--gdc-blue); border-color: transparent; }
+.gdc-http-method-post { background: var(--gdc-green-dim); color: var(--gdc-green); border-color: transparent; }
+.gdc-http-method-put,
+.gdc-http-method-patch { background: var(--gdc-amber-dim); color: var(--gdc-amber-d); border-color: transparent; }
+.gdc-http-method-delete { background: var(--gdc-red-dim); color: var(--gdc-red); border-color: transparent; }
+
+.gdc-http-status { font-family: var(--gdc-mono); font-weight: var(--gdc-fw-bold); border-color: transparent; }
+.gdc-http-status-2xx { background: var(--gdc-green-dim); color: var(--gdc-green); }
+.gdc-http-status-3xx { background: var(--gdc-blue-dim); color: var(--gdc-blue); }
+.gdc-http-status-4xx { background: var(--gdc-amber-dim); color: var(--gdc-amber-d); }
+.gdc-http-status-5xx,
+.gdc-http-status-err { background: var(--gdc-red-dim); color: var(--gdc-red); }
+
+.gdc-http-error {
+	max-width: 320px;
+	white-space: normal;
+	line-height: 1.4;
+}
+
+/* ------------------------------------------------------------
+   Constants
+   ------------------------------------------------------------ */
+.gdc-constants-groups {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gdc-sp-2h);
+}
+
+.gdc-constants-table td:first-child { width: 45%; }
+.gdc-constants-table td code { font-size: var(--gdc-fs-2xs); }
+.gdc-chip.gdc-constant-masked { background: var(--gdc-s3); color: var(--gdc-tx3); font-family: var(--gdc-mono); }
+.gdc-constants-toolbar .gdc-input { width: min(380px, 100%); }
+
+/* ------------------------------------------------------------
+   Empty-state wrappers used by the viewers
+   ------------------------------------------------------------ */
+.gdc-empty-state { margin: 0; }
+.gdc-transient-expired td { background: var(--gdc-red-dim); }
+.gdc-transient-expired:hover td { background: var(--gdc-red-dim); }

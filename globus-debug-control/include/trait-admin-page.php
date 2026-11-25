@@ -259,10 +259,7 @@ trait GDC_Admin_Page {
 	}
 
 	/**
-	 * Renders a module that has not migrated to the design system yet.
-	 *
-	 * The legacy stylesheet is scoped to .gdc-legacy, so old markup keeps its
-	 * look without affecting the new shell.
+	 * Renders a module on the design system.
 	 *
 	 * @param string               $tab    Module id.
 	 * @param array<string, mixed> $module Module metadata.
@@ -292,34 +289,29 @@ trait GDC_Admin_Page {
 			?>
 
 			<div class="gdc-settings-content">
-				<div class="gdc-legacy">
-					<?php
-					switch ( $tab ) {
-						case 'wpcfg':
-							GDC_WpConfig_Debug::render();
-							break;
-						case 'cron':
-							GDC_Cron_Viewer::render();
-							break;
-						case 'transients':
-							GDC_Transient_Viewer::render();
-							break;
-						case 'autoloaded':
-							GDC_Options_Viewer::render();
-							break;
-						case 'http':
-							GDC_Http_Log::render();
-							break;
-						case 'constants':
-							GDC_Constants_Viewer::render();
-							break;
-						case 'log':
-						default:
-							GDC_Log_Viewer::render();
-							break;
-					}
-					?>
-				</div>
+				<?php
+				switch ( $tab ) {
+					case 'cron':
+						GDC_Cron_Viewer::render();
+						break;
+					case 'transients':
+						GDC_Transient_Viewer::render();
+						break;
+					case 'autoloaded':
+						GDC_Options_Viewer::render();
+						break;
+					case 'http':
+						GDC_Http_Log::render();
+						break;
+					case 'constants':
+						GDC_Constants_Viewer::render();
+						break;
+					case 'log':
+					default:
+						GDC_Log_Viewer::render();
+						break;
+				}
+				?>
 			</div>
 		</div>
 		<?php
@@ -425,7 +417,6 @@ trait GDC_Admin_Page {
 		wp_enqueue_style( 'gdc-tokens', $css . 'gdc-tokens.css', array(), $this->asset_version( 'assets/css/gdc-tokens.css' ) );
 		wp_enqueue_style( 'gdc-ui', $css . 'gdc-ui.css', array( 'gdc-tokens' ), $this->asset_version( 'assets/css/gdc-ui.css' ) );
 		wp_enqueue_style( 'gdc-components', $css . 'gdc-components.css', array( 'gdc-ui' ), $this->asset_version( 'assets/css/gdc-components.css' ) );
-		wp_enqueue_style( 'gdc-legacy', $css . 'legacy.css', array( 'gdc-tokens', 'dashicons' ), $this->asset_version( 'assets/css/legacy.css' ) );
 		wp_enqueue_style( 'gdc-toastify', GDC_ASSETS_URL . 'vendor/toastify/toastify.min.css', array(), $this->asset_version( 'assets/vendor/toastify/toastify.min.css' ) );
 
 		wp_enqueue_script( 'gdc-toastify', GDC_ASSETS_URL . 'vendor/toastify/toastify.min.js', array(), $this->asset_version( 'assets/vendor/toastify/toastify.min.js' ), true );

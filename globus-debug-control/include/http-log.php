@@ -253,100 +253,113 @@ final class GDC_Http_Log {
 		?>
 							;</script>
 
-		<div class="gdc-tool-header">
-			<div class="gdc-cron-summary">
-				<div class="gdc-cron-summary-card <?php echo $capturing ? 'gdc-card-ok' : ''; ?>">
-					<span class="dashicons dashicons-<?php echo $capturing ? 'controls-play' : 'controls-pause'; ?>"></span>
-					<div>
-						<strong><?php echo $capturing ? esc_html__( 'Capturing', 'globus-debug-control' ) : esc_html__( 'Paused', 'globus-debug-control' ); ?></strong>
-						<span><?php esc_html_e( 'HTTP capture', 'globus-debug-control' ); ?></span>
-					</div>
-				</div>
-				<div class="gdc-cron-summary-card">
-					<span class="dashicons dashicons-cloud"></span>
-					<div>
-						<strong><?php echo esc_html( count( $log ) ); ?></strong>
-						<span><?php esc_html_e( 'Requests logged', 'globus-debug-control' ); ?></span>
-					</div>
-				</div>
-			</div>
-			<div class="gdc-tool-actions gdc-log-actions">
-				<button type="button" id="gdc-http-toggle" class="button button-secondary<?php echo $capturing ? ' gdc-http-capturing' : ''; ?>"
-					data-capturing="<?php echo $capturing ? '1' : '0'; ?>">
-					<span class="dashicons <?php echo $capturing ? 'dashicons-controls-pause' : 'dashicons-controls-play'; ?>" aria-hidden="true"></span>
-					<?php echo $capturing ? esc_html__( 'Stop capturing', 'globus-debug-control' ) : esc_html__( 'Start capturing', 'globus-debug-control' ); ?>
-				</button>
-				<?php if ( ! empty( $log ) ) : ?>
-					<button type="button" id="gdc-http-clear" class="button button-secondary">
-						<span class="dashicons dashicons-trash" aria-hidden="true"></span>
-						<?php esc_html_e( 'Clear log', 'globus-debug-control' ); ?>
-					</button>
-				<?php endif; ?>
-			</div>
-		</div>
+		<div class="gdc-http-viewer">
 
-		<?php if ( empty( $log ) ) : ?>
-			<div class="gdc-empty-state">
-				<span class="dashicons dashicons-cloud" aria-hidden="true"></span>
-				<p>
+			<div class="gdc-cron-summary gdc-grid gdc-grid--auto gdc-mb-3h">
+				<div class="gdc-card gdc-kpi <?php echo $capturing ? 'gdc-card-ok' : ''; ?>">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'HTTP capture', 'globus-debug-control' ); ?></span>
+						<span class="<?php echo $capturing ? 'gdc-tx-green' : 'gdc-tx2'; ?>">
+							<?php echo GDC_UI::icon( $capturing ? 'play' : 'stop', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						</span>
+					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo $capturing ? esc_html__( 'Capturing', 'globus-debug-control' ) : esc_html__( 'Paused', 'globus-debug-control' ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Outgoing API requests', 'globus-debug-control' ); ?></div>
+				</div>
+
+				<div class="gdc-card gdc-kpi">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Requests logged', 'globus-debug-control' ); ?></span>
+						<span class="gdc-tx2"><?php echo GDC_UI::icon( 'globe', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
+					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo esc_html( number_format_i18n( count( $log ) ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Most recent first', 'globus-debug-control' ); ?></div>
+				</div>
+			</div>
+
+			<div class="gdc-toolbar">
+				<span class="gdc-fs-xs gdc-dim">
+					<?php esc_html_e( 'Captured requests are stored in a transient and capped at 100 entries.', 'globus-debug-control' ); ?>
+				</span>
+				<div class="gdc-toolbar-group">
+					<button type="button" id="gdc-http-toggle" class="gdc-btn <?php echo $capturing ? 'gdc-btn--surface' : 'gdc-btn--pri'; ?><?php echo $capturing ? ' gdc-http-capturing' : ''; ?>"
+						data-capturing="<?php echo $capturing ? '1' : '0'; ?>">
+						<?php echo GDC_UI::icon( $capturing ? 'stop' : 'play', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<?php echo $capturing ? esc_html__( 'Stop capturing', 'globus-debug-control' ) : esc_html__( 'Start capturing', 'globus-debug-control' ); ?>
+					</button>
+					<?php if ( ! empty( $log ) ) : ?>
+						<button type="button" id="gdc-http-clear" class="gdc-btn gdc-btn--danger">
+							<?php echo GDC_UI::icon( 'trash', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+							<?php esc_html_e( 'Clear log', 'globus-debug-control' ); ?>
+						</button>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<?php if ( empty( $log ) ) : ?>
+				<div class="gdc-empty-state">
 					<?php
 					if ( $capturing ) {
-						esc_html_e( 'No requests captured yet. Browse other pages to record HTTP API calls.', 'globus-debug-control' );
+						$gdc_empty = __( 'No requests captured yet. Browse other pages to record HTTP API calls.', 'globus-debug-control' );
 					} else {
-						esc_html_e( 'Capturing is disabled. Click "Start capturing" to begin recording outgoing HTTP requests.', 'globus-debug-control' );
+						$gdc_empty = __( 'Capturing is disabled. Click "Start capturing" to begin recording outgoing HTTP requests.', 'globus-debug-control' );
 					}
+
+					echo GDC_UI::empty_state( $gdc_empty, 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
 					?>
-				</p>
-			</div>
-		<?php else : ?>
-			<div class="gdc-table-scroll">
-				<table class="wp-list-table widefat striped gdc-http-table">
-					<thead>
-						<tr>
-							<th class="gdc-col-time"><?php esc_html_e( 'Time', 'globus-debug-control' ); ?></th>
-							<th><?php esc_html_e( 'Request', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-status"><?php esc_html_e( 'Status', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-transport"><?php esc_html_e( 'Transport', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-error"><?php esc_html_e( 'Error', 'globus-debug-control' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $log as $entry ) : ?>
-							<?php
-							$s   = (int) $entry['status'];
-							$cls = 0 === $s ? 'gdc-http-status-err'
-								: ( $s >= 500 ? 'gdc-http-status-5xx'
-								: ( $s >= 400 ? 'gdc-http-status-4xx'
-								: ( $s >= 300 ? 'gdc-http-status-3xx' : 'gdc-http-status-2xx' ) ) );
-							?>
-							<tr>
-								<td><span class="gdc-http-time"><?php echo esc_html( gmdate( 'H:i:s', $entry['ts'] ) ); ?></span></td>
-								<td class="gdc-http-url-cell">
-									<div class="gdc-http-request">
-										<span class="gdc-http-method gdc-http-method-<?php echo esc_attr( strtolower( $entry['method'] ) ); ?>"><?php echo esc_html( $entry['method'] ); ?></span>
-										<code class="gdc-http-url" title="<?php echo esc_attr( $entry['url'] ); ?>"><?php echo esc_html( $entry['url'] ); ?></code>
-									</div>
-								</td>
-								<td>
-									<div class="gdc-http-status-cell">
-										<span class="gdc-http-status <?php echo esc_attr( $cls ); ?>"><?php echo esc_html( $s > 0 ? (string) $s : '—' ); ?></span>
-										<span class="gdc-http-duration"><?php echo esc_html( number_format_i18n( (float) ( $entry['duration'] ?? 0.0 ), 3 ) . 's' ); ?></span>
-									</div>
-								</td>
-								<td><code><?php echo esc_html( isset( $entry['transport'] ) ? (string) $entry['transport'] : '-' ); ?></code></td>
-								<td>
-									<?php if ( ! empty( $entry['error'] ) ) : ?>
-										<span class="gdc-http-error"><?php echo esc_html( $entry['error'] ); ?></span>
-									<?php else : ?>
-										<span class="gdc-text-muted">&mdash;</span>
-									<?php endif; ?>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			</div>
-		<?php endif; ?>
+				</div>
+			<?php else : ?>
+				<div class="gdc-card">
+					<div class="gdc-table-wrap">
+						<table class="gdc-table gdc-http-table">
+							<thead>
+								<tr>
+									<th class="gdc-col-time"><?php esc_html_e( 'Time', 'globus-debug-control' ); ?></th>
+									<th><?php esc_html_e( 'Request', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-status"><?php esc_html_e( 'Status', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-transport"><?php esc_html_e( 'Transport', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-error"><?php esc_html_e( 'Error', 'globus-debug-control' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $log as $entry ) : ?>
+									<?php
+									$s   = (int) $entry['status'];
+									$cls = 0 === $s ? 'gdc-http-status-err'
+										: ( $s >= 500 ? 'gdc-http-status-5xx'
+										: ( $s >= 400 ? 'gdc-http-status-4xx'
+										: ( $s >= 300 ? 'gdc-http-status-3xx' : 'gdc-http-status-2xx' ) ) );
+									?>
+									<tr>
+										<td class="gdc-mono gdc-fs-2xs gdc-nowrap"><?php echo esc_html( gmdate( 'H:i:s', (int) $entry['ts'] ) ); ?></td>
+										<td class="gdc-http-url-cell">
+											<div class="gdc-row gdc-g-1h gdc-row--top gdc-row--wrap">
+												<span class="gdc-chip gdc-http-method gdc-http-method-<?php echo esc_attr( strtolower( (string) $entry['method'] ) ); ?>"><?php echo esc_html( (string) $entry['method'] ); ?></span>
+												<code class="gdc-http-url" title="<?php echo esc_attr( (string) $entry['url'] ); ?>"><?php echo esc_html( (string) $entry['url'] ); ?></code>
+											</div>
+										</td>
+										<td>
+											<div class="gdc-row gdc-g-1h">
+												<span class="gdc-chip gdc-http-status <?php echo esc_attr( $cls ); ?>"><?php echo esc_html( $s > 0 ? (string) $s : '—' ); ?></span>
+												<span class="gdc-dim gdc-fs-2xs gdc-http-duration"><?php echo esc_html( number_format_i18n( (float) ( $entry['duration'] ?? 0.0 ), 3 ) . 's' ); ?></span>
+											</div>
+										</td>
+										<td><code class="gdc-fs-2xs"><?php echo esc_html( isset( $entry['transport'] ) ? (string) $entry['transport'] : '-' ); ?></code></td>
+										<td>
+											<?php if ( ! empty( $entry['error'] ) ) : ?>
+												<span class="gdc-chip gdc-chip--red gdc-http-error"><?php echo esc_html( (string) $entry['error'] ); ?></span>
+											<?php else : ?>
+												<span class="gdc-dim">&mdash;</span>
+											<?php endif; ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 }

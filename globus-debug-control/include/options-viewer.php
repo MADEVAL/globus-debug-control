@@ -85,75 +85,81 @@ final class GDC_Options_Viewer {
 		$count_class = $stats['count'] > self::WARN_COUNT ? 'gdc-card-warning' : 'gdc-card-ok';
 		$size_class  = $stats['total_size'] > self::WARN_BYTES ? 'gdc-card-warning' : 'gdc-card-ok';
 		?>
-		<div class="gdc-tool-header">
-			<div class="gdc-cron-summary">
-				<div class="gdc-cron-summary-card <?php echo esc_attr( $count_class ); ?>">
-					<span class="dashicons dashicons-list-view"></span>
-					<div>
-						<strong><?php echo esc_html( $stats['count'] ); ?></strong>
-						<span><?php esc_html_e( 'Autoloaded rows', 'globus-debug-control' ); ?></span>
+		<div class="gdc-options-viewer">
+
+			<div class="gdc-cron-summary gdc-grid gdc-grid--auto gdc-mb-3h">
+				<div class="gdc-card gdc-kpi <?php echo esc_attr( $count_class ); ?>">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Autoloaded rows', 'globus-debug-control' ); ?></span>
+						<span class="<?php echo $stats['count'] > self::WARN_COUNT ? 'gdc-tx-amber' : 'gdc-tx-green'; ?>"><?php echo GDC_UI::icon( 'list', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
 					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo esc_html( number_format_i18n( (int) $stats['count'] ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Rows loaded on every request', 'globus-debug-control' ); ?></div>
 				</div>
-				<div class="gdc-cron-summary-card <?php echo esc_attr( $size_class ); ?>">
-					<span class="dashicons dashicons-chart-area"></span>
-					<div>
-						<strong><?php echo esc_html( size_format( $stats['total_size'] ) ); ?></strong>
-						<span><?php esc_html_e( 'Total autoloaded', 'globus-debug-control' ); ?></span>
+
+				<div class="gdc-card gdc-kpi <?php echo esc_attr( $size_class ); ?>">
+					<div class="gdc-row gdc-row--between">
+						<span class="gdc-kpi-label"><?php esc_html_e( 'Total autoloaded', 'globus-debug-control' ); ?></span>
+						<span class="<?php echo $stats['total_size'] > self::WARN_BYTES ? 'gdc-tx-amber' : 'gdc-tx-green'; ?>"><?php echo GDC_UI::icon( 'database', 'gdc-ico--sm' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?></span>
 					</div>
+					<div class="gdc-kpi-n"><span class="gdc-stat gdc-stat--sm"><?php echo esc_html( size_format( (int) $stats['total_size'] ) ); ?></span></div>
+					<div class="gdc-kpi-sub"><?php esc_html_e( 'Recommended under 800 KB', 'globus-debug-control' ); ?></div>
 				</div>
 			</div>
+
 			<?php if ( $stats['count'] >= self::LIMIT ) : ?>
-				<p class="description">
+				<div class="gdc-alert gdc-alert--info gdc-mb-3h">
 					<?php
 					echo esc_html(
 						sprintf(
 							/* translators: %d: row limit */
-							__( 'Showing top %d rows by size.', 'globus-debug-control' ),
+							__( 'Showing the top %d rows by size.', 'globus-debug-control' ),
 							self::LIMIT
 						)
 					);
 					?>
-				</p>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( empty( $options ) ) : ?>
+				<div class="gdc-empty-state">
+					<?php echo GDC_UI::empty_state( __( 'No autoloaded options found.', 'globus-debug-control' ), 'database' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
+				</div>
+			<?php else : ?>
+				<div class="gdc-card">
+					<div class="gdc-table-wrap">
+						<table class="gdc-table gdc-options-table">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Option name', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
+									<th class="gdc-col-bar"><?php esc_html_e( 'Relative size', 'globus-debug-control' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php
+								$max = ! empty( $options ) ? max( 1, $options[0]['value_size'] ) : 1;
+								foreach ( $options as $opt ) :
+									$pct       = (int) round( ( $opt['value_size'] / $max ) * 100 );
+									$bar_class = $opt['value_size'] > 100000 ? 'gdc-bar-danger'
+										: ( $opt['value_size'] > 10000 ? 'gdc-bar-warning' : 'gdc-bar-ok' );
+									?>
+									<tr>
+										<td><code title="<?php echo esc_attr( $opt['name'] ); ?>"><?php echo esc_html( $opt['name'] ); ?></code></td>
+										<td class="gdc-col-num"><?php echo esc_html( size_format( $opt['value_size'] ) ); ?></td>
+										<td>
+											<div class="gdc-size-bar-wrap" title="<?php echo esc_attr( $pct . '%' ); ?>">
+												<div class="gdc-size-bar <?php echo esc_attr( $bar_class ); ?>" style="width:<?php echo esc_attr( (string) $pct ); ?>%"></div>
+											</div>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				</div>
 			<?php endif; ?>
 		</div>
-
-		<?php if ( empty( $options ) ) : ?>
-			<div class="gdc-empty-state">
-				<span class="dashicons dashicons-database-view" aria-hidden="true"></span>
-				<p><?php esc_html_e( 'No autoloaded options found.', 'globus-debug-control' ); ?></p>
-			</div>
-		<?php else : ?>
-			<div class="gdc-table-scroll">
-				<table class="wp-list-table widefat striped gdc-options-table">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Option name', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-size"><?php esc_html_e( 'Size', 'globus-debug-control' ); ?></th>
-							<th class="gdc-col-bar"><?php esc_html_e( 'Relative size', 'globus-debug-control' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-						$max = ! empty( $options ) ? max( 1, $options[0]['value_size'] ) : 1;
-						foreach ( $options as $opt ) :
-							$pct       = (int) round( ( $opt['value_size'] / $max ) * 100 );
-							$bar_class = $opt['value_size'] > 100000 ? 'gdc-bar-danger'
-								: ( $opt['value_size'] > 10000 ? 'gdc-bar-warning' : 'gdc-bar-ok' );
-							?>
-							<tr>
-								<td><code title="<?php echo esc_attr( $opt['name'] ); ?>"><?php echo esc_html( $opt['name'] ); ?></code></td>
-								<td><?php echo esc_html( size_format( $opt['value_size'] ) ); ?></td>
-								<td>
-									<div class="gdc-size-bar-wrap" title="<?php echo esc_attr( $pct . '%' ); ?>">
-										<div class="gdc-size-bar <?php echo esc_attr( $bar_class ); ?>" style="width:<?php echo esc_attr( $pct ); ?>%"></div>
-									</div>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			</div>
-		<?php endif; ?>
 		<?php
 	}
 }

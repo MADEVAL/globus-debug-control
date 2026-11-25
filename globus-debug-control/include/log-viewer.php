@@ -229,7 +229,7 @@ final class GDC_Log_Viewer {
 		$path         = self::get_log_path();
 		$debug_state  = self::get_debug_state();
 		$can_generate = $debug_state['logging_active'];
-		$page         = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page         = max( 1, isset( $_GET['logpage'] ) ? (int) $_GET['logpage'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
 
 		$exists = file_exists( $path );
 		$size   = $exists ? @filesize( $path ) : 0;
@@ -238,7 +238,9 @@ final class GDC_Log_Viewer {
 		$total  = 0;
 
 		/** Maximum bytes to read for log rendering (2 MB). Prevents OOM on very large log files. */
-		$max_render_bytes = 2 * 1024 * 1024;        if ( $exists && $size > 0 ) {
+		$max_render_bytes = 2 * 1024 * 1024;
+
+		if ( $exists && $size > 0 ) {
 			if ( $size <= $max_render_bytes ) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				$content = @file_get_contents( $path );
@@ -254,6 +256,7 @@ final class GDC_Log_Viewer {
 					$content = false;
 				}
 			}
+
 			$all    = false !== $content ? array_reverse( explode( "\n", rtrim( $content ) ) ) : array();
 			$total  = count( $all );
 			$offset = ( $page - 1 ) * self::LINES_PER_PAGE;
@@ -262,70 +265,85 @@ final class GDC_Log_Viewer {
 
 		$total_pages = $total > 0 ? (int) ceil( $total / self::LINES_PER_PAGE ) : 1;
 
-		if ( isset( $_GET['cleared'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Log file cleared.', 'globus-debug-control' ) . '</p></div>';
-		}
-
-		GDC_WpConfig_Debug::render_dependency_notice( 'log' );
-
-		if ( ! $can_generate ) {
-			?>
-			<div class="notice notice-info inline gdc-log-generate-disabled">
-				<p>
-					<?php esc_html_e( 'Test errors are disabled because WP_DEBUG or error logging is off. Enable both to confirm that log writing works.', 'globus-debug-control' ); ?>
-				</p>
-			</div>
-			<?php
-		}
-
-		$last_fatal = get_option( 'gdc_last_fatal', null );
-		if ( is_array( $last_fatal ) && ! empty( $last_fatal['message'] ) ) {
-			$fatal_time = isset( $last_fatal['ts'] ) ? gmdate( 'Y-m-d H:i:s', (int) $last_fatal['ts'] ) : '';
-			$fatal_file = isset( $last_fatal['file'] ) ? $last_fatal['file'] : '';
-			$fatal_line = isset( $last_fatal['line'] ) ? (int) $last_fatal['line'] : 0;
-			?>
-			<div class="notice notice-error gdc-last-fatal">
-				<p>
-					<strong><?php esc_html_e( 'Last fatal error:', 'globus-debug-control' ); ?></strong>
-					<?php echo esc_html( $last_fatal['message'] ); ?>
-					<code><?php echo esc_html( $fatal_file . ':' . $fatal_line ); ?></code>
-					<?php if ( '' !== $fatal_time ) : ?>
-						<span class="gdc-text-muted">(<?php echo esc_html( $fatal_time ); ?>)</span>
-					<?php endif; ?>
-				</p>
-			</div>
-			<?php
-		}
-		?>
-		<script>var gdcLog=
-		<?php
-		echo wp_json_encode(
-			array(
-				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
-				'nonce'           => wp_create_nonce( self::NONCE_GENERATE ),
-				'statusNonce'     => wp_create_nonce( self::NONCE_ACTION ),
-				'mtime'           => $mtime,
-				'suppressedTypes' => self::get_suppressed_types(),
-			)
+		$error_type_options = array(
+			'notice'     => 'E_USER_NOTICE',
+			'warning'    => 'E_USER_WARNING',
+			'deprecated' => 'E_USER_DEPRECATED',
+			'error'      => 'E_USER_ERROR',
+			'exception'  => 'Uncaught Exception',
+			'fatal'      => 'Fatal Error (sim.)',
+			'parse'      => 'Parse Error (sim.)',
 		);
+		$suppressed_types   = self::get_suppressed_types();
 		?>
-							;</script>
 		<div class="gdc-log-viewer">
-			<div class="gdc-log-toolbar">
-				<div class="gdc-log-toolbar-row">
-					<div class="gdc-log-meta">
+
+			<?php if ( isset( $_GET['cleared'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag. ?>
+				<?php echo GDC_UI::alert( esc_html__( 'Log file cleared.', 'globus-debug-control' ), 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
+			<?php endif; ?>
+
+			<div class="gdc-alert-wrap gdc-dependency gdc-mb-3h">
+				<?php GDC_WpConfig_Debug::render_dependency_notice( 'log' ); ?>
+			</div>
+
+			<?php if ( ! $can_generate ) : ?>
+				<div class="gdc-alert gdc-alert--info gdc-mb-3h gdc-log-generate-disabled">
+					<?php esc_html_e( 'Test errors are disabled because WP_DEBUG or error logging is off. Enable both to confirm that log writing works.', 'globus-debug-control' ); ?>
+				</div>
+			<?php endif; ?>
+
+			<?php
+			$last_fatal = get_option( 'gdc_last_fatal', null );
+			if ( is_array( $last_fatal ) && ! empty( $last_fatal['message'] ) ) :
+				$fatal_time = isset( $last_fatal['ts'] ) ? gmdate( 'Y-m-d H:i:s', (int) $last_fatal['ts'] ) : '';
+				$fatal_file = isset( $last_fatal['file'] ) ? (string) $last_fatal['file'] : '';
+				$fatal_line = isset( $last_fatal['line'] ) ? (int) $last_fatal['line'] : 0;
+				?>
+				<div class="gdc-alert gdc-alert--danger gdc-mb-3h gdc-last-fatal">
+					<p><strong><?php esc_html_e( 'Last fatal error:', 'globus-debug-control' ); ?></strong> <?php echo esc_html( (string) $last_fatal['message'] ); ?></p>
+					<?php if ( '' !== $fatal_file ) : ?>
+						<p class="gdc-mono gdc-fs-2xs gdc-mt-2"><?php echo esc_html( $fatal_file . ':' . $fatal_line ); ?>
+							<?php if ( '' !== $fatal_time ) : ?>
+								<span class="gdc-dim">(<?php echo esc_html( $fatal_time ); ?>)</span>
+							<?php endif; ?>
+						</p>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+
+			<script>var gdcLog=
+			<?php
+			echo wp_json_encode(
+				array(
+					'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+					'nonce'           => wp_create_nonce( self::NONCE_GENERATE ),
+					'statusNonce'     => wp_create_nonce( self::NONCE_ACTION ),
+					'mtime'           => $mtime,
+					'suppressedTypes' => $suppressed_types,
+				)
+			);
+			?>
+							;</script>
+
+			<div class="gdc-card gdc-mb-3h gdc-log-toolbar">
+				<div class="gdc-card-pad gdc-toolbar gdc-mb-0">
+					<div class="gdc-console-meta">
 						<?php if ( $exists ) : ?>
 							<code title="<?php echo esc_attr( $path ); ?>"><?php echo esc_html( $path ); ?></code>
-							<span class="gdc-log-badge"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
+							<button type="button" class="gdc-btn gdc-btn--sm gdc-btn--icon" data-gdc-copy="<?php echo esc_attr( $path ); ?>" aria-label="<?php esc_attr_e( 'Copy log path', 'globus-debug-control' ); ?>" title="<?php esc_attr_e( 'Copy log path', 'globus-debug-control' ); ?>">
+								<?php echo GDC_UI::icon( 'copy', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+							</button>
+							<span class="gdc-chip"><?php echo esc_html( size_format( (int) $size ) ); ?></span>
 							<?php /* translators: %s: number of log lines */ ?>
-							<span class="gdc-log-badge"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
+							<span class="gdc-chip"><?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?></span>
 						<?php else : ?>
 							<span><?php esc_html_e( 'Log file does not exist.', 'globus-debug-control' ); ?></span>
 						<?php endif; ?>
 					</div>
+
 					<?php if ( $exists && $size > 0 ) : ?>
-						<div class="gdc-log-actions">
-							<label class="gdc-log-wrap-label">
+						<div class="gdc-console-actions">
+							<label class="gdc-check gdc-log-wrap-label">
 								<input type="checkbox" id="gdc-log-wrap-toggle">
 								<?php esc_html_e( 'Word wrap', 'globus-debug-control' ); ?>
 							</label>
@@ -338,58 +356,49 @@ final class GDC_Log_Viewer {
 								)
 							);
 							?>
-										" class="button button-secondary">
-								<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
+									" class="gdc-btn gdc-btn--surface">
+								<?php echo GDC_UI::icon( 'cloud-download', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+								<?php esc_html_e( 'Download', 'globus-debug-control' ); ?>
 							</a>
-							<form method="post" class="gdc-clear-form">
+							<form method="post" class="gdc-inline">
 								<?php wp_nonce_field( self::NONCE_CLEAR ); ?>
 								<input type="hidden" name="gdc_clear_log" value="1">
-								<button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>')">
-									<span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Clear Log', 'globus-debug-control' ); ?>
+								<button type="submit" class="gdc-btn gdc-btn--danger" data-gdc-confirm="<?php esc_attr_e( 'Clear the log file?', 'globus-debug-control' ); ?>">
+									<?php echo GDC_UI::icon( 'trash', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+									<?php esc_html_e( 'Clear log', 'globus-debug-control' ); ?>
 								</button>
 							</form>
 						</div>
 					<?php endif; ?>
 				</div>
-				<div class="gdc-log-toolbar-row">
-					<div class="gdc-log-generate">
-						<?php
-						$suppressed_types   = self::get_suppressed_types();
-						$error_type_options = array(
-							'notice'     => 'E_USER_NOTICE',
-							'warning'    => 'E_USER_WARNING',
-							'deprecated' => 'E_USER_DEPRECATED',
-							'error'      => 'E_USER_ERROR',
-							'exception'  => 'Uncaught Exception',
-							'fatal'      => 'Fatal Error (sim.)',
-							'parse'      => 'Parse Error (sim.)',
-						);
-						?>
+
+				<div class="gdc-divider gdc-mb-0"></div>
+
+				<div class="gdc-card-pad gdc-toolbar gdc-mb-0">
+					<div class="gdc-toolbar-group">
 						<span class="gdc-toolbar-label"><?php esc_html_e( 'Test error', 'globus-debug-control' ); ?></span>
-						<select id="gdc-error-type" class="gdc-select-small" <?php disabled( ! $can_generate ); ?>>
+						<select id="gdc-error-type" class="gdc-input" <?php disabled( ! $can_generate ); ?>>
 							<?php foreach ( $error_type_options as $val => $label ) : ?>
 								<option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( in_array( $val, $suppressed_types, true ) ? $label . ' - suppressed' : $label ); ?></option>
 							<?php endforeach; ?>
 						</select>
-						<button type="button" id="gdc-generate-error" class="button button-secondary" <?php disabled( ! $can_generate ); ?> <?php echo $can_generate ? '' : 'title="' . esc_attr( __( 'Enable WP_DEBUG and error logging first.', 'globus-debug-control' ) ) . '"'; ?>>
+						<button type="button" id="gdc-generate-error" class="gdc-btn gdc-btn--surface" <?php disabled( ! $can_generate ); ?> <?php echo $can_generate ? '' : 'title="' . esc_attr__( 'Enable WP_DEBUG and error logging first.', 'globus-debug-control' ) . '"'; ?>>
+							<?php echo GDC_UI::icon( 'bolt', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 							<?php esc_html_e( 'Generate', 'globus-debug-control' ); ?>
 						</button>
 					</div>
-					<div class="gdc-log-right">
-						<button type="button" id="gdc-live-toggle" class="button button-secondary" title="<?php esc_attr_e( 'Auto-refresh when log file changes', 'globus-debug-control' ); ?>">
-							<span class="dashicons dashicons-update gdc-live-icon" aria-hidden="true"></span>
+					<div class="gdc-toolbar-group">
+						<button type="button" id="gdc-live-toggle" class="gdc-btn gdc-btn--surface" title="<?php esc_attr_e( 'Auto-refresh when log file changes', 'globus-debug-control' ); ?>">
+							<?php echo GDC_UI::icon( 'refresh', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 							<?php esc_html_e( 'Live tail', 'globus-debug-control' ); ?>
 						</button>
 					</div>
 				</div>
-			</div><!-- /.gdc-log-toolbar -->
+			</div>
 
 			<?php if ( $exists && $size > $max_render_bytes ) : ?>
-				<div class="notice notice-warning notice-alt gdc-log-tail-notice inline">
-					<p>
-						<span class="dashicons dashicons-download" aria-hidden="true"></span>
-						<?php esc_html_e( 'The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything.', 'globus-debug-control' ); ?>
-					</p>
+				<div class="gdc-alert gdc-alert--warning gdc-mb-3h gdc-log-tail-notice">
+					<?php esc_html_e( 'The log file is larger than the render limit - only the last 2 MB are shown. Download the full file to inspect everything.', 'globus-debug-control' ); ?>
 				</div>
 			<?php endif; ?>
 
@@ -410,41 +419,47 @@ final class GDC_Log_Viewer {
 					}
 				}
 				?>
-			<div id="gdc-log-wrap">
-				<textarea id="gdc-log-code" readonly><?php echo esc_textarea( implode( "\n", $text_lines ) ); ?></textarea>
-			</div>
-			<script type="application/json" id="gdc-log-line-data"><?php echo wp_json_encode( $line_data ); ?></script>
+				<div class="gdc-console" id="gdc-log-wrap">
+					<textarea id="gdc-log-code" readonly><?php echo esc_textarea( implode( "\n", $text_lines ) ); ?></textarea>
+				</div>
+				<script type="application/json" id="gdc-log-line-data"><?php echo wp_json_encode( $line_data ); ?></script>
 
 				<?php if ( $total_pages > 1 ) : ?>
-			<div class="gdc-log-pagination tablenav">
-				<div class="tablenav-pages">
-					<span class="displaying-num">					<?php /* translators: %s: number of log lines */ ?>						<?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?>
-					</span>
-					<?php
-					$base_url = GDC_UI::module_url( 'log' );
-					if ( $page > 1 ) {
-						echo '<a class="prev-page button" href="' . esc_url( add_query_arg( 'logpage', $page - 1, $base_url ) ) . '">‹</a>';
-					}
-					echo '<span class="paging-input">' . esc_html( $page ) . ' / ' . esc_html( $total_pages ) . '</span>';
-					if ( $page < $total_pages ) {
-						echo '<a class="next-page button" href="' . esc_url( add_query_arg( 'logpage', $page + 1, $base_url ) ) . '">›</a>';
-					}
-					?>
-				</div>
-			</div>
-			<?php endif; ?>
+					<div class="gdc-row gdc-row--between gdc-mt-3">
+						<span class="gdc-dim gdc-fs-xs">
+							<?php /* translators: %s: number of log lines */ ?>
+							<?php echo esc_html( sprintf( _n( '%s line', '%s lines', $total, 'globus-debug-control' ), number_format_i18n( $total ) ) ); ?>
+						</span>
+						<div class="gdc-pager">
+							<?php if ( $page > 1 ) : ?>
+								<a class="gdc-btn gdc-btn--sm gdc-btn--icon gdc-pager-prev" href="<?php echo esc_url( GDC_UI::module_url( 'log', array( 'logpage' => $page - 1 ) ) ); ?>" aria-label="<?php esc_attr_e( 'Previous page', 'globus-debug-control' ); ?>">
+									<?php echo GDC_UI::icon( 'chevronR', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+								</a>
+							<?php endif; ?>
+							<span class="gdc-chip"><?php echo esc_html( $page . ' / ' . $total_pages ); ?></span>
+							<?php if ( $page < $total_pages ) : ?>
+								<a class="gdc-btn gdc-btn--sm gdc-btn--icon" href="<?php echo esc_url( GDC_UI::module_url( 'log', array( 'logpage' => $page + 1 ) ) ); ?>" aria-label="<?php esc_attr_e( 'Next page', 'globus-debug-control' ); ?>">
+									<?php echo GDC_UI::icon( 'chevronR', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+								</a>
+							<?php endif; ?>
+						</div>
+					</div>
+				<?php endif; ?>
 
 			<?php else : ?>
-			<div class="gdc-log-empty-state">
-				<span class="dashicons dashicons-media-text" aria-hidden="true"></span>
-				<?php if ( ! $debug_state['wp_debug'] ) : ?>
-					<p><?php esc_html_e( 'Log file is empty. WP_DEBUG is off, so PHP does not report new errors.', 'globus-debug-control' ); ?></p>
-				<?php elseif ( ! $debug_state['log_enabled'] ) : ?>
-					<p><?php esc_html_e( 'Log file is empty. Error logging is disabled in the plugin settings.', 'globus-debug-control' ); ?></p>
-				<?php else : ?>
-					<p><?php esc_html_e( 'Log file is empty.', 'globus-debug-control' ); ?></p>
-				<?php endif; ?>
-			</div>
+				<div class="gdc-card gdc-card-pad gdc-log-empty-state">
+					<?php
+					if ( ! $debug_state['wp_debug'] ) {
+						$gdc_empty_text = __( 'Log file is empty. WP_DEBUG is off, so PHP does not report new errors.', 'globus-debug-control' );
+					} elseif ( ! $debug_state['log_enabled'] ) {
+						$gdc_empty_text = __( 'Log file is empty. Error logging is disabled in the plugin settings.', 'globus-debug-control' );
+					} else {
+						$gdc_empty_text = __( 'Log file is empty.', 'globus-debug-control' );
+					}
+
+					echo GDC_UI::empty_state( $gdc_empty_text, 'doc' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
+					?>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php
@@ -520,3 +535,4 @@ final class GDC_Log_Viewer {
 		';
 	}
 }
+
