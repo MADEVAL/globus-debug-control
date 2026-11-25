@@ -430,8 +430,9 @@ final class GDC_WpConfig_Debug {
 		$config_path = self::find_wp_config();
 		$writable    = ! empty( $config_path ) && wp_is_writable( $config_path );
 		$wpcfg_url   = GDC_UI::module_url( 'wpcfg' );
+		$variant     = $wp_debug ? 'info' : 'warning';
 		?>
-		<div class="notice <?php echo $wp_debug ? 'notice-info' : 'notice-warning'; ?> gdc-debug-dependency">
+		<div class="gdc-alert gdc-alert--<?php echo esc_attr( $variant ); ?> gdc-debug-dependency">
 			<p>
 				<strong>
 					<?php
@@ -450,51 +451,38 @@ final class GDC_WpConfig_Debug {
 				}
 				?>
 			</p>
+
 			<?php if ( $writable ) : ?>
-				<form method="post" class="gdc-quick-debug-form">
+				<form method="post" class="gdc-quick-debug-form gdc-mt-2">
 					<?php wp_nonce_field( self::QUICK_NONCE ); ?>
 					<input type="hidden" name="gdc_quick_debug" value="1">
 					<input type="hidden" name="gdc_return_tab" value="<?php echo esc_attr( $return_tab ); ?>">
-					<button type="submit" class="button button-primary">
-						<?php
-						if ( ! $wp_debug ) {
-							esc_html_e( 'Enable WP_DEBUG + WP_DEBUG_LOG', 'globus-debug-control' );
-						} else {
-							esc_html_e( 'Enable WP_DEBUG_LOG', 'globus-debug-control' );
-						}
-						?>
-					</button>
-					<span class="description">
-						<?php esc_html_e( 'Writes to wp-config.php after creating a backup. WP_DEBUG_DISPLAY is switched off when debug mode is enabled for the first time.', 'globus-debug-control' ); ?>
-					</span>
+					<div class="gdc-row gdc-g-2h gdc-row--wrap">
+						<button type="submit" class="gdc-btn gdc-btn--pri gdc-btn--sm">
+							<?php echo GDC_UI::icon( 'bolt', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+							<?php
+							if ( ! $wp_debug ) {
+								esc_html_e( 'Enable WP_DEBUG + WP_DEBUG_LOG', 'globus-debug-control' );
+							} else {
+								esc_html_e( 'Enable WP_DEBUG_LOG', 'globus-debug-control' );
+							}
+							?>
+						</button>
+						<span class="gdc-fs-2xs">
+							<?php esc_html_e( 'Writes to wp-config.php after creating a backup. WP_DEBUG_DISPLAY is switched off when debug mode is enabled for the first time.', 'globus-debug-control' ); ?>
+						</span>
+					</div>
 				</form>
 			<?php else : ?>
-				<p>
-					<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="button button-secondary">
+				<div class="gdc-row gdc-g-2h gdc-row--wrap gdc-mt-2">
+					<a href="<?php echo esc_url( $wpcfg_url ); ?>" class="gdc-btn gdc-btn--surface gdc-btn--sm">
+						<?php echo GDC_UI::icon( 'debug', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 						<?php esc_html_e( 'Open WP_DEBUG settings', 'globus-debug-control' ); ?>
 					</a>
-					<span class="description"><?php esc_html_e( 'wp-config.php is not writable, so the constants must be enabled manually.', 'globus-debug-control' ); ?></span>
-				</p>
+					<span class="gdc-fs-2xs"><?php esc_html_e( 'wp-config.php is not writable, so the constants must be enabled manually.', 'globus-debug-control' ); ?></span>
+				</div>
 			<?php endif; ?>
 		</div>
-		<?php
-	}
-
-	/**
-	 * Prints compact WP_DEBUG / WP_DEBUG_LOG status badges.
-	 */
-	public static function render_status_badges(): void {
-		$wp_debug     = self::is_wp_debug_on();
-		$wp_debug_log = self::is_wp_debug_log_on();
-		?>
-		<span class="gdc-wpcfg-status">
-			<span class="gdc-badge <?php echo $wp_debug ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
-				WP_DEBUG: <?php echo $wp_debug ? esc_html__( 'On', 'globus-debug-control' ) : esc_html__( 'Off', 'globus-debug-control' ); ?>
-			</span>
-			<span class="gdc-badge <?php echo $wp_debug_log ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
-				WP_DEBUG_LOG: <?php echo $wp_debug_log ? esc_html__( 'On', 'globus-debug-control' ) : esc_html__( 'Off', 'globus-debug-control' ); ?>
-			</span>
-		</span>
 		<?php
 	}
 
@@ -517,7 +505,7 @@ final class GDC_WpConfig_Debug {
 		}
 
 		if ( ! self::is_wp_debug_on() || ! self::is_wp_debug_log_on() ) {
-			echo '<div class="gdc-alert-wrap gdc-dependency">';
+			echo '<div class="gdc-dependency gdc-mb-3h">';
 			self::render_dependency_notice( 'wpcfg' );
 			echo '</div>';
 		}
@@ -664,3 +652,4 @@ final class GDC_WpConfig_Debug {
 		return $constants['WP_DEBUG']['value'];
 	}
 }
+

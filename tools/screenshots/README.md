@@ -57,6 +57,7 @@ screenshots and `out/*.html` for a single template without the marketing frame.
 ```
 generate-templates.php  renders templates from the local sandbox (dev only)
 templates/               the .gdc-app shell of each of the nine screens
+templates/sprite.html    shared inline icon sprite (injected by capture.mjs)
 fixtures/debug.log       demo log content used by the Error Log template
 layout.mjs               WordPress admin bar, menu and page wrapper
 capture.mjs              renders templates and captures raw/<shot>.png

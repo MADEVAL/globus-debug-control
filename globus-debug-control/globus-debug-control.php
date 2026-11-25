@@ -109,6 +109,7 @@ final class Globus_Debug_Control {
 		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_settings_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_dashboard_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_enqueue_php_error_assets' ) );
 
 		GDC_Log_Viewer::register_ajax_hooks();
@@ -169,7 +170,7 @@ final class Globus_Debug_Control {
 	 * @return string[] Modified action links with Settings prepended.
 	 */
 	public function plugin_action_links( array $links ): array {
-		$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=globus-debug-control' ) ) . '">' . esc_html__( 'Settings', 'globus-debug-control' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( GDC_UI::page_url() ) . '">' . esc_html__( 'Dashboard', 'globus-debug-control' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

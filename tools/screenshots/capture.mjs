@@ -153,6 +153,13 @@ async function renderPages( options ) {
 	const scripts = scriptHrefs();
 	const rendered = [];
 	const assetHref = toHref( previewDir, pluginAssets ) + '/';
+	let sprite = '';
+
+	try {
+		sprite = await readFile( path.join( here, 'templates', 'sprite.html' ), 'utf8' );
+	} catch {
+		sprite = '';
+	}
 
 	for ( const [ index, screen ] of SCREENS.entries() ) {
 		if ( options.only && screen.slug !== options.only ) {
@@ -160,7 +167,7 @@ async function renderPages( options ) {
 		}
 
 		const template = await readFile( path.join( here, 'templates', screen.template ), 'utf8' );
-		const content = template.replaceAll( ASSET_PREFIX, assetHref );
+		const content = ( sprite ? sprite + '\n' : '' ) + template.replaceAll( ASSET_PREFIX, assetHref );
 		const html = renderDocument( {
 			page: screen.page,
 			content,

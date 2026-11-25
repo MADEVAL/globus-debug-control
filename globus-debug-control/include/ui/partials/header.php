@@ -19,7 +19,7 @@ $gdc_wp_debug_on = ! empty( $gdc_wp_debug_on );
 <div class="gdc-plughead">
 	<div class="gdc-plughead-left">
 		<a class="gdc-logo" href="<?php echo esc_url( GDC_UI::page_url() ); ?>">
-			<img class="gdc-logo-img" src="<?php echo esc_url( GDC_ASSETS_URL . 'img/logo.svg' ); ?>" alt="<?php esc_attr_e( 'GLOBUS Debug Control', 'globus-debug-control' ); ?>" />
+			<img class="gdc-logo-img" src="<?php echo esc_url( GDC_ASSETS_URL . 'img/logo.png' ); ?>" alt="<?php esc_attr_e( 'GLOBUS Debug Control', 'globus-debug-control' ); ?>" />
 		</a>
 		<span class="gdc-chip gdc-chip--kbd">v<?php echo esc_html( $gdc_version ); ?></span>
 		<span class="gdc-chip <?php echo $gdc_wp_debug_on ? 'gdc-chip--red' : 'gdc-chip--green'; ?>" title="<?php esc_attr_e( 'Current WP_DEBUG state', 'globus-debug-control' ); ?>">

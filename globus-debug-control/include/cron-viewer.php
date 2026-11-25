@@ -1222,13 +1222,5 @@ final class GDC_Cron_Viewer {
 
 		return round( $seconds / 86400 ) . 'd';
 	}
-
-	/**
-	 * Returns an empty string (styles are enqueued via the global admin stylesheet).
-	 *
-	 * @return string
-	 */
-	public static function get_inline_styles(): string {
-		return '';
-	}
 }
+

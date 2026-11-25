@@ -31,7 +31,7 @@ $gdc_field   = $gdc_opt . '[';
 		</div>
 	<?php endif; ?>
 
-	<div class="gdc-alert-wrap gdc-dependency">
+	<div class="gdc-dependency">
 		<?php GDC_WpConfig_Debug::render_dependency_notice( 'settings' ); ?>
 	</div>
 
@@ -290,3 +290,4 @@ $gdc_field   = $gdc_opt . '[';
 </div>
 <?php
 // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+

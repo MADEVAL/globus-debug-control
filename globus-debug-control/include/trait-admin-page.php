@@ -39,7 +39,7 @@ trait GDC_Admin_Page {
 			'manage_options',
 			'globus-debug-control',
 			array( $this, 'render_settings_page' ),
-			GDC_ASSETS_URL . 'img/logo.svg',
+			GDC_ASSETS_URL . 'img/logo.png',
 			81
 		);
 
@@ -125,24 +125,44 @@ trait GDC_Admin_Page {
 	 */
 	public function render_dashboard_widget() {
 		$last_fatal = get_option( 'gdc_last_fatal', null );
+		$opts       = $this->get_options();
+		$log_path   = GDC_Log_Viewer::get_log_path();
+		$log_exists = '' !== $log_path && file_exists( $log_path );
+		$log_size   = $log_exists ? (int) @filesize( $log_path ) : 0;
 		?>
-		<div class="gdc-dashboard">
+		<div class="gdc-dashboard gdc-widget">
 			<?php if ( is_array( $last_fatal ) && ! empty( $last_fatal['message'] ) ) : ?>
-				<div class="gdc-last-fatal">
-					<p>
-						<strong><?php esc_html_e( 'Last fatal error:', 'globus-debug-control' ); ?></strong><br>
-						<?php echo esc_html( $last_fatal['message'] ); ?><br>
-						<code><?php echo esc_html( ( $last_fatal['file'] ?? '' ) . ':' . (int) ( $last_fatal['line'] ?? 0 ) ); ?></code>
-					</p>
+				<div class="gdc-alert gdc-alert--danger gdc-last-fatal">
+					<p class="gdc-fw-semibold"><?php esc_html_e( 'Last fatal error', 'globus-debug-control' ); ?></p>
+					<p class="gdc-mono gdc-fs-2xs"><?php echo esc_html( (string) $last_fatal['message'] ); ?></p>
+					<?php if ( ! empty( $last_fatal['file'] ) ) : ?>
+						<p class="gdc-mono gdc-fs-2xs gdc-dim"><?php echo esc_html( (string) $last_fatal['file'] . ':' . (int) ( $last_fatal['line'] ?? 0 ) ); ?></p>
+					<?php endif; ?>
 				</div>
 			<?php else : ?>
-				<p><?php esc_html_e( 'No fatal errors recorded.', 'globus-debug-control' ); ?></p>
+				<div class="gdc-alert gdc-alert--success">
+					<p class="gdc-fw-semibold"><?php esc_html_e( 'No fatal errors recorded.', 'globus-debug-control' ); ?></p>
+					<p class="gdc-fs-xs"><?php esc_html_e( 'The error log is clean.', 'globus-debug-control' ); ?></p>
+				</div>
 			<?php endif; ?>
-			<p>
-				<a href="<?php echo esc_url( GDC_UI::module_url( 'log' ) ); ?>">
+
+			<div class="gdc-row gdc-g-2h gdc-row--wrap gdc-mt-2">
+				<?php
+				echo GDC_UI::status_chip( GDC_WpConfig_Debug::is_wp_debug_on(), 'WP_DEBUG ON', 'WP_DEBUG OFF' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
+				echo GDC_UI::status_chip( ! empty( $opts['log_enabled'] ), __( 'Logging on', 'globus-debug-control' ), __( 'Logging off', 'globus-debug-control' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
+
+				if ( $log_exists ) {
+					echo GDC_UI::chip( size_format( (int) $log_size ), 'blue' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
+				}
+				?>
+			</div>
+
+			<div class="gdc-mt-2">
+				<a class="gdc-btn gdc-btn--sm gdc-btn--surface" href="<?php echo esc_url( GDC_UI::module_url( 'log' ) ); ?>">
+					<?php echo GDC_UI::icon( 'code', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 					<?php esc_html_e( 'Open Error Log', 'globus-debug-control' ); ?>
 				</a>
-			</p>
+			</div>
 		</div>
 		<?php
 	}
@@ -467,6 +487,23 @@ trait GDC_Admin_Page {
 		if ( 'log' === $tab ) {
 			wp_enqueue_code_editor( array( 'type' => 'text/plain' ) );
 		}
+	}
+
+	/**
+	 * Enqueues the design tokens on the WordPress dashboard for the widget.
+	 *
+	 * @param string $hook Current admin page hook suffix.
+	 */
+	public function admin_enqueue_dashboard_assets( string $hook ): void {
+		if ( 'index.php' !== $hook ) {
+			return;
+		}
+
+		$css = GDC_ASSETS_URL . 'css/';
+
+		wp_enqueue_style( 'gdc-tokens', $css . 'gdc-tokens.css', array(), $this->asset_version( 'assets/css/gdc-tokens.css' ) );
+		wp_enqueue_style( 'gdc-ui', $css . 'gdc-ui.css', array( 'gdc-tokens' ), $this->asset_version( 'assets/css/gdc-ui.css' ) );
+		wp_enqueue_style( 'gdc-components', $css . 'gdc-components.css', array( 'gdc-ui' ), $this->asset_version( 'assets/css/gdc-components.css' ) );
 	}
 
 	/**

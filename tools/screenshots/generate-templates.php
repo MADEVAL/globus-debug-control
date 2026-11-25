@@ -163,9 +163,18 @@ foreach ( $pages as $slug => $config ) {
 	$plugin->render_settings_page();
 	$html = (string) ob_get_clean();
 
-	$sprite_start = strpos( $html, '<svg xmlns="http://www.w3.org/2000/svg" style="display:none"' );
-	$app_start    = strpos( $html, '<div class="gdc-app">' );
-	$start        = false !== $sprite_start ? $sprite_start : $app_start;
+	// The inline icon sprite is identical on every screen: keep it once.
+	if ( preg_match( '#<svg xmlns="http://www.w3.org/2000/svg" style="display:none".*?</svg>#s', $html, $sprite_match ) ) {
+		$sprite_file = __DIR__ . '/templates/sprite.html';
+
+		if ( 'overview' === $slug ) {
+			file_put_contents( $sprite_file, $sprite_match[0] . "\n" );
+		}
+
+		$html = str_replace( $sprite_match[0], '', $html );
+	}
+
+	$start = strpos( $html, '<div class="gdc-app">' );
 
 	if ( false === $start ) {
 		fwrite( STDERR, "Shell not found for {$slug}\n" );

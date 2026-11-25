@@ -282,7 +282,7 @@ final class GDC_Log_Viewer {
 				<?php echo GDC_UI::alert( esc_html__( 'Log file cleared.', 'globus-debug-control' ), 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
 			<?php endif; ?>
 
-			<div class="gdc-alert-wrap gdc-dependency gdc-mb-3h">
+			<div class="gdc-dependency gdc-mb-3h">
 				<?php GDC_WpConfig_Debug::render_dependency_notice( 'log' ); ?>
 			</div>
 
@@ -491,48 +491,6 @@ final class GDC_Log_Viewer {
 		}
 
 		return 'gdc-log-info';
-	}
-
-	/**
-	 * Returns the inline CSS styles for the log viewer component.
-	 *
-	 * @return string CSS rules string.
-	 */
-	public static function get_inline_styles(): string {
-		return '
-			.gdc-log-viewer { margin-top:16px; }
-			.gdc-log-toolbar { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f6f7f7; border:1px solid #dcdcde; border-bottom:none; border-radius:3px 3px 0 0; flex-wrap:wrap; gap:8px; }
-			.gdc-log-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:#50575e; }
-			.gdc-log-meta code { font-size:11px; }
-			.gdc-log-badge { background:#dcdcde; border-radius:10px; padding:1px 8px; font-size:11px; white-space:nowrap; }
-			.gdc-log-actions { display:flex; align-items:center; gap:6px; }
-			.gdc-log-actions .button .dashicons { font-size:14px; width:14px; height:14px; vertical-align:middle; margin-right:3px; }
-			.gdc-log-empty-state { padding:32px; text-align:center; background:#fff; border:1px solid #dcdcde; border-radius:0 0 3px 3px; color:#646970; }
-			.gdc-log-entries { border:1px solid #1d2327; background:#1e1e1e; border-radius:0 0 3px 3px; max-height:620px; overflow-y:auto; font-family:Consolas,"Fira Code","JetBrains Mono","Courier New",monospace; font-size:12px; line-height:1.65; }
-			.gdc-log-line { display:flex; border-bottom:1px solid rgba(255,255,255,.04); }
-			.gdc-log-line:last-child { border-bottom:none; }
-			.gdc-log-text { flex:1; padding:2px 14px; word-break:break-all; color:#abb2bf; }
-			.gdc-log-fatal { background:rgba(248,99,104,.08); }
-			.gdc-log-fatal .gdc-log-text { color:#f8c9cb; }
-			.gdc-log-warning { background:rgba(240,195,60,.07); }
-			.gdc-log-warning .gdc-log-text { color:#f0e0a0; }
-			.gdc-log-notice { background:rgba(114,174,230,.07); }
-			.gdc-log-notice .gdc-log-text { color:#a9c5e8; }
-			.gdc-log-cron { background:rgba(104,222,124,.05); }
-			.gdc-log-cron .gdc-log-text { color:#a8d8b0; }
-			.gdc-log-info .gdc-log-text { color:#8b949e; }
-			.gdc-log-ts { color:#4a5568; font-style:italic; }
-			.gdc-log-type { font-weight:700; }
-			.gdc-log-fatal .gdc-log-type { color:#f86368; }
-			.gdc-log-warning .gdc-log-type { color:#e5b94e; }
-			.gdc-log-notice .gdc-log-type { color:#89b4fa; }
-			.gdc-log-cron .gdc-log-type { color:#68de7c; }
-			.gdc-log-file { color:#4d87c7; }
-			.gdc-log-lnr { color:#e5c07b; }
-			.gdc-log-pagination { padding:8px 0; }
-			.gdc-log-pagination .tablenav-pages { display:flex; align-items:center; gap:8px; }
-			.gdc-clear-form { display:inline; }
-		';
 	}
 }
 

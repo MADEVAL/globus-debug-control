@@ -1057,25 +1057,6 @@ body.wp-admin .gdc-app .gdc-field-box input.gdc-input:focus {
 .gdc-alert .gdc-btn { margin-top: var(--gdc-sp-2); }
 .gdc-alert strong { font-weight: var(--gdc-fw-bold); }
 
-/* Legacy WordPress notices rendered by shared helpers. */
-.gdc-alert-wrap .notice {
-	margin: 0;
-	padding: var(--gdc-sp-3h) var(--gdc-sp-4);
-	border: 1px solid var(--gdc-line);
-	border-left-width: 4px;
-	border-radius: var(--gdc-r-md);
-	background: var(--gdc-s2);
-	box-shadow: none;
-}
-
-.gdc-alert-wrap .notice p { margin: 0; font-size: var(--gdc-fs-sm); }
-.gdc-alert-wrap .notice p + p { margin-top: var(--gdc-sp-2); }
-.gdc-alert-wrap .notice.notice-warning { background: var(--gdc-amber-dim); border-color: var(--gdc-amber-border); }
-.gdc-alert-wrap .notice.notice-info { background: var(--gdc-blue-dim); border-color: var(--gdc-blue-dim-d); }
-.gdc-alert-wrap .notice.notice-error { background: var(--gdc-red-dim); border-color: var(--gdc-red); }
-.gdc-alert-wrap .notice.notice-success { background: var(--gdc-green-dim); border-color: var(--gdc-green-border); }
-.gdc-alert-wrap .notice .button { margin-top: var(--gdc-sp-2); }
-
 .gdc-progress {
 	height: 8px;
 	background: var(--gdc-s3);

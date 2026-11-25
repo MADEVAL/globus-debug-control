@@ -25,7 +25,7 @@ No SSH. No file editing. No installing five separate plugins for five separate p
 * **One screen instead of five plugins.** Error filtering, log viewer, WP_DEBUG toggle, cron inspector, transient manager, autoloaded options, HTTP logger, and constants view live in one place.
 * **Less noise, not less signal.** Notices, deprecations, and warnings are filtered independently. Fatal errors are never hidden.
 * **No SSH, no SQL, no wp-config.php edits.** Everything happens on the **GLOBUS Debug** screen, including toggling WP_DEBUG constants.
-* **Safe on a live site.** The diagnostic tabs are read-only. Every action is protected by capability checks and nonces. No external services, no tracking, no account.
+* **Safe on a live site.** The diagnostic screens are read-only. Every action is protected by capability checks and nonces. No external services, no tracking, no account.
 * **Fixes what WP_DEBUG breaks.** Removes the php-error body class and keeps AJAX, REST, WP-Cron, and WP-CLI responses clean.
 * **Works with any stack.** Any theme, any plugin set, single site or multisite. No setup wizard and no configuration files.
 
@@ -46,7 +46,7 @@ No SSH. No file editing. No installing five separate plugins for five separate p
 * **Transient and option bloat** - Expired transients and heavy autoloaded options slow down every request but are invisible without raw SQL. This plugin shows them sorted by size with one-click cleanup.
 * **Unknown outgoing HTTP calls** - Plugins and themes make external API calls you never asked for, and you have no idea which ones are slow or failing. This plugin captures them with status codes and response times.
 
-= Settings tab =
+= Settings =
 
 **Choose which errors to see**
 
@@ -83,9 +83,9 @@ WordPress adds a `php-error` class to the `<body>` tag whenever a PHP error occu
 
 WordPress loads plugins in alphabetical order. If another plugin throws an error before GLOBUS Debug Control initialises, those errors will not be filtered. Enabling the **MU-plugin dropin** installs a small helper file into `wp-content/mu-plugins/` that runs before any regular plugin, ensuring your filter settings apply from the very start of the request. The dropin is removed automatically when the plugin is deactivated or uninstalled.
 
-= WP_DEBUG tab =
+= WP_DEBUG =
 
-Normally, toggling `WP_DEBUG` means SSH access, finding wp-config.php, and editing PHP constants by hand. This tab lets you flip the five most important debug constants from the admin panel:
+Normally, toggling `WP_DEBUG` means SSH access, finding wp-config.php, and editing PHP constants by hand. This screen lets you flip the five most important debug constants from the admin panel:
 
 * `WP_DEBUG` - master debug switch
 * `WP_DEBUG_LOG` - write errors to a log file (supports a custom log path)
@@ -114,29 +114,29 @@ On WordPress 6.9+ the plugin registers abilities for MCP and REST clients:
 
 All abilities require the `manage_options` capability. The early-loader dropin is regenerated automatically after a plugin update - no manual re-save is needed. `gdc/update-wp-config` keeps a timestamped backup of `wp-config.php` before writing.
 
-= Error Log tab =
+= Error Log =
 
-Your debug.log file can grow to hundreds of megabytes without you noticing. This tab displays it directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low. When `WP_DEBUG` is off, the tab explains why no new lines arrive, disables the test-error generator, and offers a one-click fix that writes the debug constants to `wp-config.php`.
+Your debug.log file can grow to hundreds of megabytes without you noticing. This screen displays it directly in the admin panel using a CodeMirror editor with line numbers. Lines are color-coded by severity: fatal/parse errors, warnings, notices/deprecations, and cron-related messages. The log is paginated (200 lines per page), supports live polling for new entries, and can be downloaded or cleared with one click. Large log files (over 2 MB) are read from the tail to keep memory usage low. When `WP_DEBUG` is off, the screen explains why no new lines arrive, disables the test-error generator, and offers a one-click fix that writes the debug constants to `wp-config.php`.
 
-= Cron Tasks tab =
+= Cron Tasks =
 
-WordPress cron runs silently. When events are overdue, hooks are orphaned, or schedules are duplicated, there is no built-in way to see it. This tab lists all scheduled cron events with hook name, next run time, recurrence interval, and arguments. Summary cards show total events, overdue count, orphaned hooks, and duplicates. Overdue events are highlighted. You can run any event immediately or delete orphaned hooks directly from the table.
+WordPress cron runs silently. When events are overdue, hooks are orphaned, or schedules are duplicated, there is no built-in way to see it. This screen lists all scheduled cron events with hook name, next run time, recurrence interval, and arguments. Summary cards show total events, overdue count, orphaned hooks, and duplicates. Overdue events are highlighted. You can run any event immediately or delete orphaned hooks directly from the table.
 
-= Transients tab =
+= Transients =
 
-Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This tab displays database-stored WordPress transients from the options table with key name, data size, and expiration time. On multisite, network transients from the sitemeta table are included too. Transients stored in an external object cache (Redis, Memcached) are not shown; when such a cache is detected, the tab says so instead of showing a bare empty state. Database errors and unexpected transient-like rows are also surfaced in the notice area. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click, including network site transients. Summary cards show total count, expired count, and total data size.
+Expired transients pile up in the database, and without raw SQL you have no way to see or clean them. This screen displays database-stored WordPress transients from the options table with key name, data size, and expiration time. On multisite, network transients from the sitemeta table are included too. Transients stored in an external object cache (Redis, Memcached) are not shown; when such a cache is detected, the screen says so instead of showing a bare empty state. Database errors and unexpected transient-like rows are also surfaced in the notice area. Expired transients are highlighted. You can delete individual transients or purge all expired ones in one click, including network site transients. Summary cards show total count, expired count, and total data size.
 
-= Autoloaded tab =
+= Autoloaded Options =
 
-Every autoloaded option is fetched on every single page load. When plugins leave behind large serialised blobs, your site slows down and there is no obvious way to find the culprit. This tab lists autoloaded options from `wp_options` sorted by data size (top 200). Summary cards display total autoloaded row count and total payload size with warnings when thresholds are exceeded (over 800 KB or over 100 rows).
+Every autoloaded option is fetched on every single page load. When plugins leave behind large serialised blobs, your site slows down and there is no obvious way to find the culprit. This screen lists autoloaded options from `wp_options` sorted by data size (top 200). Summary cards display total autoloaded row count and total payload size with warnings when thresholds are exceeded (over 800 KB or over 100 rows).
 
-= HTTP Log tab =
+= HTTP Log =
 
-Plugins and themes silently make outgoing HTTP calls - license checks, update pings, API syncs - and a slow or failing endpoint can stall your entire page load. This tab captures outgoing WordPress HTTP API requests (`wp_remote_get`, `wp_remote_post`, etc.) via the `http_api_debug` hook. Capturing must be explicitly enabled and stores up to 100 entries (6-hour TTL). Each entry shows the request URL, HTTP method, status code, error message, transport class, and response duration. Sensitive query parameters (`key`, `token`, `secret`, `password`, etc.) are automatically masked before an entry is stored.
+Plugins and themes silently make outgoing HTTP calls - license checks, update pings, API syncs - and a slow or failing endpoint can stall your entire page load. This screen captures outgoing WordPress HTTP API requests (`wp_remote_get`, `wp_remote_post`, etc.) via the `http_api_debug` hook. Capturing must be explicitly enabled and stores up to 100 entries (6-hour TTL). Each entry shows the request URL, HTTP method, status code, error message, transport class, and response duration. Sensitive query parameters (`key`, `token`, `secret`, `password`, etc.) are automatically masked before an entry is stored.
 
-= Constants tab =
+= Constants =
 
-When you need to check what debug, performance, or security constants are active at runtime, you normally have to grep through wp-config.php and hope nothing is overridden elsewhere. This tab displays every user-defined PHP constant at runtime, grouped by category: Debug, Performance, Security, Database, Auth and Salts, Paths, Other WP_* constants, and Plugin & Theme constants from plugins, themes and custom code. A name filter and collapsible groups keep large lists manageable. Sensitive values (database password, auth keys, salts, and names containing PASSWORD, SECRET, TOKEN, API_KEY, and similar markers) are automatically masked.
+When you need to check what debug, performance, or security constants are active at runtime, you normally have to grep through wp-config.php and hope nothing is overridden elsewhere. This screen displays every user-defined PHP constant at runtime, grouped by category: Debug, Performance, Security, Database, Auth and Salts, Paths, Other WP_* constants, and Plugin & Theme constants from plugins, themes and custom code. A name filter and collapsible groups keep large lists manageable. Sensitive values (database password, auth keys, salts, and names containing PASSWORD, SECRET, TOKEN, API_KEY, and similar markers) are automatically masked.
 
 == Screenshots ==
 
@@ -168,27 +168,27 @@ The plugin automatically suppresses error display during AJAX requests, REST API
 
 = I do not have SSH access. How can I toggle WP_DEBUG? =
 
-Use the **WP_DEBUG** tab. It reads and writes debug constants directly in your `wp-config.php` from the admin panel. No terminal, no file manager, no FTP.
+Open the **WP_DEBUG** screen. It reads and writes debug constants directly in your `wp-config.php` from the admin panel. No terminal, no file manager, no FTP.
 
 = Does the plugin require WP_DEBUG to be enabled? =
 
-The plugin is always active, but error filtering and test errors only take effect when `WP_DEBUG` is `true`. The **Settings** and **Error Log** tabs show the current `WP_DEBUG` and `WP_DEBUG_LOG` state and offer a one-click fix that writes the constants to `wp-config.php` after creating a backup. You can also toggle them from the **WP_DEBUG** tab at any time.
+The plugin is always active, but error filtering and test errors only take effect when `WP_DEBUG` is `true`. The **Settings** and **Error Log** screens show the current `WP_DEBUG` and `WP_DEBUG_LOG` state and offer a one-click fix that writes the constants to `wp-config.php` after creating a backup. You can also toggle them from the **WP_DEBUG** screen at any time.
 
 = I still see errors from plugins that load before this one. =
 
-WordPress loads plugins in alphabetical order. Enable the **MU-plugin dropin** in the Settings tab - it installs a small helper into `wp-content/mu-plugins/` that runs before any regular plugin, so your filter settings apply from the very first line of the request. The dropin is removed automatically on deactivation or uninstall.
+WordPress loads plugins in alphabetical order. Enable the **MU-plugin dropin** on the Settings screen - it installs a small helper into `wp-content/mu-plugins/` that runs before any regular plugin, so your filter settings apply from the very first line of the request. The dropin is removed automatically on deactivation or uninstall.
 
 = My debug.log is huge and I cannot read it on the server. =
 
-The **Error Log** tab shows it in the admin with color-coded lines and pagination. Files over 2 MB are read from the tail so the page loads fast. You can download the full file or clear it with one click.
+The **Error Log** screen shows it in the admin with color-coded lines and pagination. Files over 2 MB are read from the tail so the page loads fast. You can download the full file or clear it with one click.
 
 = My site is slow and I suspect cron or database bloat. =
 
-Check the **Cron Tasks** tab for overdue or orphaned events. Check the **Autoloaded** tab for oversized options that load on every request. Check the **Transients** tab for expired entries piling up in the database. All three are read-only and safe to use on a live site.
+Check the **Cron Tasks** screen for overdue or orphaned events. Check the **Autoloaded Options** screen for oversized options that load on every request. Check the **Transients** screen for expired entries piling up in the database. All three are read-only and safe to use on a live site.
 
 = Can I use this on a production site? =
 
-Yes. The recommended setup: suppress all error types, disable error display, enable logging to a file, and keep the `php-error` class removal active. The diagnostic tabs (Cron Tasks, Transients, Autoloaded, HTTP Log, Constants) are read-only and safe at any time.
+Yes. The recommended setup: suppress all error types, disable error display, enable logging to a file, and keep the `php-error` class removal active. The diagnostic screens (Cron Tasks, Transients, Autoloaded, HTTP Log, Constants) are read-only and safe at any time.
 
 = Does the plugin change global PHP settings? =
 
@@ -200,7 +200,7 @@ Yes. Before the plugin writes a debug constant it creates a timestamped `wp-conf
 
 = What does the "generate test error" button do? =
 
-It is an admin-only tool in the **Error Log** tab. It requires `manage_options` and a valid nonce, and writes one sample line so you can confirm that logging works. It is not available on the front end and never runs automatically.
+It is an admin-only tool on the **Error Log** screen. It requires `manage_options` and a valid nonce, and writes one sample line so you can confirm that logging works. It is not available on the front end and never runs automatically.
 
 == Changelog ==
 

@@ -49,6 +49,32 @@
 		});
 	}
 
+	function trapFocus(container, event) {
+		if ('Tab' !== event.key) {
+			return;
+		}
+
+		var focusable = qsa('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])', container)
+			.filter(function (el) {
+				return el.offsetParent !== null;
+			});
+
+		if (!focusable.length) {
+			return;
+		}
+
+		var first = focusable[0];
+		var last = focusable[focusable.length - 1];
+
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* 2. toasts                                                           */
 	/* ------------------------------------------------------------------ */
@@ -84,6 +110,8 @@
 			previous.parentNode.removeChild(previous);
 		}
 
+		var returnFocus = document.activeElement;
+
 		var overlay = document.createElement('div');
 		overlay.className = 'gdc-modal-overlay';
 		overlay.id = 'gdc-runtime-confirm';
@@ -115,6 +143,10 @@
 				overlay.parentNode.removeChild(overlay);
 			}
 			document.removeEventListener('keydown', onKey);
+
+			if (returnFocus && returnFocus.focus) {
+				returnFocus.focus();
+			}
 		}
 
 		function onKey(event) {
@@ -137,6 +169,9 @@
 			}
 		});
 		document.addEventListener('keydown', onKey);
+		on(overlay, 'keydown', function (event) {
+			trapFocus(modal, event);
+		});
 		qs('[data-gdc-ok]', modal).focus();
 	};
 
@@ -189,12 +224,14 @@
 	var paletteInput = qs('#gdc-pal-input');
 	var paletteList = qs('#gdc-pal-list');
 	var paletteState = { items: [], selected: 0 };
+	var paletteReturnFocus = null;
 
 	function openPalette() {
 		if (!palette) {
 			return;
 		}
 
+		paletteReturnFocus = document.activeElement;
 		palette.removeAttribute('hidden');
 		buildPalette('');
 		if (paletteInput) {
@@ -204,11 +241,15 @@
 	}
 
 	function closePalette() {
-		if (!palette) {
+		if (!palette || palette.hasAttribute('hidden')) {
 			return;
 		}
 
 		palette.setAttribute('hidden', '');
+
+		if (paletteReturnFocus && paletteReturnFocus.focus) {
+			paletteReturnFocus.focus();
+		}
 	}
 
 	function buildPalette(query) {
@@ -312,6 +353,10 @@
 		if (event.target === palette) {
 			closePalette();
 		}
+	});
+
+	on(palette, 'keydown', function (event) {
+		trapFocus(palette, event);
 	});
 
 	// Capture phase: WordPress core also binds Ctrl+K. Take the shortcut first.

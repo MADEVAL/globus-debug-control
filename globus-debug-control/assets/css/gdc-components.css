@@ -339,3 +339,18 @@
 .gdc-empty-state { margin: 0; }
 .gdc-transient-expired td { background: var(--gdc-red-dim); }
 .gdc-transient-expired:hover td { background: var(--gdc-red-dim); }
+
+/* ------------------------------------------------------------
+   Dashboard widget
+   ------------------------------------------------------------ */
+.gdc-widget {
+	font-family: var(--gdc-font);
+	font-size: var(--gdc-fs-sm);
+	line-height: 1.5;
+	color: var(--gdc-tx);
+}
+
+.gdc-widget .gdc-alert p { margin: 0; }
+.gdc-widget .gdc-alert p + p { margin-top: var(--gdc-sp-1h); }
+.gdc-widget .gdc-btn { text-decoration: none; }
+.gdc-widget .gdc-mono { font-family: var(--gdc-mono); }

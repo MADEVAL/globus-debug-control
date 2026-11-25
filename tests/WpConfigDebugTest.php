@@ -433,12 +433,4 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		$this->assertStringContainsString('gdc_return_tab', $html);
 	}
 
-	public function testRenderStatusBadgesShowsBothConstants(): void {
-		ob_start();
-		\GDC_WpConfig_Debug::render_status_badges();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('WP_DEBUG:', $html);
-		$this->assertStringContainsString('WP_DEBUG_LOG:', $html);
-	}
 }

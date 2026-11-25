@@ -114,6 +114,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$links = $this->plugin()->plugin_action_links(['Existing']);
 
 		$this->assertStringContainsString('admin.php?page=globus-debug-control', $links[0]);
+		$this->assertStringContainsString('Dashboard', $links[0]);
 		$this->assertSame('Existing', $links[1]);
 	}
 
@@ -297,17 +298,14 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertFileDoesNotExist($path);
 	}
 
-	public function testRegisterSettingsRegistersExpectedFields(): void {
+	public function testRegisterSettingsRegistersOptionOnly(): void {
 		$this->plugin()->register_settings();
 
-		$state = $this->state();
-		$registered = array_column($state['registered_settings'], 'name');
-		$this->assertContains('globus_debug_control_options', $registered);
+		$state      = $this->state();
+		$registered = array_column( $state['registered_settings'], 'name' );
 
-		$fields = array_column($state['settings_fields'], 'id');
-		$this->assertContains('enabled', $fields);
-		$this->assertContains('suppress', $fields);
-		$this->assertContains('logging', $fields);
+		$this->assertContains( 'globus_debug_control_options', $registered );
+		$this->assertEmpty( $state['settings_fields'], 'The custom form does not register Settings API fields.' );
 	}
 
 	public function testRegisterSettingsDoesNotAutoloadPluginOptions(): void {
@@ -321,80 +319,6 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		}
 
 		$this->fail('Plugin option not registered');
-	}
-
-	public function testFieldEnabledOutputsCheckbox(): void {
-		$this->refreshOptions(['enabled' => 1]);
-
-		ob_start();
-		$this->plugin()->field_enabled();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('type="checkbox"', $html);
-		$this->assertStringContainsString('[enabled]', $html);
-	}
-
-	public function testFieldSuppressOutputsCheckboxes(): void {
-		$this->refreshOptions(['suppress_notices' => 1]);
-
-		ob_start();
-		$this->plugin()->field_suppress();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('[suppress_notices]', $html);
-		$this->assertStringContainsString('[suppress_deprecated]', $html);
-		$this->assertStringContainsString('[suppress_warnings]', $html);
-	}
-
-	public function testFieldDisplayModeOutputsSelect(): void {
-		$this->refreshOptions(['display_errors_mode' => 'off']);
-
-		ob_start();
-		$this->plugin()->field_display_mode();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('<select', $html);
-		$this->assertStringContainsString('inherit', $html);
-		$this->assertStringContainsString('on', $html);
-		$this->assertStringContainsString('off', $html);
-	}
-
-	public function testFieldLoggingOutputsInputs(): void {
-		$this->refreshOptions(['log_enabled' => 1, 'log_path' => 'logs/debug.log', 'log_max_size_mb' => 10]);
-
-		ob_start();
-		$this->plugin()->field_logging();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('[log_enabled]', $html);
-		$this->assertStringContainsString('[log_path]', $html);
-		$this->assertStringContainsString('[log_max_size_mb]', $html);
-	}
-
-	public function testFieldBodyClassOutputsCheckbox(): void {
-		$this->refreshOptions(['remove_php_error_bodyclass' => 1]);
-
-		ob_start();
-		$this->plugin()->field_body_class();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('[remove_php_error_bodyclass]', $html);
-	}
-
-	public function testFieldApiContextsOutputsCheckbox(): void {
-		ob_start();
-		$this->plugin()->field_api_contexts();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('[force_in_api_contexts]', $html);
-	}
-
-	public function testFieldMuDropinOutputsCheckbox(): void {
-		ob_start();
-		$this->plugin()->field_mu_dropin();
-		$html = ob_get_clean();
-
-		$this->assertStringContainsString('[install_mu_dropin]', $html);
 	}
 
 	public function testAddSettingsPageRegistersPage(): void {

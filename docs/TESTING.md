@@ -109,29 +109,31 @@ For write paths, call the abilities explicitly with `confirm=true`:
 
 ## 4. Admin UI with Playwright
 
-Use the Playwright dependency in `tools/screenshots`:
+Run the committed smoke test with the Playwright copy in `tools/screenshots`:
 
-```sh
-cd tools/screenshots
-node your-live-check.mjs
+```powershell
+$env:GDC_E2E_URL  = 'http://127.0.0.1:8088'
+$env:GDC_E2E_USER = 'admin'
+$env:GDC_E2E_PASS = '<password>'
+node tests/e2e/admin-smoke.mjs
 ```
 
-The check should log in through `/wp-login.php` and verify:
+It checks all nine screens, the command palette (focus trap included), the
+constants filter, the AJAX master switch, the settings save round-trip and the
+dashboard widget. Every changed setting is restored. Without credentials the
+script prints `SKIP` and exits 0. See `tests/e2e/README.md`.
 
-- Settings: `.gdc-debug-status-row` shows `WP_DEBUG: On` and `WP_DEBUG_LOG: On`.
-- WP_DEBUG: every `.gdc-toggle-label` checkbox and `.gdc-status-badge` centre differs
-  by no more than 2 px, at 1440 px and 800 px widths.
-- Error Log with debug off: `.gdc-debug-dependency` is visible, `#gdc-generate-error`
-  is disabled, and `.gdc-log-generate-disabled` explains why.
+Manual spot checks that need real site state:
+
+- Error Log with debug off: `.gdc-debug-dependency` is visible,
+  `#gdc-generate-error` is disabled, and `.gdc-log-generate-disabled` explains why.
 - One-click fix: submitting `.gdc-quick-debug-form` writes the constants, reloads
-  with a success notice, and enables the generator.
+  with a success alert, and enables the generator.
 - Generate: select `warning`, click `#gdc-generate-error`, and confirm
   `#gdc-log-code` contains the test warning after reload.
 - Transients: `.gdc-transient-table` lists rows, or the empty state plus
   `.gdc-transient-cache-notice` appears with an external object cache.
-- Constants: `.gdc-constants-group` contains `Plugin & Theme`, secrets show
-  `*** (masked)`, and `#gdc-constants-filter` narrows visible `.gdc-constant-row`
-  elements.
+- Constants: groups contain `Plugin & Theme` and secrets show `*** (masked)`.
 
 Keep temporary Playwright scripts out of commits.
 
