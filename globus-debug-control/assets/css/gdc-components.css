@@ -318,7 +318,6 @@
 	white-space: normal;
 	line-height: 1.4;
 }
-
 /* ------------------------------------------------------------
    Constants
    ------------------------------------------------------------ */
@@ -332,6 +331,7 @@
 .gdc-constants-table td code { font-size: var(--gdc-fs-2xs); }
 .gdc-chip.gdc-constant-masked { background: var(--gdc-s3); color: var(--gdc-tx3); font-family: var(--gdc-mono); }
 .gdc-constants-toolbar .gdc-input { width: min(380px, 100%); }
+.gdc-constants-toolbar .gdc-toolbar-group { flex-wrap: nowrap; }
 
 /* ------------------------------------------------------------
    Empty-state wrappers used by the viewers

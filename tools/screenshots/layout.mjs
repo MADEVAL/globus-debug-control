@@ -1,9 +1,9 @@
 /**
  * Shared WordPress admin chrome for the screenshot templates.
  *
- * Templates contain only the contents of the GLOBUS Debug Control page.
- * This module wraps them in the same markup WordPress uses, so the vendored
- * wp-admin CSS renders a realistic admin screen.
+ * Templates contain the whole `.gdc-app` shell of one plugin screen.
+ * This module wraps them in the same admin markup WordPress uses, so the
+ * vendored wp-admin CSS renders a realistic screen.
  */
 
 const MENU = [
@@ -11,42 +11,40 @@ const MENU = [
 	{ icon: 'admin-post', label: 'Posts' },
 	{ icon: 'admin-media', label: 'Media' },
 	{ icon: 'admin-page', label: 'Pages' },
-	{ icon: 'admin-comments', label: 'Comments', count: '3' },
+	{ icon: 'admin-comments', label: 'Comments', count: '2' },
 	{ icon: 'admin-appearance', label: 'Appearance' },
-	{ icon: 'admin-plugins', label: 'Plugins', count: '2' },
+	{ icon: 'admin-plugins', label: 'Plugins', count: '3' },
 	{ icon: 'admin-users', label: 'Users' },
 	{ icon: 'admin-tools', label: 'Tools' },
-	{ icon: 'admin-settings', label: 'Settings', submenu: true },
-	{ icon: 'admin-collapse', label: 'Collapse menu', collapse: true },
+	{ icon: 'admin-settings', label: 'Settings' },
 ];
 
-const SETTINGS_SUBMENU = [
-	['General', false],
-	['Writing', false],
-	['Reading', false],
-	['Discussion', false],
-	['Media', false],
-	['Permalinks', false],
-	['Privacy', false],
-	['GLOBUS Debug Control', true],
+const GLOBUS_SUBMENU = [
+	[ 'Overview', 'globus-debug-control' ],
+	[ 'Settings', 'gdc-settings' ],
+	[ 'WP_DEBUG', 'gdc-wp-debug' ],
+	[ 'Error Log', 'gdc-log' ],
+	[ 'Cron Tasks', 'gdc-cron' ],
+	[ 'Transients', 'gdc-transients' ],
+	[ 'Autoloaded Options', 'gdc-autoloaded' ],
+	[ 'HTTP Log', 'gdc-http' ],
+	[ 'Constants', 'gdc-constants' ],
 ];
 
-function menuItem( item, isSettings ) {
+function menuItem( item, currentPage ) {
+	const isCurrent = item.slug && item.slug === currentPage;
 	const classes = [ 'menu-top', `menu-icon-${ item.icon }` ];
-	if ( item.collapse ) {
-		classes.push( 'wp-menu-separator' );
-	}
-	if ( item.submenu ) {
+	if ( item.slug ) {
 		classes.push( 'wp-has-submenu', 'wp-menu-open', 'wp-has-current-submenu', 'current', 'menu-top-first' );
 	}
 
 	let submenu = '';
-	if ( item.submenu ) {
-		const links = SETTINGS_SUBMENU.map( ( [ label, current ] ) => {
-			const cls = current ? ' class="current"' : '';
-			return `<li${ current ? ' class="current"' : '' }><a href="#"${ cls }>${ label }</a></li>`;
+	if ( item.slug ) {
+		const links = GLOBUS_SUBMENU.map( ( [ label, slug ] ) => {
+			const current = slug === currentPage ? ' class="current"' : '';
+			return `<li${ current }><a href="#"${ current }>${ label }</a></li>`;
 		} ).join( '' );
-		submenu = `<ul class="wp-submenu wp-submenu-wrap"><li class="wp-submenu-head" aria-hidden="true">Settings</li>${ links }</ul>`;
+		submenu = `<ul class="wp-submenu wp-submenu-wrap"><li class="wp-submenu-head" aria-hidden="true">GLOBUS Debug</li>${ links }</ul>`;
 	}
 
 	const badge = item.count ? `<span class="update-plugins count-${ item.count }"><span class="plugin-count">${ item.count }</span></span>` : '';
@@ -65,7 +63,7 @@ function adminBar() {
 		<ul id="wp-admin-bar-root-default" class="ab-top-menu">
 			<li id="wp-admin-bar-wp-logo" class="menupop"><a class="ab-item" href="#" aria-haspopup="true"><span class="ab-icon" aria-hidden="true"></span><span class="screen-reader-text">About WordPress</span></a></li>
 			<li id="wp-admin-bar-site-name" class="menupop"><a class="ab-item" href="#" aria-haspopup="true">example.com</a></li>
-			<li id="wp-admin-bar-updates"><a class="ab-item" href="#"><span class="ab-icon dashicons-before dashicons-update" aria-hidden="true"></span><span class="ab-label">2</span><span class="screen-reader-text">2 updates available</span></a></li>
+			<li id="wp-admin-bar-updates"><a class="ab-item" href="#"><span class="ab-icon dashicons-before dashicons-update" aria-hidden="true"></span><span class="ab-label">1</span><span class="screen-reader-text">1 update available</span></a></li>
 			<li id="wp-admin-bar-new-content" class="menupop"><a class="ab-item" href="#" aria-haspopup="true"><span class="ab-icon dashicons-before dashicons-plus-alt" aria-hidden="true"></span><span class="ab-label">New</span></a></li>
 		</ul>
 		<ul id="wp-admin-bar-top-secondary" class="ab-top-secondary ab-top-menu">
@@ -75,38 +73,39 @@ function adminBar() {
 </div>`;
 }
 
-function sidebar() {
+function sidebar( currentPage ) {
+	const items = [
+		...MENU.map( ( item ) => menuItem( item, currentPage ) ),
+		menuItem( { icon: 'editor-code', label: 'GLOBUS Debug', slug: 'globus-debug-control' }, currentPage ),
+		menuItem( { icon: 'admin-collapse', label: 'Collapse menu', collapse: true }, currentPage ),
+	];
+
 	return `<div id="adminmenumain" role="navigation" aria-label="Main menu">
 	<a href="#adminmenuback" class="screen-reader-shortcut">Skip to main content</a>
 	<div id="adminmenuback"></div>
 	<div id="adminmenuwrap">
 		<ul id="adminmenu">
-			${ MENU.map( ( item ) => menuItem( item ) ).join( '\n' ) }
+			${ items.join( '\n' ) }
 		</ul>
 	</div>
 </div>`;
 }
 
-export function pluginTabs( active ) {
-	const tabs = [
-		[ 'settings', 'Settings' ],
-		[ 'wpcfg', 'WP_DEBUG' ],
-		[ 'log', 'Error Log' ],
-		[ 'cron', 'Cron Tasks' ],
-		[ 'transients', 'Transients' ],
-		[ 'autoloaded', 'Autoloaded' ],
-		[ 'http', 'HTTP Log' ],
-		[ 'constants', 'Constants' ],
-	];
-
-	return tabs.map( ( [ key, label ] ) => {
-		const cls = key === active ? 'nav-tab nav-tab-active' : 'nav-tab';
-		return `<a href="#" class="${ cls }"${ key === active ? ' aria-current="page"' : '' }>${ label }</a>`;
-	} ).join( '\n' );
-}
-
-export function renderDocument( { tab, content, cssHrefs } ) {
+/**
+ * Builds the full HTML document for one plugin screen.
+ *
+ * @param {Object}   options
+ * @param {string}   options.page      Admin page slug of the screen.
+ * @param {string}   options.content   Rendered `.gdc-app` markup.
+ * @param {string[]} options.cssHrefs  Stylesheet URLs relative to the document.
+ * @param {string[]} options.jsHrefs   Script URLs relative to the document.
+ */
+export function renderDocument( { page, content, cssHrefs, jsHrefs = [] } ) {
 	const links = cssHrefs.map( ( href ) => `<link rel="stylesheet" href="${ href }">` ).join( '\n\t' );
+	const scripts = jsHrefs.map( ( href ) => `<script src="${ href }"></script>` ).join( '\n\t' );
+	const bodyClass = 'globus-debug-control' === page
+		? 'toplevel_page_globus-debug-control'
+		: `globus-debug_page_${ page }`;
 
 	return `<!DOCTYPE html>
 <html lang="en-US" class="wp-toolbar">
@@ -116,31 +115,21 @@ export function renderDocument( { tab, content, cssHrefs } ) {
 	<title>GLOBUS Debug Control</title>
 	${ links }
 </head>
-<body class="wp-admin wp-core-ui js admin-bar auto-fold">
+<body class="wp-admin wp-core-ui js admin-bar auto-fold ${ bodyClass }">
 	${ adminBar() }
 	<div id="wpwrap">
-		${ sidebar() }
+		${ sidebar( page ) }
 		<div id="wpcontent">
 			<div id="wpbody" role="main">
 				<div id="wpbody-content">
-					<div class="wrap gdc-page">
-						<div class="gdc-page-header">
-							<h1 class="wp-heading-inline">GLOBUS Debug Control</h1>
-							<span class="gdc-debug-badge gdc-debug-on"><span class="dashicons dashicons-warning" aria-hidden="true"></span>WP_DEBUG ON</span>
-						</div>
-						<hr class="wp-header-end">
-						<nav class="nav-tab-wrapper">
-							${ pluginTabs( tab ) }
-						</nav>
-						<div class="gdc-tab-content">
 ${ content }
-						</div>
-					</div>
 					<div class="clear"></div>
 				</div>
 			</div>
 		</div>
 	</div>
+	<script>window.gdcUiData = { searchIndex: [], i18n: {} };</script>
+	${ scripts }
 </body>
 </html>
 `;

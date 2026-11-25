@@ -498,7 +498,6 @@
 			}
 
 			var horizontal = '1' === canvas.getAttribute('data-horizontal');
-			var palette = ['#2271b1', '#3b82f6', '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
 			new window.Chart(canvas.getContext('2d'), {
 				type: 'bar',
@@ -507,7 +506,7 @@
 					datasets: [{
 						label: canvas.getAttribute('data-label') || '',
 						data: values,
-						backgroundColor: horizontal ? '#2271b1' : palette,
+						backgroundColor: '#2271b1',
 						borderRadius: 4,
 						maxBarThickness: 34
 					}]

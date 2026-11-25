@@ -489,6 +489,7 @@ a.gdc-btn--pri:visited { color: var(--gdc-s1); }
 	border: 1px solid var(--gdc-line);
 	color: var(--gdc-tx2);
 	line-height: 1.5;
+	white-space: nowrap;
 }
 
 .gdc-chip--kbd { font-family: var(--gdc-mono); font-size: var(--gdc-fs-2xs); padding: var(--gdc-sp-h) var(--gdc-sp-1h); }

@@ -4,8 +4,11 @@
  *
  * The capture is the raw material for `marketing/render.mjs`, which composes
  * the 1600x1000 WordPress.org listing images. Templates are rendered with the
- * real plugin stylesheet and a vendored copy of the WordPress admin CSS, so no
+ * real plugin stylesheets and a vendored copy of the WordPress admin CSS, so no
  * WordPress install or database is needed.
+ *
+ * Templates are generated from the sandbox by `generate-templates.php`; rerun it
+ * after a UI change, then `npm run marketing`.
  *
  * Usage:
  *   npm install
@@ -28,67 +31,73 @@ import { renderDocument } from './layout.mjs';
 
 const here = path.dirname( fileURLToPath( import.meta.url ) );
 const repoRoot = path.resolve( here, '../..' );
-const pluginCss = path.join( repoRoot, 'globus-debug-control', 'assets', 'css', 'admin.css' );
+const pluginAssets = path.join( repoRoot, 'globus-debug-control', 'assets' );
 const previewDir = path.join( here, 'out' );
 const rawDir = path.join( here, 'raw' );
 
-const VIEWPORT = { width: 1500, height: 2400 };
+const VIEWPORT = { width: 1600, height: 2400 };
 const SCALE = 1;
-const SHOT_SELECTOR = '.wrap.gdc-page';
+const SHOT_SELECTOR = '.gdc-app';
 
-// Optional per-slide crop height, used to stop long tabs at a card boundary.
+// Optional per-slide crop height, used to stop long screens at a card boundary.
 const MANIFEST = path.join( here, 'marketing', 'slides.json' );
 const SLIDES = JSON.parse( await readFile( MANIFEST, 'utf8' ) ).slides || [];
 const MAX_HEIGHTS = Object.fromEntries( SLIDES.map( ( slide ) => [ slide.shot, slide.maxHeight || 1000 ] ) );
 
 const SCREENS = [
 	{
+		slug: 'overview',
+		page: 'globus-debug-control',
+		template: '01-overview.html',
+		caption: 'Overview: health score, KPIs, cron chart and autoload payload at a glance.',
+	},
+	{
 		slug: 'settings',
-		template: '01-settings.html',
-		tab: 'settings',
-		caption: 'Settings tab: filter PHP error types, choose the error display mode, and configure logging.',
+		page: 'gdc-settings',
+		template: '02-settings.html',
+		caption: 'Settings: error filtering, display mode, logging and early interception.',
 	},
 	{
 		slug: 'wp-debug',
-		template: '02-wp-debug.html',
-		tab: 'wpcfg',
-		caption: 'WP_DEBUG tab: toggle debug constants in wp-config.php without editing files.',
+		page: 'gdc-wp-debug',
+		template: '03-wp-debug.html',
+		caption: 'WP_DEBUG: toggle wp-config.php constants with a backup on every write.',
 	},
 	{
 		slug: 'error-log',
-		template: '03-error-log.html',
-		tab: 'log',
-		caption: 'Error Log tab: color-coded debug.log with pagination, live polling, download, and clear.',
+		page: 'gdc-log',
+		template: '04-error-log.html',
+		caption: 'Error Log: dark console with pagination, live polling, download and clear.',
 	},
 	{
 		slug: 'cron',
-		template: '04-cron.html',
-		tab: 'cron',
-		caption: 'Cron Tasks tab: overdue events, orphaned hooks, source detection, and one-click actions.',
+		page: 'gdc-cron',
+		template: '05-cron.html',
+		caption: 'Cron Tasks: overdue events, orphaned hooks, source detection and actions.',
 	},
 	{
 		slug: 'transients',
-		template: '05-transients.html',
-		tab: 'transients',
-		caption: 'Transients tab: every database transient with size and expiry, plus bulk purge of expired rows.',
+		page: 'gdc-transients',
+		template: '06-transients.html',
+		caption: 'Transients: size and expiry for every row, plus a bulk purge of expired entries.',
 	},
 	{
 		slug: 'autoloaded',
-		template: '06-autoloaded.html',
-		tab: 'autoloaded',
-		caption: 'Autoloaded tab: the heaviest autoloaded options, sorted by size, to spot request bloat.',
+		page: 'gdc-autoloaded',
+		template: '07-autoloaded.html',
+		caption: 'Autoloaded Options: the heaviest rows, sorted by size, with warning thresholds.',
 	},
 	{
 		slug: 'http-log',
-		template: '07-http-log.html',
-		tab: 'http',
-		caption: 'HTTP Log tab: outgoing WordPress HTTP API calls with status, transport, and duration.',
+		page: 'gdc-http',
+		template: '08-http-log.html',
+		caption: 'HTTP Log: outgoing API calls with status, transport, duration and masked URLs.',
 	},
 	{
 		slug: 'constants',
-		template: '08-constants.html',
-		tab: 'constants',
-		caption: 'Constants tab: every runtime constant, including plugin and theme constants, with filtering and secret masking.',
+		page: 'gdc-constants',
+		template: '09-constants.html',
+		caption: 'Constants: grouped runtime constants with filtering and secret masking.',
 	},
 ];
 
@@ -108,12 +117,23 @@ function stylesheetHrefs() {
 		path.join( wp, 'buttons.min.css' ),
 		path.join( wp, 'admin-bar.min.css' ),
 		path.join( wp, 'colors', 'modern', 'colors.min.css' ),
-		pluginCss,
+		path.join( pluginAssets, 'css', 'gdc-tokens.css' ),
+		path.join( pluginAssets, 'css', 'gdc-ui.css' ),
+		path.join( pluginAssets, 'css', 'gdc-components.css' ),
 		path.join( here, 'mock.css' ),
 	];
 
 	return files.map( ( file ) => toHref( previewDir, file ) );
 }
+
+function scriptHrefs() {
+	return [
+		toHref( previewDir, path.join( pluginAssets, 'vendor', 'chartjs', 'chart.umd.js' ) ),
+		toHref( previewDir, path.join( pluginAssets, 'js', 'gdc-ui.js' ) ),
+	];
+}
+
+const ASSET_PREFIX = 'https://example.com/wp-content/plugins/globus-debug-control/assets/';
 
 function parseArgs( argv ) {
 	const options = { renderOnly: false, only: null };
@@ -130,7 +150,9 @@ function parseArgs( argv ) {
 async function renderPages( options ) {
 	await mkdir( previewDir, { recursive: true } );
 	const hrefs = stylesheetHrefs();
+	const scripts = scriptHrefs();
 	const rendered = [];
+	const assetHref = toHref( previewDir, pluginAssets ) + '/';
 
 	for ( const [ index, screen ] of SCREENS.entries() ) {
 		if ( options.only && screen.slug !== options.only ) {
@@ -138,7 +160,13 @@ async function renderPages( options ) {
 		}
 
 		const template = await readFile( path.join( here, 'templates', screen.template ), 'utf8' );
-		const html = renderDocument( { tab: screen.tab, content: template, cssHrefs: hrefs } );
+		const content = template.replaceAll( ASSET_PREFIX, assetHref );
+		const html = renderDocument( {
+			page: screen.page,
+			content,
+			cssHrefs: hrefs,
+			jsHrefs: scripts,
+		} );
 		const file = path.join( previewDir, `${ String( index + 1 ).padStart( 2, '0' ) }-${ screen.slug }.html` );
 
 		await writeFile( file, html, 'utf8' );
@@ -161,7 +189,8 @@ async function capture( rendered ) {
 	for ( const [ index, screen ] of rendered.entries() ) {
 		await page.goto( `file://${ screen.file.replace( /\\/g, '/' ) }`, { waitUntil: 'load' } );
 		await page.evaluate( () => document.fonts.ready );
-		await page.waitForTimeout( 150 );
+		// Chart.js animations are not affected by prefers-reduced-motion.
+		await page.waitForTimeout( 600 );
 
 		const target = path.join( rawDir, `${ screen.slug }.png` );
 		const panel = page.locator( SHOT_SELECTOR );
@@ -169,14 +198,14 @@ async function capture( rendered ) {
 		if ( ! box ) {
 			throw new Error( `selector ${ SHOT_SELECTOR } not found on ${ screen.slug }` );
 		}
-		// Very long tabs (Settings) are cropped at a card boundary so the
-		// composed marketing frame stays legible at 950px wide.
+		// Very long screens are cropped at a card boundary so the composed
+		// marketing frame stays legible at 950px wide.
 		const maxHeight = MAX_HEIGHTS[ screen.slug ] || 1000;
 		await page.screenshot( {
 			path: target,
 			clip: {
 				x: box.x,
-				y: box.y,
+				y: Math.max( 0, box.y ),
 				width: box.width,
 				height: Math.min( box.height, maxHeight ),
 			},
@@ -194,5 +223,5 @@ if ( options.renderOnly ) {
 	console.log( `Rendered ${ rendered.length } page(s) to ${ path.relative( repoRoot, previewDir ) }/` );
 } else {
 	await capture( rendered );
-	console.log( `\nWritten to ${ path.relative( repoRoot, rawDir ) }/` );
+	console.log( `\nWritten to ${ path.relative( repoRoot, rawDir )}/` );
 }

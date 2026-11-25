@@ -1,27 +1,30 @@
 # Screenshot and brand tool
 
 Renders the WordPress.org listing images with Playwright from static HTML
-templates, so every image can be regenerated after a UI or copy change. No
-WordPress install or database is needed.
+templates, so every image can be regenerated after a UI or copy change.
 
-Two steps:
+Three steps:
 
-1. `capture.mjs` renders each tab and saves a PNG of the plugin page to `raw/`
-   (gitignored).
-2. `marketing/render.mjs` composes those captures into 1600x1000 marketing
+1. `generate-templates.php` (dev only) renders the nine plugin screens from the
+   local WordPress sandbox into `templates/`, with demo data and sanitised paths.
+2. `capture.mjs` renders each template and saves a PNG of the plugin shell to
+   `raw/` (gitignored).
+3. `marketing/render.mjs` composes those captures into 1600x1000 marketing
    frames and writes `docs/screenshots/screenshot-N.jpg`.
 
 Banners and the social card are separate: `marketing/render-brand.mjs` draws the
 WordPress.org banners and the Open Graph image from the plugin icon.
 
 The templates reproduce the real admin markup and load the actual plugin
-stylesheet (`globus-debug-control/assets/css/admin.css`) plus a vendored copy of
-the WordPress admin CSS.
+stylesheets (`gdc-tokens.css`, `gdc-ui.css`, `gdc-components.css`) plus a
+vendored copy of the WordPress admin CSS.
 
 ## Requirements
 
 - Node.js 18 or newer
 - Playwright browsers (`npx playwright install chromium`)
+- For `generate-templates.php` only: the gitignored `wordpress/` sandbox with the
+  plugin active. Capture and composition need no database.
 
 ## Usage
 
@@ -29,17 +32,18 @@ the WordPress admin CSS.
 cd tools/screenshots
 npm install
 
-npm run marketing   # capture + compose docs/screenshots/screenshot-N.jpg
-npm run capture     # capture only, into raw/ (gitignored)
-npm run brand       # banners into docs/wordpress-org/, OG card into docs/social/
+php generate-templates.php   # refresh templates from the sandbox (after UI changes)
+npm run marketing            # capture + compose docs/screenshots/screenshot-N.jpg
+npm run capture              # capture only, into raw/ (gitignored)
+npm run brand                # banners into docs/wordpress-org/, OG card into docs/social/
 ```
 
 Useful flags:
 
 ```sh
-node capture.mjs --only=settings                 # one tab
-npm run render                                   # HTML previews in out/, no browser
-node marketing/render.mjs --only=cron --no-preview
+node capture.mjs --only=settings                  # one screen
+npm run render                                    # HTML previews in out/, no browser
+node marketing/render.mjs --only cron --no-preview
 node marketing/render.mjs --format png --quality 95
 node marketing/render-brand.mjs --only banner --no-locales
 node marketing/render-brand.mjs --locale ru_RU,uk
@@ -51,27 +55,29 @@ screenshots and `out/*.html` for a single template without the marketing frame.
 ## Layout
 
 ```
-templates/            per-tab page content (the .wrap body only)
-layout.mjs            WordPress admin bar, menu, and tab chrome
-capture.mjs           renders templates and captures raw/<shot>.png
-mock.css              screenshot-only fixes and the static log editor
-marketing/slides.json  slide order, file names, themes and all copy
-marketing/render.mjs   marketing frame composer
+generate-templates.php  renders templates from the local sandbox (dev only)
+templates/               the .gdc-app shell of each of the nine screens
+fixtures/debug.log       demo log content used by the Error Log template
+layout.mjs               WordPress admin bar, menu and page wrapper
+capture.mjs              renders templates and captures raw/<shot>.png
+mock.css                 screenshot-only fixes (admin colour variables, scrollbar)
+marketing/slides.json    slide order, file names, themes and all copy
+marketing/render.mjs     marketing frame composer
 marketing/render-brand.mjs  WordPress.org banners and the Open Graph card
-raw/                  element captures (gitignored)
-out/                  rendered previews (gitignored)
-vendor/wp/            WordPress admin CSS, dashicons, colour scheme (GPLv2)
+raw/                     element captures (gitignored)
+out/                     rendered previews (gitignored)
+vendor/wp/               WordPress admin CSS, dashicons, colour scheme (GPLv2)
 ```
 
 `slides.json` is the single source of truth for listing copy. `maxHeight` on a
-slide crops a very long tab at a readable point; `theme` switches the frame
+slide crops a very long screen at a readable point; `theme` switches the frame
 between `dark` (default) and `light`.
 
 ## Output
 
 | Path | Size | Use |
 | --- | --- | --- |
-| `docs/screenshots/screenshot-1.jpg` ... `screenshot-8.jpg` | 1600x1000 | WordPress.org listing screenshots |
+| `docs/screenshots/screenshot-1.jpg` ... `screenshot-9.jpg` | 1600x1000 | WordPress.org listing screenshots |
 | `docs/wordpress-org/banner-772x250.png` | 772x250 | WordPress.org plugin banner |
 | `docs/wordpress-org/banner-1544x500.png` | 1544x500 | Retina banner |
 | `docs/wordpress-org/banner-*-<locale>.png` | both sizes | Localized banners |

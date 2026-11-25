@@ -26,6 +26,7 @@ composer test             # run PHPUnit
 composer cs               # lint with PHPCS (WordPress standard)
 composer cs-fix           # auto-fix with PHPCBF
 composer pot              # regenerate languages/globus-debug-control.pot (WP-CLI i18n)
+php tools/screenshots/generate-templates.php               # refresh screenshot templates from the sandbox
 cd tools/screenshots && npm install && npm run marketing   # regenerate docs/screenshots/*.jpg
 cd tools/screenshots && npm run brand                       # regenerate banners and OG card
 ```

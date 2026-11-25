@@ -4,10 +4,26 @@
 	"footer": { "left": "GLOBUS Debug Control", "right": "wordpress.org/plugins/globus-debug-control" },
 	"slides": [
 		{
-			"id": "settings",
+			"id": "overview",
 			"file": "screenshot-1",
+			"shot": "overview",
+			"maxHeight": 1000,
+			"theme": "dark",
+			"eyebrow": "Overview",
+			"headline": "One screen for the whole debug state",
+			"lead": "Health score, live KPIs, cron load and autoload weight - without leaving wp-admin.",
+			"bullets": [
+				"Real data: log size, cron orphans, expired transients, autoload payload",
+				"Health checklist links straight to the screen that fixes each item",
+				"Master switch pauses the plugin without touching wp-config.php"
+			],
+			"address": "example.com/wp-admin - GLOBUS Debug - Overview"
+		},
+		{
+			"id": "settings",
+			"file": "screenshot-2",
 			"shot": "settings",
-			"maxHeight": 666,
+			"maxHeight": 830,
 			"theme": "dark",
 			"eyebrow": "Error filtering",
 			"headline": "Stop drowning in debug noise",
@@ -17,14 +33,15 @@
 				"Display mode: inherit, always on, or always off",
 				"Optional MU-plugin dropin filters errors before other plugins load"
 			],
-			"address": "example.com/wp-admin - Settings - GLOBUS Debug Control"
+			"address": "example.com/wp-admin - GLOBUS Debug - Settings"
 		},
 		{
 			"id": "wp-debug",
-			"file": "screenshot-2",
+			"file": "screenshot-3",
 			"shot": "wp-debug",
+			"maxHeight": 800,
 			"theme": "dark",
-			"eyebrow": "WP_DEBUG tab",
+			"eyebrow": "WP_DEBUG",
 			"headline": "Toggle debug constants without FTP",
 			"lead": "Flip WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG and SAVEQUERIES from the admin.",
 			"bullets": [
@@ -32,57 +49,61 @@
 				"Timestamped backup before every write",
 				"Commented-out defines are never touched"
 			],
-			"address": "example.com/wp-admin - Settings - WP_DEBUG"
+			"address": "example.com/wp-admin - GLOBUS Debug - WP_DEBUG"
 		},
 		{
 			"id": "error-log",
-			"file": "screenshot-3",
+			"file": "screenshot-4",
 			"shot": "error-log",
+			"maxHeight": 1000,
 			"theme": "dark",
 			"eyebrow": "Error log",
 			"headline": "Read debug.log inside wp-admin",
-			"lead": "Color-coded log with pagination, live polling, download and one-click clear.",
+			"lead": "A dark console with pagination, live polling, download and one-click clear.",
 			"bullets": [
 				"Severity colors for fatal, warning, notice and cron lines",
 				"Tail-read keeps multi-megabyte files light",
-				"Download or clear the log in one click"
+				"Generate test errors to confirm logging works"
 			],
-			"address": "example.com/wp-admin - Settings - Error Log"
+			"address": "example.com/wp-admin - GLOBUS Debug - Error Log"
 		},
 		{
 			"id": "cron",
-			"file": "screenshot-4",
+			"file": "screenshot-5",
 			"shot": "cron",
+			"maxHeight": 1000,
 			"theme": "dark",
 			"eyebrow": "Cron tasks",
 			"headline": "See every cron event at a glance",
 			"lead": "Find overdue events, orphaned hooks and duplicate schedules in one table.",
 			"bullets": [
 				"Run any event immediately",
-				"Delete orphaned hooks safely",
+				"Delete orphaned hooks safely, one by one or in bulk",
 				"Source detection shows which plugin scheduled it"
 			],
-			"address": "example.com/wp-admin - Settings - Cron Tasks"
+			"address": "example.com/wp-admin - GLOBUS Debug - Cron Tasks"
 		},
 		{
 			"id": "transients",
-			"file": "screenshot-5",
+			"file": "screenshot-6",
 			"shot": "transients",
+			"maxHeight": 900,
 			"theme": "dark",
 			"eyebrow": "Transients",
-			"headline": "Find the transients bloating your options table",
+			"headline": "Find transients bloating your options table",
 			"lead": "Every database transient with size and expiry, plus a bulk purge for expired rows.",
 			"bullets": [
-				"Sort by size and expiration",
+				"Expired rows are highlighted and counted",
 				"Delete single transients",
 				"Purge all expired rows in one click"
 			],
-			"address": "example.com/wp-admin - Settings - Transients"
+			"address": "example.com/wp-admin - GLOBUS Debug - Transients"
 		},
 		{
 			"id": "autoloaded",
-			"file": "screenshot-6",
+			"file": "screenshot-7",
 			"shot": "autoloaded",
+			"maxHeight": 900,
 			"theme": "dark",
 			"eyebrow": "Autoloaded options",
 			"headline": "Find what slows down every request",
@@ -92,28 +113,29 @@
 				"Size warnings above 800 KB or 100 rows",
 				"Spot plugin bloat before it hurts response time"
 			],
-			"address": "example.com/wp-admin - Settings - Autoloaded"
+			"address": "example.com/wp-admin - GLOBUS Debug - Autoloaded Options"
 		},
 		{
 			"id": "http-log",
-			"file": "screenshot-7",
+			"file": "screenshot-8",
 			"shot": "http-log",
+			"maxHeight": 900,
 			"theme": "dark",
 			"eyebrow": "HTTP log",
 			"headline": "See every outgoing HTTP call",
-			"lead": "Capture WordPress HTTP API requests with status, transport and duration.",
+			"lead": "Capture WordPress HTTP API requests with status, transport, duration and errors.",
 			"bullets": [
 				"Captures wp_remote_get and wp_remote_post via http_api_debug",
 				"Sensitive query parameters are masked automatically",
 				"Up to 100 entries with a 6-hour TTL"
 			],
-			"address": "example.com/wp-admin - Settings - HTTP Log"
+			"address": "example.com/wp-admin - GLOBUS Debug - HTTP Log"
 		},
 		{
 			"id": "constants",
-			"file": "screenshot-8",
+			"file": "screenshot-9",
 			"shot": "constants",
-			"maxHeight": 950,
+			"maxHeight": 1000,
 			"theme": "dark",
 			"eyebrow": "Constants",
 			"headline": "Every runtime constant in one place",
@@ -123,7 +145,7 @@
 				"Database passwords, auth keys, tokens and API keys stay masked",
 				"Read-only reference - nothing is changed"
 			],
-			"address": "example.com/wp-admin - Settings - Constants"
+			"address": "example.com/wp-admin - GLOBUS Debug - Constants"
 		}
 	]
 }
