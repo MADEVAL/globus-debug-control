@@ -237,6 +237,10 @@
 .gdc-cron-actions .gdc-btn { margin-left: var(--gdc-sp-1); }
 .gdc-cron-source .spinner { float: none; margin: 0; }
 .gdc-cron-hook-name { word-break: break-all; }
+
+.gdc-cron-overdue td { background: var(--gdc-amber-dim); }
+.gdc-cron-overdue:hover td { background: var(--gdc-amber-dim); }
+.gdc-cron-orphan td { box-shadow: inset 3px 0 0 var(--gdc-red); }
 .gdc-card > .gdc-table-wrap { border-radius: var(--gdc-r-md); overflow: hidden; }
 
 .gdc-cron-table .gdc-col-when { width: 22%; }
@@ -292,6 +296,12 @@
 	line-height: 1.45;
 }
 
+.gdc-http-duration { font-family: var(--gdc-mono); white-space: nowrap; }
+.gdc-http-table .gdc-col-time { width: 96px; }
+.gdc-http-table .gdc-col-status { width: 110px; }
+.gdc-http-table .gdc-col-transport { width: 210px; }
+.gdc-http-table .gdc-col-error { width: 220px; }
+
 .gdc-http-method {
 	font-family: var(--gdc-mono);
 	font-size: var(--gdc-fs-nano);
@@ -329,6 +339,7 @@
 
 .gdc-constants-table td:first-child { width: 45%; }
 .gdc-constants-table td code { font-size: var(--gdc-fs-2xs); }
+.gdc-constant-name code { font-family: var(--gdc-mono); word-break: break-all; }
 .gdc-chip.gdc-constant-masked { background: var(--gdc-s3); color: var(--gdc-tx3); font-family: var(--gdc-mono); }
 .gdc-constants-toolbar .gdc-input { width: min(380px, 100%); }
 .gdc-constants-toolbar .gdc-toolbar-group { flex-wrap: nowrap; }
@@ -339,6 +350,10 @@
 .gdc-empty-state { margin: 0; }
 .gdc-transient-expired td { background: var(--gdc-red-dim); }
 .gdc-transient-expired:hover td { background: var(--gdc-red-dim); }
+.gdc-transient-key { font-family: var(--gdc-mono); word-break: break-all; }
+.gdc-transient-table .gdc-col-size { width: 110px; }
+.gdc-transient-table .gdc-col-expires { width: 180px; }
+.gdc-transient-table .gdc-col-actions { width: 110px; }
 
 /* ------------------------------------------------------------
    Dashboard widget

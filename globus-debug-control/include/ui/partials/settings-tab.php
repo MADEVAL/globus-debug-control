@@ -48,10 +48,6 @@ $gdc_field   = $gdc_opt . '[';
 					<?php echo GDC_UI::icon( 'code' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 					<?php esc_html_e( 'Open error log', 'globus-debug-control' ); ?>
 				</a>
-				<button type="submit" class="gdc-btn gdc-btn--pri">
-					<?php echo GDC_UI::icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
-					<?php esc_html_e( 'Save changes', 'globus-debug-control' ); ?>
-				</button>
 			</div>
 		</div>
 

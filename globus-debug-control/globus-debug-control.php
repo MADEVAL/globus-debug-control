@@ -103,11 +103,12 @@ final class Globus_Debug_Control {
 		add_action( 'admin_init', array( $this, 'maybe_upgrade_mu_dropin' ), 1 );
 		add_action( 'upgrader_process_complete', array( $this, 'on_upgrader_process_complete' ) );
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
-		add_action( 'admin_init', array( $this, 'maybe_redirect_legacy_url' ), 1 );
+		add_action( 'init', array( $this, 'maybe_redirect_legacy_url' ), 1 );
 		add_action( 'wp_ajax_gdc_toggle_setting', array( $this, 'ajax_toggle_setting' ) );
 		add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
 		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_menu_styles' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_settings_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_dashboard_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_enqueue_php_error_assets' ) );

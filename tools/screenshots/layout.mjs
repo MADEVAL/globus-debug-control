@@ -19,39 +19,26 @@ const MENU = [
 	{ icon: 'admin-settings', label: 'Settings' },
 ];
 
-const GLOBUS_SUBMENU = [
-	[ 'Overview', 'globus-debug-control' ],
-	[ 'Settings', 'gdc-settings' ],
-	[ 'WP_DEBUG', 'gdc-wp-debug' ],
-	[ 'Error Log', 'gdc-log' ],
-	[ 'Cron Tasks', 'gdc-cron' ],
-	[ 'Transients', 'gdc-transients' ],
-	[ 'Autoloaded Options', 'gdc-autoloaded' ],
-	[ 'HTTP Log', 'gdc-http' ],
-	[ 'Constants', 'gdc-constants' ],
-];
+const GLOBUS_MENU = { icon: '', label: 'GLOBUS Debug', slug: 'globus-debug-control' };
 
 function menuItem( item, currentPage ) {
 	const isCurrent = item.slug && item.slug === currentPage;
-	const classes = [ 'menu-top', `menu-icon-${ item.icon }` ];
+	const classes = [ 'menu-top' ];
+	if ( item.icon ) {
+		classes.push( `menu-icon-${ item.icon }` );
+	}
 	if ( item.slug ) {
-		classes.push( 'wp-has-submenu', 'wp-menu-open', 'wp-has-current-submenu', 'current', 'menu-top-first' );
+		classes.push( 'gdc-menu-flat' );
+	}
+	if ( isCurrent ) {
+		classes.push( 'current' );
 	}
 
-	let submenu = '';
-	if ( item.slug ) {
-		const links = GLOBUS_SUBMENU.map( ( [ label, slug ] ) => {
-			const current = slug === currentPage ? ' class="current"' : '';
-			return `<li${ current }><a href="#"${ current }>${ label }</a></li>`;
-		} ).join( '' );
-		submenu = `<ul class="wp-submenu wp-submenu-wrap"><li class="wp-submenu-head" aria-hidden="true">GLOBUS Debug</li>${ links }</ul>`;
-	}
-
+	const iconClass = item.icon ? ` dashicons-${ item.icon }` : '';
 	const badge = item.count ? `<span class="update-plugins count-${ item.count }"><span class="plugin-count">${ item.count }</span></span>` : '';
 
 	return `<li class="wp-first-item ${ classes.join( ' ' ) }">
-		<a href="#" class="menu-top" aria-haspopup="true"><div class="wp-menu-arrow"><div></div></div><div class="wp-menu-image dashicons-before dashicons-${ item.icon }" aria-hidden="true"><br></div><div class="wp-menu-name">${ item.label }${ badge }</div></a>
-		${ submenu }
+		<a href="#" class="menu-top" aria-haspopup="true"><div class="wp-menu-image dashicons-before${ iconClass }" aria-hidden="true"><br></div><div class="wp-menu-name">${ item.label }${ badge }</div></a>
 	</li>`;
 }
 
@@ -76,7 +63,7 @@ function adminBar() {
 function sidebar( currentPage ) {
 	const items = [
 		...MENU.map( ( item ) => menuItem( item, currentPage ) ),
-		menuItem( { icon: 'editor-code', label: 'GLOBUS Debug', slug: 'globus-debug-control' }, currentPage ),
+		menuItem( GLOBUS_MENU, currentPage ),
 		menuItem( { icon: 'admin-collapse', label: 'Collapse menu', collapse: true }, currentPage ),
 	];
 
@@ -95,17 +82,14 @@ function sidebar( currentPage ) {
  * Builds the full HTML document for one plugin screen.
  *
  * @param {Object}   options
- * @param {string}   options.page      Admin page slug of the screen.
  * @param {string}   options.content   Rendered `.gdc-app` markup.
  * @param {string[]} options.cssHrefs  Stylesheet URLs relative to the document.
  * @param {string[]} options.jsHrefs   Script URLs relative to the document.
  */
-export function renderDocument( { page, content, cssHrefs, jsHrefs = [] } ) {
+export function renderDocument( { content, cssHrefs, jsHrefs = [] } ) {
 	const links = cssHrefs.map( ( href ) => `<link rel="stylesheet" href="${ href }">` ).join( '\n\t' );
 	const scripts = jsHrefs.map( ( href ) => `<script src="${ href }"></script>` ).join( '\n\t' );
-	const bodyClass = 'globus-debug-control' === page
-		? 'toplevel_page_globus-debug-control'
-		: `globus-debug_page_${ page }`;
+	const bodyClass = 'toplevel_page_globus-debug-control';
 
 	return `<!DOCTYPE html>
 <html lang="en-US" class="wp-toolbar">
@@ -118,7 +102,7 @@ export function renderDocument( { page, content, cssHrefs, jsHrefs = [] } ) {
 <body class="wp-admin wp-core-ui js admin-bar auto-fold ${ bodyClass }">
 	${ adminBar() }
 	<div id="wpwrap">
-		${ sidebar( page ) }
+		${ sidebar( 'globus-debug-control' ) }
 		<div id="wpcontent">
 			<div id="wpbody" role="main">
 				<div id="wpbody-content">

@@ -189,20 +189,7 @@ body.wp-admin[class*="_page_gdc-"] #wpbody-content > .error {
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	min-height: calc(100vh - var(--gdc-sticky-admin-offset));
-	max-height: calc(100vh - var(--gdc-sticky-admin-offset));
-	overflow: hidden;
 	background: var(--gdc-bg);
-}
-
-@supports (height: 100dvh) {
-	:root {
-		--gdc-scrollport-h: calc(100dvh - var(--gdc-sticky-admin-offset) - var(--gdc-plughead-h));
-	}
-	.gdc-app {
-		min-height: calc(100dvh - var(--gdc-sticky-admin-offset));
-		max-height: calc(100dvh - var(--gdc-sticky-admin-offset));
-	}
 }
 
 .gdc-content {
@@ -211,9 +198,6 @@ body.wp-admin[class*="_page_gdc-"] #wpbody-content > .error {
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
-	overflow-x: hidden;
-	overscroll-behavior: contain;
 	background: var(--gdc-bg);
 }
 
@@ -227,7 +211,8 @@ body.wp-admin[class*="_page_gdc-"] #wpbody-content > .error {
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--gdc-sp-4);
-	position: relative;
+	position: sticky;
+	top: var(--gdc-sticky-admin-offset);
 	z-index: var(--gdc-z-plughead);
 	overflow-x: clip;
 }
@@ -306,6 +291,10 @@ body.wp-admin[class*="_page_gdc-"] #wpbody-content > .error {
 
 .gdc-card-pad { padding: var(--gdc-card-pad); }
 .gdc-card--tight { padding: var(--gdc-sp-1h); }
+
+/* State accents for KPI and summary cards. */
+.gdc-card-warning { box-shadow: inset 3px 0 0 var(--gdc-amber); }
+.gdc-card-ok { box-shadow: inset 3px 0 0 var(--gdc-green); }
 .gdc-inner { background: var(--gdc-s2); border: 1px solid var(--gdc-line); border-radius: var(--gdc-r-sm); }
 
 .gdc-card-header { padding: var(--gdc-card-pad) var(--gdc-card-pad) 0; }
@@ -1411,7 +1400,7 @@ body.wp-admin .gdc-pal-input:focus {
 
 .gdc-snav {
 	position: sticky;
-	top: var(--gdc-sp-2h);
+	top: calc(var(--gdc-plughead-h) + var(--gdc-sp-2h) + var(--gdc-sticky-admin-offset));
 	align-self: start;
 	max-height: calc(var(--gdc-scrollport-h) - var(--gdc-sp-6));
 	display: flex;
@@ -1657,7 +1646,7 @@ body.wp-admin #wpbody-content .gdc-snav.has-search .gdc-snav-search-clear { disp
 
 .gdc-rail {
 	position: sticky;
-	top: var(--gdc-sp-2h);
+	top: calc(var(--gdc-plughead-h) + var(--gdc-sp-2h) + var(--gdc-sticky-admin-offset));
 	display: flex;
 	flex-direction: column;
 	gap: var(--gdc-sp-3h);

@@ -329,15 +329,35 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$this->assertContains('globus-debug-control', $slugs);
 	}
 
-	public function testAddSettingsPageRegistersOnePagePerModule(): void {
+	public function testAddSettingsPageRegistersSingleMenuItem(): void {
 		$this->plugin()->add_settings_page();
 
 		$submenus = $this->state('submenu_pages');
-		$slugs    = array_column($submenus, 'menu_slug');
+		$this->assertCount(0, $submenus);
 
-		$this->assertSame(array_map(array('\GDC_UI', 'module_slug'), array_keys(\GDC_UI::modules())), $slugs);
-		$this->assertCount(9, $slugs);
-		$this->assertSame(array('globus-debug-control'), array_values(array_unique(array_column($submenus, 'parent_slug'))));
+		$pages = $this->state('menu_pages');
+		$this->assertCount(1, $pages);
+		$this->assertSame('none', $pages[0]['icon_url']);
+	}
+
+	public function testModuleUrlUsesSharedPage(): void {
+		$log_url = \GDC_UI::module_url('log');
+
+		$this->assertStringContainsString('page=globus-debug-control', $log_url);
+		$this->assertStringContainsString('tab=log', $log_url);
+		$this->assertStringNotContainsString('tab=', \GDC_UI::module_url('overview'));
+	}
+
+	public function testCurrentModuleReadsTabArgument(): void {
+		$_GET['page'] = 'globus-debug-control';
+		$_GET['tab']  = 'cron';
+
+		$this->assertSame('cron', \GDC_UI::current_module());
+
+		$_GET['tab'] = 'not-a-module';
+		$this->assertSame('overview', \GDC_UI::current_module());
+
+		unset($_GET['page'], $_GET['tab']);
 	}
 
 	public function testRenderSettingsPageRendersShellAndSettingsModule(): void {
@@ -386,9 +406,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 	public function testAdminEnqueueSettingsAssetsEnqueuesOnModulePages(): void {
 		$this->plugin()->add_settings_page();
 
-		$hooks = array_column($this->state('submenu_pages'), 'hook');
-
-		$this->plugin()->admin_enqueue_settings_assets($hooks[3]);
+		$this->plugin()->admin_enqueue_settings_assets('toplevel_page_globus-debug-control');
 
 		$this->assertContains('gdc-ui', $this->state('enqueued_styles'));
 	}
@@ -539,7 +557,8 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 		$html = ob_get_clean();
 
 		$this->assertStringContainsString('Out of memory', $html);
-		$this->assertStringContainsString('page=gdc-log', $html);
+		$this->assertStringContainsString('page=globus-debug-control', $html);
+		$this->assertStringContainsString('tab=log', $html);
 	}
 
 	public function testRenderDashboardWidgetShowsNothingWhenNoFatal(): void {

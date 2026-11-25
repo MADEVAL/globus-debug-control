@@ -40,15 +40,23 @@ final class GDC_UI {
 	/**
 	 * Returns the URL of a module screen.
 	 *
+	 * Modules share one admin page; the module id travels in the `tab` query
+	 * argument so the WordPress menu stays a single item.
+	 *
 	 * @param string               $module Module id.
 	 * @param array<string, mixed> $args   Extra query arguments.
 	 * @return string
 	 */
 	public static function module_url( string $module, array $args = array() ): string {
-		return add_query_arg(
-			array_merge( array( 'page' => self::module_slug( $module ) ), $args ),
-			admin_url( 'admin.php' )
-		);
+		$modules = self::modules();
+		$module  = isset( $modules[ $module ] ) ? $module : 'overview';
+		$query   = array( 'page' => 'globus-debug-control' );
+
+		if ( 'overview' !== $module ) {
+			$query['tab'] = $module;
+		}
+
+		return add_query_arg( array_merge( $query, $args ), admin_url( 'admin.php' ) );
 	}
 
 	/**
@@ -66,17 +74,51 @@ final class GDC_UI {
 	/**
 	 * Maps an admin page slug back to a module id.
 	 *
+	 * Kept for legacy URLs such as `?page=gdc-log`.
+	 *
 	 * @param string $page Admin page slug.
 	 * @return string
 	 */
 	public static function module_from_page( string $page ): string {
+		$module = self::module_from_slug( $page );
+
+		return '' !== $module ? $module : 'overview';
+	}
+
+	/**
+	 * Returns the module id for a registered module slug.
+	 *
+	 * @param string $slug Admin page slug.
+	 * @return string Module id, or an empty string when unknown.
+	 */
+	public static function module_from_slug( string $slug ): string {
 		foreach ( self::modules() as $id => $module ) {
-			if ( (string) $module['slug'] === $page ) {
+			if ( (string) $module['slug'] === $slug ) {
 				return (string) $id;
 			}
 		}
 
-		return 'overview';
+		return '';
+	}
+
+	/**
+	 * Returns the module currently rendered on the shared admin page.
+	 *
+	 * @return string
+	 */
+	public static function current_module(): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page detection.
+		$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : 'globus-debug-control';
+
+		if ( 'globus-debug-control' === $page ) {
+			$modules = self::modules();
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page detection.
+			$tab = isset( $_GET['tab'] ) && is_string( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
+
+			return isset( $modules[ $tab ] ) ? $tab : 'overview';
+		}
+
+		return self::module_from_page( $page );
 	}
 
 	/**

@@ -27,6 +27,15 @@ body {
 	vertical-align: middle;
 }
 
+/* The plugin menu item is text-only. */
+#adminmenu .gdc-menu-flat .wp-menu-image {
+	display: none;
+}
+
+#adminmenu .gdc-menu-flat .wp-menu-name {
+	padding-left: 8px;
+}
+
 /*
  * Static stand-in for the CodeMirror console used by the Error Log template.
  * CodeMirror itself is overkill for a marketing screenshot.

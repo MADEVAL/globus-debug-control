@@ -395,7 +395,8 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		try {
 			\GDC_WpConfig_Debug::handle_quick_enable_action();
 		} catch (\GDC_Test_RedirectException $e) {
-			$this->assertStringContainsString('page=gdc-log', $e->location);
+			$this->assertStringContainsString('page=globus-debug-control', $e->location);
+			$this->assertStringContainsString('tab=log', $e->location);
 			$this->assertStringContainsString('gdc_debug_enabled=1', $e->location);
 		}
 
@@ -416,7 +417,8 @@ final class WpConfigDebugTest extends WordPressTestCase {
 		try {
 			\GDC_WpConfig_Debug::handle_quick_enable_action();
 		} catch (\GDC_Test_RedirectException $e) {
-			$this->assertStringContainsString('page=gdc-wp-debug', $e->location);
+			$this->assertStringContainsString('page=globus-debug-control', $e->location);
+			$this->assertStringContainsString('tab=wpcfg', $e->location);
 			$this->assertStringContainsString('gdc_cfg_error=nowrite', $e->location);
 		}
 	}

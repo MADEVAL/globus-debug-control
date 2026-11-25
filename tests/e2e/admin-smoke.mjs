@@ -26,15 +26,15 @@ if ( ! USER || ! PASS ) {
 }
 
 const PAGES = [
-	[ 'globus-debug-control', 'Overview' ],
-	[ 'gdc-settings', 'Settings' ],
-	[ 'gdc-wp-debug', 'WP_DEBUG' ],
-	[ 'gdc-log', 'Error Log' ],
-	[ 'gdc-cron', 'Cron Tasks' ],
-	[ 'gdc-transients', 'Transients' ],
-	[ 'gdc-autoloaded', 'Autoloaded Options' ],
-	[ 'gdc-http', 'HTTP Log' ],
-	[ 'gdc-constants', 'Constants' ],
+	[ 'overview', 'Overview' ],
+	[ 'settings', 'Settings' ],
+	[ 'wpcfg', 'WP_DEBUG' ],
+	[ 'log', 'Error Log' ],
+	[ 'cron', 'Cron Tasks' ],
+	[ 'transients', 'Transients' ],
+	[ 'autoloaded', 'Autoloaded Options' ],
+	[ 'http', 'HTTP Log' ],
+	[ 'constants', 'Constants' ],
 ];
 
 const failures = [];
@@ -50,8 +50,11 @@ function check( name, condition, detail = '' ) {
 	console.log( `  FAIL ${ name }${ detail ? ' - ' + detail : '' }` );
 }
 
-async function gotoPage( page, slug ) {
-	const response = await page.goto( `${ BASE }/wp-admin/admin.php?page=${ slug }`, {
+async function gotoPage( page, tab ) {
+	const url = 'overview' === tab
+		? `${ BASE }/wp-admin/admin.php?page=globus-debug-control`
+		: `${ BASE }/wp-admin/admin.php?page=globus-debug-control&tab=${ tab }`;
+	const response = await page.goto( url, {
 		waitUntil: 'domcontentloaded',
 	} );
 	await page.waitForTimeout( 500 );
@@ -76,6 +79,19 @@ try {
 		] );
 	}
 
+	console.log( '\nAdmin menu' );
+
+	const menuItem = page.locator( '#adminmenu li.toplevel_page_globus-debug-control' );
+	check( 'single plugin menu item', ( await menuItem.count() ) === 1 );
+	check( 'no plugin submenu items', ( await page.locator( '#adminmenu .toplevel_page_globus-debug-control .wp-submenu li' ).count() ) === 0 );
+	check(
+		'no menu icon image',
+		( await page.locator( '#adminmenu .toplevel_page_globus-debug-control .wp-menu-image img' ).count() ) === 0
+	);
+
+	const menuBox = await menuItem.boundingBox();
+	check( 'menu item height <= 40px', !! menuBox && menuBox.height <= 40, menuBox ? `${ Math.round( menuBox.height ) }px` : 'missing' );
+
 	console.log( '\nScreens' );
 
 	for ( const [ slug, heading ] of PAGES ) {
@@ -84,13 +100,15 @@ try {
 
 		check( `${ slug } loads`, response && response.status() === 200 );
 		check( `${ slug } renders the shell`, ( await page.locator( '.gdc-app' ).count() ) === 1 );
+		const maxHeight = await page.locator( '.gdc-app' ).evaluate( ( el ) => getComputedStyle( el ).maxHeight );
+		check( `${ slug } shell is not viewport-locked`, maxHeight === 'none' || maxHeight === '', maxHeight );
 		check( `${ slug } heading`, h1 === heading, h1 );
 		check( `${ slug } nav highlight`, ( await page.locator( '.gdc-snav-item.is-active' ).count() ) === 1 );
 	}
 
 	console.log( '\nCommand palette' );
 
-	await gotoPage( page, 'globus-debug-control' );
+	await gotoPage( page, 'overview' );
 	await page.keyboard.press( 'Control+k' );
 	await page.waitForTimeout( 200 );
 	check( 'Ctrl+K opens', ( await page.locator( '#gdc-palette:not([hidden])' ).count() ) === 1 );
@@ -109,7 +127,7 @@ try {
 
 	console.log( '\nConstants filter' );
 
-	await gotoPage( page, 'gdc-constants' );
+	await gotoPage( page, 'constants' );
 	const allRows = await page.locator( '.gdc-constant-row:visible' ).count();
 	await page.fill( '#gdc-constants-filter', 'WP_DEBUG' );
 	await page.waitForTimeout( 250 );
@@ -118,7 +136,7 @@ try {
 
 	console.log( '\nMaster switch' );
 
-	await gotoPage( page, 'globus-debug-control' );
+	await gotoPage( page, 'overview' );
 	const toggle = page.locator( '[data-gdc-ajax-toggle]' ).first();
 	const before = await toggle.getAttribute( 'aria-checked' );
 	await toggle.click();
@@ -135,14 +153,14 @@ try {
 
 	console.log( '\nSettings save' );
 
-	await gotoPage( page, 'gdc-settings' );
+	await gotoPage( page, 'settings' );
 	const warnings = page.locator( '#gdc-opt-warnings' );
 	const warningsBefore = await warnings.isChecked();
 	await warnings.setChecked( ! warningsBefore, { force: true } );
 
 	await Promise.all( [
 		page.waitForNavigation( { waitUntil: 'domcontentloaded' } ),
-		page.locator( '.gdc-pagehead-actions button[type="submit"]' ).click(),
+		page.locator( '.gdc-settings-actions button[type="submit"]' ).click(),
 	] );
 	await page.waitForTimeout( 400 );
 	check( 'success alert appears', ( await page.locator( '.gdc-alert--success' ).count() ) >= 1 );
@@ -151,7 +169,7 @@ try {
 	await page.locator( '#gdc-opt-warnings' ).setChecked( warningsBefore, { force: true } );
 	await Promise.all( [
 		page.waitForNavigation( { waitUntil: 'domcontentloaded' } ),
-		page.locator( '.gdc-pagehead-actions button[type="submit"]' ).click(),
+		page.locator( '.gdc-settings-actions button[type="submit"]' ).click(),
 	] );
 	await page.waitForTimeout( 300 );
 

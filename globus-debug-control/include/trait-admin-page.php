@@ -29,51 +29,55 @@ trait GDC_Admin_Page {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Registers the plugin as a top-level menu with one page per module.
+	 * Registers the single top-level menu item.
+	 *
+	 * Module switching happens inside the plugin shell, so the WordPress menu
+	 * does not grow with every viewer.
 	 */
 	public function add_settings_page() {
 		self::$page_hooks   = array();
 		self::$page_hooks[] = add_menu_page(
 			'GLOBUS Debug Control',
 			__( 'GLOBUS Debug', 'globus-debug-control' ),
-			'manage_options',
+			self::manage_capability(),
 			'globus-debug-control',
 			array( $this, 'render_settings_page' ),
-			GDC_ASSETS_URL . 'img/logo.png',
+			'none',
 			81
 		);
-
-		foreach ( GDC_UI::modules() as $module ) {
-			self::$page_hooks[] = add_submenu_page(
-				'globus-debug-control',
-				sprintf(
-					/* translators: %s: module label */
-					__( '%s - GLOBUS Debug Control', 'globus-debug-control' ),
-					(string) $module['label']
-				),
-				(string) $module['label'],
-				'manage_options',
-				(string) $module['slug'],
-				array( $this, 'render_settings_page' )
-			);
-		}
 	}
 
 	/**
-	 * Redirects legacy tab URLs to the dedicated module pages.
+	 * Removes the empty icon column from the plugin menu item.
 	 *
-	 * Keeps old bookmarks, dashboard widget links and documentation working
-	 * after the tabs were split into separate admin pages.
+	 * The plugin uses a text-only menu entry, so hiding the reserved image
+	 * column keeps the label aligned with the rest of the admin menu.
+	 */
+	public function admin_enqueue_menu_styles(): void {
+		$css = '#adminmenu .toplevel_page_globus-debug-control .wp-menu-image{display:none;}'
+			. '#adminmenu .toplevel_page_globus-debug-control .wp-menu-name{padding-left:8px;}'
+			. '.folded #adminmenu .toplevel_page_globus-debug-control .wp-menu-image{display:flex;align-items:center;justify-content:center;padding:0;font-size:14px;font-weight:700;line-height:1;}'
+			. '.folded #adminmenu .toplevel_page_globus-debug-control .wp-menu-image::before{content:"G";}'
+			. '.folded #adminmenu .toplevel_page_globus-debug-control .wp-menu-image br{display:none;}';
+
+		wp_add_inline_style( 'common', $css );
+	}
+
+	/**
+	 * Redirects legacy URLs to the shared module page.
+	 *
+	 * Old bookmarks used `?page=gdc-log` and the old Settings screen lived
+	 * under `options-general.php`. Both now resolve to the single plugin page.
 	 */
 	public function maybe_redirect_legacy_url(): void {
 		global $pagenow;
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
-		if ( ! isset( $_GET['page'] ) ) {
+		if ( ! is_admin() ) {
 			return;
 		}
 
-		if ( ! current_user_can( self::manage_capability() ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		if ( ! isset( $_GET['page'] ) || ! is_string( $_GET['page'] ) ) {
 			return;
 		}
 
@@ -81,31 +85,40 @@ trait GDC_Admin_Page {
 		$page = sanitize_key( wp_unslash( (string) $_GET['page'] ) );
 		$args = array();
 
+		if ( is_user_logged_in() && ! current_user_can( self::manage_capability() ) ) {
+			return;
+		}
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
 		if ( isset( $_GET['logpage'] ) ) {
 			$args['logpage'] = (int) $_GET['logpage']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
 		}
 
 		$legacy_settings = ( 'options-general.php' === $pagenow && 'globus-debug-control' === $page );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
-		$legacy_tab = ( 'admin.php' === $pagenow && 'globus-debug-control' === $page && isset( $_GET['tab'] ) );
 
-		if ( ! $legacy_settings && ! $legacy_tab ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		$legacy_module = ( 'admin.php' === $pagenow && 'globus-debug-control' !== $page )
+			? GDC_UI::module_from_slug( $page )
+			: '';
+
+		if ( ! $legacy_settings && '' === $legacy_module ) {
 			return;
 		}
 
-		$tab = 'overview';
+		$module = 'overview';
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
-		if ( isset( $_GET['tab'] ) ) {
-			$tab = sanitize_key( wp_unslash( (string) $_GET['tab'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		if ( $legacy_settings ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+			$tab = isset( $_GET['tab'] ) && is_string( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+
+			if ( '' !== $tab && array_key_exists( $tab, GDC_UI::modules() ) ) {
+				$module = $tab;
+			}
+		} else {
+			$module = $legacy_module;
 		}
 
-		if ( ! array_key_exists( $tab, GDC_UI::modules() ) ) {
-			$tab = 'overview';
-		}
-
-		wp_safe_redirect( GDC_UI::module_url( $tab, $args ) );
+		wp_safe_redirect( GDC_UI::module_url( $module, $args ) );
 		exit;
 	}
 
@@ -175,11 +188,8 @@ trait GDC_Admin_Page {
 			return;
 		}
 
-		$modules = GDC_UI::modules();
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page detection.
-		$page       = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : 'globus-debug-control';
-		$active_tab = GDC_UI::module_from_page( $page );
+		$modules    = GDC_UI::modules();
+		$active_tab = GDC_UI::current_module();
 
 		$opts = $this->get_options();
 
@@ -418,11 +428,6 @@ trait GDC_Admin_Page {
 
 		if ( empty( $hooks ) ) {
 			$hooks = array( 'toplevel_page_globus-debug-control' );
-
-			foreach ( GDC_UI::modules() as $module ) {
-				$hooks[] = 'globus-debug-control_page_' . (string) $module['slug'];
-				$hooks[] = 'globus-debug_page_' . (string) $module['slug'];
-			}
 		}
 
 		if ( ! in_array( $hook, $hooks, true ) ) {
@@ -441,8 +446,7 @@ trait GDC_Admin_Page {
 
 		wp_enqueue_script( 'gdc-toastify', GDC_ASSETS_URL . 'vendor/toastify/toastify.min.js', array(), $this->asset_version( 'assets/vendor/toastify/toastify.min.js' ), true );
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page detection.
-		$tab = GDC_UI::module_from_page( isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : 'globus-debug-control' );
+		$tab = GDC_UI::current_module();
 
 		if ( 'overview' === $tab ) {
 			wp_enqueue_script( 'gdc-chartjs', GDC_ASSETS_URL . 'vendor/chartjs/chart.umd.js', array(), $this->asset_version( 'assets/vendor/chartjs/chart.umd.js' ), true );

@@ -35,12 +35,6 @@ $gdc_wp_debug_on = ! empty( $gdc_wp_debug_on );
 	</button>
 
 	<div class="gdc-plughead-right">
-		<a class="gdc-btn gdc-btn--ghost gdc-btn--icon" href="<?php echo esc_url( GDC_UI::module_url( 'log' ) ); ?>" title="<?php esc_attr_e( 'Error Log', 'globus-debug-control' ); ?>" aria-label="<?php esc_attr_e( 'Error Log', 'globus-debug-control' ); ?>">
-			<?php echo GDC_UI::icon( 'code', 'gdc-ico--md' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
-		</a>
-		<a class="gdc-btn gdc-btn--ghost gdc-btn--icon" href="<?php echo esc_url( GDC_UI::module_url( 'settings' ) ); ?>" title="<?php esc_attr_e( 'Settings', 'globus-debug-control' ); ?>" aria-label="<?php esc_attr_e( 'Settings', 'globus-debug-control' ); ?>">
-			<?php echo GDC_UI::icon( 'gear', 'gdc-ico--md' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
-		</a>
 		<a class="gdc-btn gdc-btn--ghost gdc-btn--icon" href="https://wordpress.org/plugins/globus-debug-control/" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Plugin page and documentation', 'globus-debug-control' ); ?>" aria-label="<?php esc_attr_e( 'Plugin page and documentation', 'globus-debug-control' ); ?>">
 			<?php echo GDC_UI::icon( 'support', 'gdc-ico--md' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
 		</a>
