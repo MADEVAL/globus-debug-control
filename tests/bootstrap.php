@@ -65,6 +65,7 @@ function gdc_test_default_state(): array {
 		'settings_sections' => [],
 		'settings_fields' => [],
 		'options_pages' => [],
+		'menu_pages' => [],
 		'dashboard_widgets' => [],
 		'registered_styles' => [],
 		'registered_scripts' => [],
@@ -277,6 +278,12 @@ if (! function_exists('esc_attr')) {
 	}
 }
 
+if (! function_exists('esc_attr__')) {
+	function esc_attr__($text, $domain = null) {
+		return (string) $text;
+	}
+}
+
 if (! function_exists('esc_url')) {
 	function esc_url($url) {
 		return (string) $url;
@@ -441,6 +448,12 @@ if (! function_exists('add_settings_field')) {
 if (! function_exists('add_options_page')) {
 	function add_options_page($page_title, $menu_title, $capability, $menu_slug, $callback = ''): void {
 		$GLOBALS['gdc_test_state']['options_pages'][] = compact('page_title', 'menu_title', 'capability', 'menu_slug', 'callback');
+	}
+}
+
+if (! function_exists('add_menu_page')) {
+	function add_menu_page($page_title, $menu_title, $capability, $menu_slug, $callback = '', $icon_url = '', $position = null): void {
+		$GLOBALS['gdc_test_state']['menu_pages'][] = compact('page_title', 'menu_title', 'capability', 'menu_slug', 'callback', 'icon_url', 'position');
 	}
 }
 
@@ -724,6 +737,18 @@ if (! function_exists('add_query_arg')) {
 if (! function_exists('wp_json_encode')) {
 	function wp_json_encode($data): string {
 		return (string) json_encode($data);
+	}
+}
+
+if (! function_exists('wp_date')) {
+	function wp_date($format, $timestamp = null) {
+		return date((string) $format, null === $timestamp ? time() : (int) $timestamp);
+	}
+}
+
+if (! function_exists('date_i18n')) {
+	function date_i18n($format, $timestamp_with_offset = false) {
+		return date((string) $format, false === $timestamp_with_offset ? time() : (int) $timestamp_with_offset);
 	}
 }
 

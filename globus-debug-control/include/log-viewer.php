@@ -68,7 +68,7 @@ final class GDC_Log_Viewer {
 					'tab'     => 'log',
 					'cleared' => '1',
 				),
-				admin_url( 'options-general.php' )
+				admin_url( 'admin.php' )
 			)
 		);
 		exit;
@@ -348,7 +348,7 @@ final class GDC_Log_Viewer {
 											'tab'    => 'log',
 											'gdc_dl' => '1',
 										),
-										admin_url( 'options-general.php' )
+										admin_url( 'admin.php' )
 									),
 									'gdc_log_download'
 								)
@@ -442,7 +442,7 @@ final class GDC_Log_Viewer {
 							'page' => 'globus-debug-control',
 							'tab'  => 'log',
 						),
-						admin_url( 'options-general.php' )
+						admin_url( 'admin.php' )
 					);
 					if ( $page > 1 ) {
 						echo '<a class="prev-page button" href="' . esc_url( add_query_arg( 'logpage', $page - 1, $base_url ) ) . '">‹</a>';

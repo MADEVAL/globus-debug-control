@@ -206,7 +206,7 @@ final class GDC_Constants_Viewer {
 				'page' => 'globus-debug-control',
 				'tab'  => 'wpcfg',
 			),
-			admin_url( 'options-general.php' )
+			admin_url( 'admin.php' )
 		);
 		?>
 		<p>

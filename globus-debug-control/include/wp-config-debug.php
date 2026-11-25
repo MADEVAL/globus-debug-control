@@ -259,7 +259,7 @@ final class GDC_WpConfig_Debug {
 						'tab'           => 'wpcfg',
 						'gdc_cfg_error' => 'nowrite',
 					),
-					admin_url( 'options-general.php' )
+					admin_url( 'admin.php' )
 				)
 			);
 			exit;
@@ -301,7 +301,7 @@ final class GDC_WpConfig_Debug {
 					'tab'           => 'wpcfg',
 					'gdc_cfg_saved' => '1',
 				),
-				admin_url( 'options-general.php' )
+				admin_url( 'admin.php' )
 			)
 		);
 		exit;
@@ -415,7 +415,7 @@ final class GDC_WpConfig_Debug {
 			$args['gdc_debug_enabled'] = '1';
 		}
 
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -441,7 +441,7 @@ final class GDC_WpConfig_Debug {
 				'page' => 'globus-debug-control',
 				'tab'  => 'wpcfg',
 			),
-			admin_url( 'options-general.php' )
+			admin_url( 'admin.php' )
 		);
 		?>
 		<div class="notice <?php echo $wp_debug ? 'notice-info' : 'notice-warning'; ?> gdc-debug-dependency">
@@ -519,125 +519,138 @@ final class GDC_WpConfig_Debug {
 		$writable    = ! empty( $config_path ) && wp_is_writable( $config_path );
 		$constants   = ! empty( $config_path ) ? self::read_constants( $config_path ) : array();
 
-		if ( isset( $_GET['gdc_cfg_saved'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'wp-config.php updated.', 'globus-debug-control' ) . '</p></div>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag after a verified redirect.
+		if ( isset( $_GET['gdc_cfg_saved'] ) ) {
+			echo GDC_UI::alert( esc_html__( 'wp-config.php updated.', 'globus-debug-control' ), 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
 		}
 
-		if ( isset( $_GET['gdc_cfg_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'wp-config.php is not writable.', 'globus-debug-control' ) . '</p></div>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag after a verified redirect.
+		if ( isset( $_GET['gdc_cfg_error'] ) ) {
+			echo GDC_UI::alert( esc_html__( 'wp-config.php is not writable.', 'globus-debug-control' ), 'danger' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output.
 		}
 
+		if ( ! self::is_wp_debug_on() || ! self::is_wp_debug_log_on() ) {
+			echo '<div class="gdc-alert-wrap gdc-dependency">';
+			self::render_dependency_notice( 'wpcfg' );
+			echo '</div>';
+		}
 		?>
-		<div class="gdc-wpcfg-wrap">
-			<?php if ( empty( $config_path ) ) : ?>
-				<div class="notice notice-warning inline"><p><?php esc_html_e( 'wp-config.php not found.', 'globus-debug-control' ); ?></p></div>
-			<?php elseif ( ! $writable ) : ?>
-				<div class="notice notice-warning inline">
-					<p>
-						<?php
-						echo wp_kses(
-							sprintf(
-								/* translators: %s: file path */
-								__( '<strong>%s</strong> is not writable. Changes cannot be saved.', 'globus-debug-control' ),
-								esc_html( $config_path )
-							),
-							array( 'strong' => array() )
-						);
-						?>
-					</p>
-				</div>
-			<?php endif; ?>
+		<?php if ( empty( $config_path ) ) : ?>
+			<div class="gdc-alert gdc-alert--warning gdc-mb-3h">
+				<?php esc_html_e( 'wp-config.php not found. The constants cannot be read or changed.', 'globus-debug-control' ); ?>
+			</div>
+		<?php elseif ( ! $writable ) : ?>
+			<div class="gdc-alert gdc-alert--warning gdc-mb-3h">
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: %s: file path */
+						__( '%s is not writable. Changes cannot be saved until the file permissions are fixed.', 'globus-debug-control' ),
+						'<code>' . esc_html( $config_path ) . '</code>'
+					),
+					array( 'code' => array() )
+				);
+				?>
+			</div>
+		<?php endif; ?>
 
-			<div class="gdc-card">
-				<div class="gdc-card-header">
-					<div>
-						<h2><?php esc_html_e( 'wp-config.php constants', 'globus-debug-control' ); ?></h2>
-						<?php if ( ! empty( $config_path ) ) : ?>
-							<p class="gdc-wpcfg-path">
-								<span><?php esc_html_e( 'Editing:', 'globus-debug-control' ); ?></span>
-								<code><?php echo esc_html( $config_path ); ?></code>
-							</p>
-						<?php endif; ?>
-					</div>
+		<div class="gdc-card gdc-mb-3h">
+			<div class="gdc-card-pad gdc-row gdc-row--between gdc-g-3 gdc-row--wrap">
+				<div class="gdc-fill">
+					<h2 class="gdc-section-title gdc-card-title"><?php esc_html_e( 'wp-config.php constants', 'globus-debug-control' ); ?></h2>
 					<?php if ( ! empty( $config_path ) ) : ?>
-						<span class="gdc-badge <?php echo $writable ? 'gdc-badge-success' : 'gdc-badge-warning'; ?>">
-							<?php echo $writable ? esc_html__( 'Writable', 'globus-debug-control' ) : esc_html__( 'Read-only', 'globus-debug-control' ); ?>
-						</span>
+						<div class="gdc-fs-2xs gdc-dim gdc-mono gdc-mt-1"><?php echo esc_html( $config_path ); ?></div>
 					<?php endif; ?>
 				</div>
+				<?php echo GDC_UI::chip( $writable ? __( 'Writable', 'globus-debug-control' ) : __( 'Read-only', 'globus-debug-control' ), $writable ? 'green' : 'amber' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
+			</div>
 
-				<form method="post">
-					<?php wp_nonce_field( self::NONCE_ACTION ); ?>
-					<input type="hidden" name="gdc_wpcfg_save" value="1">
+			<form method="post">
+				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
+				<input type="hidden" name="gdc_wpcfg_save" value="1">
 
-					<div class="gdc-card-body">
-						<table class="form-table gdc-wpcfg-table" role="presentation">
-							<tbody>
-								<?php
-								foreach ( $constants as $name => $info ) :
-									$is_true = $info['defined'] && $info['value'];
-									?>
-									<tr>
-										<th scope="row">
-											<label><code><?php echo esc_html( $name ); ?></code></label>
-										</th>
-										<td>
-											<label class="gdc-toggle-label">
-												<input
-													type="checkbox"
-													name="gdc_wpcfg[<?php echo esc_attr( $name ); ?>]"
-													value="true"
-													<?php checked( $is_true ); ?>
-													<?php disabled( ! $writable ); ?>
-													class="gdc-wpcfg-checkbox"
-												>
-												<?php if ( $is_true ) : ?>
-													<span class="gdc-status-badge gdc-status-on">
-														<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
-														<?php esc_html_e( 'Enabled', 'globus-debug-control' ); ?>
-													</span>
-												<?php else : ?>
-													<span class="gdc-status-badge gdc-status-off">
-														<span class="dashicons dashicons-no" aria-hidden="true"></span>
-														<?php esc_html_e( 'Disabled', 'globus-debug-control' ); ?>
-													</span>
-												<?php endif; ?>
-											</label>
-											<span class="gdc-wpcfg-row-current">
-												<?php if ( ! $info['defined'] ) : ?>
-													<?php esc_html_e( '(not defined, will be added)', 'globus-debug-control' ); ?>
-												<?php else : ?>
-													<?php echo esc_html__( 'Current:', 'globus-debug-control' ) . ' <code>' . esc_html( $info['raw'] ) . '</code>'; ?>
-												<?php endif; ?>
-											</span>
-											<?php if ( 'WP_DEBUG_LOG' === $name && $writable ) : ?>
-												<p class="description gdc-wpcfg-logpath">
-													<label for="gdc_wpcfg_log_path_value">
-														<?php esc_html_e( 'Custom log file path (relative to wp-content or absolute):', 'globus-debug-control' ); ?>
-													</label>
-													<input
-														type="text"
-														id="gdc_wpcfg_log_path_value"
-														class="regular-text code"
-														name="gdc_wpcfg[WP_DEBUG_LOG_value]"
-														value=""
-														placeholder="<?php esc_attr_e( 'e.g. custom/debug.log - leave empty for true', 'globus-debug-control' ); ?>"
-													>
-												</p>
-											<?php endif; ?>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
+				<div class="gdc-divider"></div>
 
-					<?php if ( $writable ) : ?>
-						<div class="gdc-card-footer">
-							<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Save to wp-config.php', 'globus-debug-control' ); ?>">
+				<div class="gdc-col">
+					<?php
+					foreach ( $constants as $name => $info ) :
+						$raw           = (string) ( $info['raw'] ?? '' );
+						$is_string_log = ( 'WP_DEBUG_LOG' === $name && '' !== $raw && ( "'" === $raw[0] || '"' === $raw[0] ) );
+						$is_true       = ! empty( $info['defined'] ) && ( ! empty( $info['value'] ) || $is_string_log );
+						?>
+						<div class="gdc-togglerow">
+							<div class="gdc-togglerow-main">
+								<div class="gdc-togglerow-label"><code><?php echo esc_html( (string) $name ); ?></code></div>
+								<div class="gdc-togglerow-desc">
+									<?php if ( empty( $info['defined'] ) ) : ?>
+										<?php esc_html_e( 'Not defined yet. It will be added on save.', 'globus-debug-control' ); ?>
+									<?php else : ?>
+										<?php esc_html_e( 'Current:', 'globus-debug-control' ); ?> <code><?php echo esc_html( $raw ); ?></code>
+									<?php endif; ?>
+								</div>
+
+								<?php if ( 'WP_DEBUG_LOG' === $name && $writable ) : ?>
+									<label class="gdc-field gdc-mt-2h" for="gdc-wpcfg-log-path">
+										<?php echo GDC_UI::field_label( __( 'Custom log file path', 'globus-debug-control' ), __( 'Relative to wp-content or an absolute path. Leave empty to write to the default debug.log.', 'globus-debug-control' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
+										<input
+											type="text"
+											id="gdc-wpcfg-log-path"
+											class="gdc-input gdc-input--mono"
+											name="gdc_wpcfg[WP_DEBUG_LOG_value]"
+											value=""
+											placeholder="<?php esc_attr_e( 'e.g. custom/debug.log - leave empty for true', 'globus-debug-control' ); ?>"
+										/>
+									</label>
+								<?php endif; ?>
+							</div>
+
+							<?php echo GDC_UI::switch_control( 'gdc_wpcfg[' . $name . ']', $is_true, 'gdc-wpcfg-' . strtolower( (string) $name ), '', ! $writable, (string) $name ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped helper output. ?>
 						</div>
-					<?php endif; ?>
-				</form>
+					<?php endforeach; ?>
+				</div>
+
+				<?php if ( $writable ) : ?>
+					<div class="gdc-divider"></div>
+					<div class="gdc-card-pad gdc-row gdc-row--between gdc-g-3 gdc-row--wrap">
+						<span class="gdc-dim gdc-fs-xs"><?php esc_html_e( 'A timestamped backup is created before every write.', 'globus-debug-control' ); ?></span>
+						<button type="submit" class="gdc-btn gdc-btn--pri">
+							<?php echo GDC_UI::icon( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+							<?php esc_html_e( 'Save to wp-config.php', 'globus-debug-control' ); ?>
+						</button>
+					</div>
+				<?php endif; ?>
+			</form>
+		</div>
+
+		<div class="gdc-grid gdc-grid--2">
+			<div class="gdc-card gdc-card-pad">
+				<h2 class="gdc-section-title gdc-card-title gdc-mb-3"><?php esc_html_e( 'How writes work', 'globus-debug-control' ); ?></h2>
+				<div class="gdc-col gdc-g-2 gdc-fs-sm">
+					<div class="gdc-row gdc-g-2 gdc-row--top">
+						<?php echo GDC_UI::icon( 'shieldCheck', 'gdc-ico--sm gdc-tx-green' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<span><?php esc_html_e( 'A backup copy named wp-config.php.gdc-backup-YYYYmmdd-HHMMSS is written next to the file.', 'globus-debug-control' ); ?></span>
+					</div>
+					<div class="gdc-row gdc-g-2 gdc-row--top">
+						<?php echo GDC_UI::icon( 'eye', 'gdc-ico--sm gdc-tx-blue' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<span><?php esc_html_e( 'Commented-out defines are never touched. Only the first active define is updated.', 'globus-debug-control' ); ?></span>
+					</div>
+					<div class="gdc-row gdc-g-2 gdc-row--top">
+						<?php echo GDC_UI::icon( 'lock', 'gdc-ico--sm gdc-tx2' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<span><?php esc_html_e( 'Missing constants are inserted before the "stop editing" marker.', 'globus-debug-control' ); ?></span>
+					</div>
+				</div>
+			</div>
+
+			<div class="gdc-card gdc-card-pad">
+				<h2 class="gdc-section-title gdc-card-title gdc-mb-3"><?php esc_html_e( 'Related screens', 'globus-debug-control' ); ?></h2>
+				<div class="gdc-col gdc-g-1">
+					<a class="gdc-link gdc-fs-sm" href="<?php echo esc_url( GDC_UI::module_url( 'log' ) ); ?>"><?php echo GDC_UI::icon( 'code', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?> <?php esc_html_e( 'Error log', 'globus-debug-control' ); ?></a>
+					<a class="gdc-link gdc-fs-sm" href="<?php echo esc_url( GDC_UI::module_url( 'constants' ) ); ?>"><?php echo GDC_UI::icon( 'list', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?> <?php esc_html_e( 'All PHP constants', 'globus-debug-control' ); ?></a>
+					<a class="gdc-link gdc-fs-sm" href="<?php echo esc_url( GDC_UI::module_url( 'settings' ) ); ?>"><?php echo GDC_UI::icon( 'gear', 'gdc-ico--xs' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?> <?php esc_html_e( 'Plugin settings', 'globus-debug-control' ); ?></a>
+				</div>
+				<div class="gdc-divider gdc-mt-3 gdc-fs-xs gdc-dim">
+					<?php esc_html_e( 'Runtime values are read from the constants above, not from the plugin options.', 'globus-debug-control' ); ?>
+				</div>
 			</div>
 		</div>
 		<?php

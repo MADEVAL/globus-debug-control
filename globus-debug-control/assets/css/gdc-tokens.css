@@ -1,0 +1,198 @@
+/* ============================================================
+   gdc-tokens.css - GLOBUS design tokens
+   Shared visual language with the GLOBUS product family.
+   Change a value here - it changes the whole admin UI.
+   No magic numbers in markup: only these variables.
+   ============================================================ */
+
+:root {
+	/* -- palette (WordPress admin base) -- */
+	--gdc-wp-blue: #2271b1;
+	--gdc-wp-blue-d: #135e96;
+	--gdc-bg: #f0f0f1;
+	--gdc-s1: #ffffff;
+	--gdc-s2: #f6f7f7;
+	--gdc-s3: #eef0f1;
+	--gdc-line: #dcdcde;
+	--gdc-line2: #c3c4c7;
+	--gdc-tx: #1d2327;
+	--gdc-tx2: #50575e;
+	--gdc-tx3: #63666a;
+	--gdc-green: #007a1e;
+	--gdc-green-d: #006018;
+	--gdc-green-dim: #edfaef;
+	--gdc-red: #d63638;
+	--gdc-red-dim: #fcf0f1;
+	--gdc-amber: #ed9c28;
+	--gdc-amber-d: #b45309;
+	--gdc-amber-dim: #fcf9e8;
+	--gdc-blue: #2271b1;
+	--gdc-blue-dim: #f0f6fc;
+	--gdc-blue-dim-d: #e3eef9;
+	--gdc-menu: #1d2327;
+	--gdc-menu-tx: #f0f0f1;
+	--gdc-overlay: rgba(29, 35, 39, .5);
+	--gdc-green-border: rgba(55, 211, 154, .25);
+	--gdc-amber-border: rgba(240, 196, 104, .2);
+
+	/* -- spacing scale (step 4px) -- */
+	--gdc-sp-1: 4px;
+	--gdc-sp-2: 8px;
+	--gdc-sp-3: 12px;
+	--gdc-sp-4: 16px;
+	--gdc-sp-5: 20px;
+	--gdc-sp-6: 24px;
+	--gdc-sp-7: 32px;
+	--gdc-sp-8: 40px;
+	/* half steps - only where the design needs them */
+	--gdc-sp-h: 2px;
+	--gdc-sp-1h: 6px;
+	--gdc-sp-2h: 10px;
+	--gdc-sp-3h: 14px;
+	--gdc-sp-4h: 18px;
+	--gdc-sp-5h: 22px;
+	--gdc-sp-xs: 3px;
+
+	/* -- border-radius scale -- */
+	--gdc-r-xs: 3px;
+	--gdc-r-sm: 4px;
+	--gdc-r-md: 6px;
+	--gdc-r-lg: 8px;
+	--gdc-r-xl: 11px;
+	--gdc-r-2xl: 14px;
+	--gdc-r-pill: 999px;
+
+	/* -- font-size scale -- */
+	--gdc-fs-2xs: .6875rem;  /* 11 */
+	--gdc-fs-xs: .75rem;     /* 12 */
+	--gdc-fs-sm: .8125rem;   /* 13 */
+	--gdc-fs-md: .875rem;    /* 14 */
+	--gdc-fs-lg: .9375rem;   /* 15 */
+	--gdc-fs-xl: 1rem;       /* 16 */
+	--gdc-fs-2xl: 1.1875rem; /* 19 */
+	--gdc-fs-3xl: 1.375rem;  /* 22 */
+	--gdc-fs-stat: 1.75rem;  /* 28 */
+
+	/* -- font weight -- */
+	--gdc-fw-normal: 400;
+	--gdc-fw-medium: 500;
+	--gdc-fw-semibold: 600;
+	--gdc-fw-bold: 700;
+	--gdc-fw-black: 800;
+
+	/* -- letter spacing -- */
+	--gdc-ls-tight: -.02em;
+	--gdc-ls-snug: -.01em;
+
+	/* -- layout dimensions -- */
+	--gdc-plughead-h: 61px;
+	--gdc-sticky-admin-offset: 0px;
+	--gdc-sticky-below-plughead: calc(var(--gdc-plughead-h) + var(--gdc-sp-2h) + var(--gdc-sticky-admin-offset));
+	--gdc-scrollport-h: calc(100vh - var(--gdc-sticky-admin-offset) - var(--gdc-plughead-h));
+	--gdc-content-pad-x: clamp(16px, 2.2vw, 32px);
+	--gdc-content-pad-y: var(--gdc-sp-5h);
+	--gdc-wrap-max: 1600px;
+	--gdc-rail-w: 380px;
+	--gdc-snav-w: 248px;
+
+	/* -- icon size scale -- */
+	--gdc-ico: 1.125em;
+
+	/* -- base card grid -- */
+	--gdc-gap: var(--gdc-sp-3h);
+	--gdc-card-pad: var(--gdc-sp-5);
+
+	/* -- shadows -- */
+	--gdc-shadow-card: 0 1px 1px rgba(0, 0, 0, .03);
+	--gdc-shadow-lift: 0 1px 2px rgba(0, 0, 0, .1);
+	--gdc-shadow-knob: 0 1px 2px rgba(0, 0, 0, .3);
+	--gdc-shadow-pop: 0 10px 28px rgba(0, 0, 0, .16);
+	--gdc-shadow-modal: 0 20px 60px rgba(0, 0, 0, .3);
+
+	/* -- transitions -- */
+	--gdc-t-fast: .12s;
+	--gdc-t-mid: .18s;
+
+	/* -- component sizes -- */
+	--gdc-toggle-w: 42px;
+	--gdc-toggle-h: 24px;
+	--gdc-toggle-r: 13px;
+	--gdc-toggle-knob: 18px;
+	--gdc-gauge-sz: 84px;
+	--gdc-gauge-inner-sz: 64px;
+	--gdc-status-ic-sz: 17px;
+	--gdc-pal-ic-sz: 28px;
+	--gdc-search-mw: 560px;
+	--gdc-tooltip-w: 232px;
+	--gdc-form-mw: 460px;
+	--gdc-form-mw-lg: 520px;
+	--gdc-desc-mw: 520px;
+
+	/* -- micro font sizes (decorative labels only) -- */
+	--gdc-fs-nano: .5938rem;   /* ~9.5px */
+	--gdc-fs-micro: .625rem;   /* ~10px */
+	--gdc-fs-ico: 1.3125rem;   /* ~21px */
+	--gdc-fs-ico-md: 1.125rem; /* ~18px */
+	--gdc-fs-ico-lg: 1.875rem; /* ~30px */
+
+	/* -- fonts -- */
+	--gdc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	--gdc-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+	--gdc-safe-bottom: env(safe-area-inset-bottom, 0px);
+	--gdc-safe-top: env(safe-area-inset-top, 0px);
+
+	--gdc-focus-ring: 2px;
+	--gdc-focus-color: var(--gdc-wp-blue);
+	--gdc-z-plughead: 10;
+	--gdc-z-tooltip: 50;
+	--gdc-z-dropdown: 50;
+	--gdc-z-modal: 100;
+	--gdc-z-palette: 200;
+}
+
+/* Admin bar offsets: the shell starts right below the fixed bar. */
+.admin-bar {
+	--gdc-sticky-admin-offset: var(--wp-admin--admin-bar--height, 32px);
+}
+
+@media screen and (max-width: 782px) {
+	.admin-bar {
+		--gdc-sticky-admin-offset: var(--wp-admin--admin-bar--height, 46px);
+	}
+}
+
+@media screen and (max-width: 600px) {
+	.admin-bar {
+		--gdc-sticky-admin-offset: 0px;
+	}
+}
+
+/* Only the plugin screen: inherits font/colour, no global resets. */
+.gdc-app,
+.gdc-modal-overlay,
+.gdc-pal-overlay {
+	box-sizing: border-box;
+	font-family: var(--gdc-font);
+	font-size: var(--gdc-fs-sm);
+	line-height: 1.5;
+	color: var(--gdc-tx);
+	-webkit-font-smoothing: antialiased;
+}
+
+.gdc-app *,
+.gdc-app *::before,
+.gdc-app *::after,
+.gdc-modal-overlay *,
+.gdc-modal-overlay *::before,
+.gdc-modal-overlay *::after,
+.gdc-pal-overlay *,
+.gdc-pal-overlay *::before,
+.gdc-pal-overlay *::after {
+	box-sizing: border-box;
+}
+
+.gdc-app [hidden],
+.gdc-pal-overlay [hidden] {
+	display: none !important;
+}

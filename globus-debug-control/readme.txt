@@ -24,7 +24,7 @@ No SSH. No file editing. No installing five separate plugins for five separate p
 
 * **One screen instead of five plugins.** Error filtering, log viewer, WP_DEBUG toggle, cron inspector, transient manager, autoloaded options, HTTP logger, and constants view live in one place.
 * **Less noise, not less signal.** Notices, deprecations, and warnings are filtered independently. Fatal errors are never hidden.
-* **No SSH, no SQL, no wp-config.php edits.** Everything happens in Settings -> GLOBUS Debug Control, including toggling WP_DEBUG constants.
+* **No SSH, no SQL, no wp-config.php edits.** Everything happens on the **GLOBUS Debug** screen, including toggling WP_DEBUG constants.
 * **Safe on a live site.** The diagnostic tabs are read-only. Every action is protected by capability checks and nonces. No external services, no tracking, no account.
 * **Fixes what WP_DEBUG breaks.** Removes the php-error body class and keeps AJAX, REST, WP-Cron, and WP-CLI responses clean.
 * **Works with any stack.** Any theme, any plugin set, single site or multisite. No setup wizard and no configuration files.
@@ -153,13 +153,13 @@ When you need to check what debug, performance, or security constants are active
 
 1. Upload the `globus-debug-control` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the **Plugins** menu in WordPress.
-3. Go to **Settings - GLOBUS Debug Control** and configure as needed.
+3. Go to **GLOBUS Debug** in the admin menu and configure as needed.
 
 == Frequently Asked Questions ==
 
 = I enabled WP_DEBUG and now my site is full of warnings from other plugins. How do I fix this? =
 
-This is exactly what GLOBUS Debug Control is built for. Go to **Settings - GLOBUS Debug Control**, enable the plugin, and uncheck the error types you want to suppress (Notices, Deprecated, Warnings). You will only see the errors that matter to your own code.
+This is exactly what GLOBUS Debug Control is built for. Open **GLOBUS Debug**, enable the plugin, and uncheck the error types you want to suppress (Notices, Deprecated, Warnings). You will only see the errors that matter to your own code.
 
 = My AJAX calls and REST API responses are broken because of PHP error output. =
 

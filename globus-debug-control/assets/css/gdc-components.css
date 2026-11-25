@@ -1,0 +1,182 @@
+/* ============================================================
+   gdc-components.css - product components on top of gdc-ui.css
+   Only what the design system does not cover generically:
+   - console (log viewer)
+   - accordion (constant groups)
+   - bulk bar (mass actions)
+   - tab toolbar
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Console: monospaced surface for the error log
+   CodeMirror is initialised inside; these rules style the frame
+   and the severity line classes added by gdc-admin.js.
+   ------------------------------------------------------------ */
+.gdc-console {
+	background: #1e1e1e;
+	border: 1px solid var(--gdc-line);
+	border-radius: 0 0 var(--gdc-r-md) var(--gdc-r-md);
+	overflow: hidden;
+}
+
+.gdc-console .CodeMirror {
+	height: auto;
+	font-family: var(--gdc-mono);
+	font-size: 12px;
+	line-height: 1.65;
+	background: #1e1e1e;
+	color: #abb2bf;
+	border: 0;
+}
+
+.gdc-console .CodeMirror-gutters {
+	background: #181818;
+	border-right: 1px solid #2a2a2a;
+}
+
+.gdc-console .CodeMirror-linenumber { color: #4a5568; }
+.gdc-console .CodeMirror-cursor { border-left-color: #abb2bf; }
+.gdc-console .CodeMirror-selected { background: rgba(114, 174, 230, .18); }
+.gdc-console .CodeMirror-focused .CodeMirror-selected { background: rgba(114, 174, 230, .28); }
+
+.gdc-console .gdc-log-fatal { background: rgba(248, 99, 104, .08); }
+.gdc-console .gdc-log-fatal span { color: #f8c9cb; }
+.gdc-console .gdc-log-warning { background: rgba(240, 195, 60, .07); }
+.gdc-console .gdc-log-warning span { color: #f0e0a0; }
+.gdc-console .gdc-log-notice { background: rgba(114, 174, 230, .07); }
+.gdc-console .gdc-log-notice span { color: #a9c5e8; }
+.gdc-console .gdc-log-cron { background: rgba(104, 222, 124, .05); }
+.gdc-console .gdc-log-cron span { color: #a8d8b0; }
+
+/* Frame toolbar sits on top of the console. */
+.gdc-console-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--gdc-sp-3);
+	flex-wrap: wrap;
+	padding: var(--gdc-sp-2h) var(--gdc-sp-3h);
+	background: var(--gdc-s2);
+	border: 1px solid var(--gdc-line);
+	border-bottom: 0;
+	border-radius: var(--gdc-r-md) var(--gdc-r-md) 0 0;
+}
+
+.gdc-console-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--gdc-sp-2h);
+	flex-wrap: wrap;
+	font-size: var(--gdc-fs-xs);
+	color: var(--gdc-tx2);
+	min-width: 0;
+}
+
+.gdc-console-meta code {
+	font-family: var(--gdc-mono);
+	font-size: var(--gdc-fs-2xs);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 46vw;
+}
+
+.gdc-console-actions { display: flex; align-items: center; gap: var(--gdc-sp-1h); flex-wrap: wrap; }
+
+/* ------------------------------------------------------------
+   Toolbar: title left, controls right
+   ------------------------------------------------------------ */
+.gdc-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--gdc-sp-3);
+	flex-wrap: wrap;
+	margin-bottom: var(--gdc-sp-3h);
+}
+
+.gdc-toolbar-group { display: flex; align-items: center; gap: var(--gdc-sp-2); flex-wrap: wrap; }
+.gdc-toolbar-label { font-size: var(--gdc-fs-xs); color: var(--gdc-tx2); }
+
+/* ------------------------------------------------------------
+   Accordion (details/summary) for grouped constants
+   ------------------------------------------------------------ */
+.gdc-accordion {
+	border: 1px solid var(--gdc-line);
+	border-radius: var(--gdc-r-md);
+	background: var(--gdc-s1);
+	overflow: hidden;
+}
+
+.gdc-accordion[open] { box-shadow: var(--gdc-shadow-card); }
+
+.gdc-accordion + .gdc-accordion { margin-top: var(--gdc-sp-2h); }
+
+.gdc-accordion > summary {
+	display: flex;
+	align-items: center;
+	gap: var(--gdc-sp-2h);
+	padding: var(--gdc-sp-3) var(--gdc-sp-4);
+	cursor: pointer;
+	font-size: var(--gdc-fs-sm);
+	font-weight: var(--gdc-fw-semibold);
+	color: var(--gdc-tx);
+	list-style: none;
+	user-select: none;
+}
+
+.gdc-accordion > summary::-webkit-details-marker { display: none; }
+.gdc-accordion > summary:hover { background: var(--gdc-s2); }
+.gdc-accordion > summary::after {
+	content: "";
+	width: 7px;
+	height: 7px;
+	margin-left: auto;
+	border-right: 2px solid var(--gdc-tx3);
+	border-bottom: 2px solid var(--gdc-tx3);
+	transform: rotate(45deg) translateY(-2px);
+	transition: transform var(--gdc-t-fast);
+	flex: 0 0 auto;
+}
+
+.gdc-accordion[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
+.gdc-accordion[open] > summary { border-bottom: 1px solid var(--gdc-line); }
+.gdc-accordion-body { padding: 0; }
+.gdc-accordion-body .gdc-table { border: 0; }
+
+.gdc-accordion-count {
+	font-size: var(--gdc-fs-2xs);
+	font-weight: var(--gdc-fw-semibold);
+	color: var(--gdc-tx2);
+	background: var(--gdc-s3);
+	border-radius: var(--gdc-r-pill);
+	padding: 0 var(--gdc-sp-1h);
+	min-width: 24px;
+	text-align: center;
+}
+
+/* ------------------------------------------------------------
+   Bulk action bar
+   ------------------------------------------------------------ */
+.gdc-bulkbar {
+	display: flex;
+	align-items: center;
+	gap: var(--gdc-sp-2h);
+	flex-wrap: wrap;
+	padding: var(--gdc-sp-2h) var(--gdc-sp-3);
+	background: var(--gdc-blue-dim);
+	border: 1px solid var(--gdc-blue-dim-d);
+	border-radius: var(--gdc-r-md);
+	font-size: var(--gdc-fs-xs);
+	color: var(--gdc-blue);
+	margin-bottom: var(--gdc-sp-3);
+}
+
+.gdc-bulkbar[hidden] { display: none; }
+.gdc-bulkbar-count { font-weight: var(--gdc-fw-bold); }
+
+/* ------------------------------------------------------------
+   Dependency alert slot (shared wp-config helpers)
+   ------------------------------------------------------------ */
+.gdc-dependency { margin-bottom: var(--gdc-sp-3h); }
+.gdc-dependency .notice { margin: 0; }

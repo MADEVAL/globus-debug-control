@@ -31,9 +31,11 @@ require_once GDC_INCLUDES . '/cron-viewer.php';
 require_once GDC_INCLUDES . '/wp-config-debug.php';
 require_once GDC_INCLUDES . '/transient-viewer.php';
 require_once GDC_INCLUDES . '/options-viewer.php';
+require_once GDC_INCLUDES . '/overview.php';
 require_once GDC_INCLUDES . '/http-log.php';
 require_once GDC_INCLUDES . '/constants-viewer.php';
 require_once GDC_INCLUDES . '/abilities.php';
+require_once GDC_INCLUDES . '/ui/class-gdc-ui.php';
 require_once GDC_INCLUDES . '/trait-error-control.php';
 require_once GDC_INCLUDES . '/trait-mu-dropin.php';
 require_once GDC_INCLUDES . '/trait-admin-settings.php';
@@ -101,6 +103,8 @@ final class Globus_Debug_Control {
 		add_action( 'admin_init', array( $this, 'maybe_upgrade_mu_dropin' ), 1 );
 		add_action( 'upgrader_process_complete', array( $this, 'on_upgrader_process_complete' ) );
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'admin_init', array( $this, 'maybe_redirect_legacy_url' ), 1 );
+		add_action( 'wp_ajax_gdc_toggle_setting', array( $this, 'ajax_toggle_setting' ) );
 		add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
 		add_action( 'after_setup_theme', array( $this, 'early_body_class_filter' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_php_error_assets' ) );
@@ -130,6 +134,15 @@ final class Globus_Debug_Control {
 	}
 
 	/**
+	 * Returns the plugin version.
+	 *
+	 * @return string
+	 */
+	public static function version(): string {
+		return self::VERSION;
+	}
+
+	/**
 	 * Returns the capability required to manage the plugin, filterable.
 	 *
 	 * @param string $context Optional context label for the filter.
@@ -156,7 +169,7 @@ final class Globus_Debug_Control {
 	 * @return string[] Modified action links with Settings prepended.
 	 */
 	public function plugin_action_links( array $links ): array {
-		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=globus-debug-control' ) ) . '">' . esc_html__( 'Settings', 'globus-debug-control' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=globus-debug-control' ) ) . '">' . esc_html__( 'Settings', 'globus-debug-control' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

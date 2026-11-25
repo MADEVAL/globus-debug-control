@@ -113,7 +113,7 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 	public function testPluginActionLinksPrependsSettingsLink(): void {
 		$links = $this->plugin()->plugin_action_links(['Existing']);
 
-		$this->assertStringContainsString('options-general.php?page=globus-debug-control', $links[0]);
+		$this->assertStringContainsString('admin.php?page=globus-debug-control', $links[0]);
 		$this->assertSame('Existing', $links[1]);
 	}
 
@@ -400,9 +400,38 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 	public function testAddSettingsPageRegistersPage(): void {
 		$this->plugin()->add_settings_page();
 
-		$pages = $this->state('options_pages');
+		$pages = $this->state('menu_pages');
 		$slugs = array_column($pages, 'menu_slug');
 		$this->assertContains('globus-debug-control', $slugs);
+	}
+
+	public function testRenderSettingsPageRendersShellAndSettingsModule(): void {
+		$this->refreshOptions(['enabled' => 1]);
+		$_GET['tab'] = 'settings';
+
+		ob_start();
+		$this->plugin()->render_settings_page();
+		$html = ob_get_clean();
+
+		unset($_GET['tab']);
+
+		$this->assertStringContainsString('gdc-app', $html);
+		$this->assertStringContainsString('gdc-snav', $html);
+		$this->assertStringContainsString('gdc-settings-layout', $html);
+		$this->assertStringContainsString('[enabled]', $html);
+		$this->assertStringContainsString('gdc-switch-track', $html);
+	}
+
+	public function testRenderSettingsPageDefaultsToOverview(): void {
+		$this->refreshOptions(['enabled' => 1]);
+
+		ob_start();
+		$this->plugin()->render_settings_page();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString('data-page="overview"', $html);
+		$this->assertStringContainsString('gdc-health', $html);
+		$this->assertStringContainsString('data-gdc-ajax-toggle', $html);
 	}
 
 	public function testAdminEnqueueSettingsAssetsDoesNothingOnWrongHook(): void {
@@ -412,10 +441,11 @@ final class GlobusDebugControlTest extends WordPressTestCase {
 	}
 
 	public function testAdminEnqueueSettingsAssetsEnqueuesOnCorrectHook(): void {
-		$this->plugin()->admin_enqueue_settings_assets('settings_page_globus-debug-control');
+		$this->plugin()->admin_enqueue_settings_assets('toplevel_page_globus-debug-control');
 
-		$handles = $this->state('enqueued_styles');
-		$this->assertContains('gdc-admin', $handles);
+		$this->assertContains('gdc-ui', $this->state('enqueued_styles'));
+		$scripts = array_column($this->state('enqueued_scripts'), 'handle');
+		$this->assertContains('gdc-admin', $scripts);
 	}
 
 	public function testAdminEnqueuePhpErrorAssetsDoesNothingWhenDisabled(): void {

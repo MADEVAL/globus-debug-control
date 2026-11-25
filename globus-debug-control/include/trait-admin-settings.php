@@ -81,79 +81,36 @@ trait GDC_Admin_Settings {
 	}
 
 	/**
-	 * Returns the visual groups used on the settings screen.
+	 * AJAX handler: toggles a single boolean option without touching the rest.
 	 *
-	 * @return array<string, array{title: string, description: string}>
+	 * Used by the Overview master switch. Only an allowlist of side-effect free
+	 * keys is accepted; everything else keeps going through the settings form.
 	 */
-	private function settings_groups(): array {
-		return array(
-			'general'   => array(
-				'title'       => __( 'Plugin status', 'globus-debug-control' ),
-				'description' => __( 'Turn all debug control behaviour on or off.', 'globus-debug-control' ),
-			),
-			'filtering' => array(
-				'title'       => __( 'Error filtering', 'globus-debug-control' ),
-				'description' => __( 'Choose which PHP error types are hidden and how errors are displayed.', 'globus-debug-control' ),
-			),
-			'logging'   => array(
-				'title'       => __( 'Logging', 'globus-debug-control' ),
-				'description' => __( 'Write errors to a file and rotate it when it grows too large.', 'globus-debug-control' ),
-			),
-			'display'   => array(
-				'title'       => __( 'Display and API contexts', 'globus-debug-control' ),
-				'description' => __( 'Front-end cosmetics and non-HTML request handling.', 'globus-debug-control' ),
-			),
-			'early'     => array(
-				'title'       => __( 'Early interception', 'globus-debug-control' ),
-				'description' => __( 'Load the error filter before regular plugins.', 'globus-debug-control' ),
-			),
-		);
-	}
+	public function ajax_toggle_setting(): void {
+		check_ajax_referer( 'gdc_admin' );
 
-	/**
-	 * Renders the grouped settings form with one card per field group.
-	 */
-	public function render_settings_form(): void {
-		$fields = $this->settings_fields_map();
-
-		foreach ( $this->settings_groups() as $group_key => $group ) {
-			$group_fields = array_filter(
-				$fields,
-				static function ( array $field ) use ( $group_key ): bool {
-					return $group_key === $field['group'];
-				}
-			);
-
-			if ( empty( $group_fields ) ) {
-				continue;
-			}
-			?>
-			<div class="gdc-card">
-				<div class="gdc-card-header">
-					<div>
-						<h2><?php echo esc_html( $group['title'] ); ?></h2>
-						<p><?php echo esc_html( $group['description'] ); ?></p>
-					</div>
-				</div>
-				<div class="gdc-card-body">
-					<table class="form-table" role="presentation">
-						<tbody>
-							<?php foreach ( $group_fields as $field ) : ?>
-								<tr>
-									<th scope="row"><?php echo esc_html( $field['label'] ); ?></th>
-									<td>
-										<?php call_user_func( array( $this, $field['callback'] ) ); ?>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<?php
+		if ( ! current_user_can( self::manage_capability() ) ) {
+			wp_send_json_error( array( 'message' => __( 'Forbidden', 'globus-debug-control' ) ), 403 );
 		}
 
-		submit_button( __( 'Save Settings', 'globus-debug-control' ) );
+		$key = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+
+		if ( ! in_array( $key, array( 'enabled', 'log_enabled' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'globus-debug-control' ) ), 400 );
+		}
+
+		$value   = ! empty( $_POST['value'] ) ? 1 : 0;
+		$options = $this->get_options( true );
+
+		$options[ $key ] = $value;
+		update_option( self::OPT, $options );
+
+		wp_send_json_success(
+			array(
+				'key'   => $key,
+				'value' => $value,
+			)
+		);
 	}
 
 	/**

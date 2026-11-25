@@ -2,8 +2,8 @@
 /**
  * GLOBUS Debug Control - Admin Page Trait
  *
- * Registers the admin menu page, renders tab-based settings UI,
- * handles asset enqueueing, and manages the php-error body class.
+ * Registers the top-level admin page, renders the shared shell with the
+ * section navigation, enqueues assets, and manages the php-error body class.
  *
  * @package GlobusDebugControl
  */
@@ -19,16 +19,52 @@ trait GDC_Admin_Page {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Registers the plugin settings page under the WordPress Settings menu.
+	 * Registers the plugin page as a top-level admin menu item.
 	 */
 	public function add_settings_page() {
-		add_options_page(
+		add_menu_page(
 			'GLOBUS Debug Control',
-			'GLOBUS Debug Control',
+			__( 'GLOBUS Debug', 'globus-debug-control' ),
 			'manage_options',
 			'globus-debug-control',
-			array( $this, 'render_settings_page' )
+			array( $this, 'render_settings_page' ),
+			GDC_ASSETS_URL . 'img/logo.svg',
+			81
 		);
+	}
+
+	/**
+	 * Redirects old "Settings > GLOBUS Debug Control" links to the new screen.
+	 *
+	 * Keeps bookmarks and documentation links working after the menu moved
+	 * from options-general.php to a top-level page.
+	 */
+	public function maybe_redirect_legacy_url(): void {
+		global $pagenow;
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		if ( 'options-general.php' !== $pagenow || ! isset( $_GET['page'] ) || 'globus-debug-control' !== $_GET['page'] ) {
+			return;
+		}
+
+		if ( ! current_user_can( self::manage_capability() ) ) {
+			return;
+		}
+
+		$args = array();
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		if ( isset( $_GET['tab'] ) ) {
+			$args['tab'] = sanitize_key( wp_unslash( (string) $_GET['tab'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		if ( isset( $_GET['logpage'] ) ) {
+			$args['logpage'] = (int) $_GET['logpage']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect of a legacy URL.
+		}
+
+		wp_safe_redirect( GDC_UI::page_url( $args ) );
+		exit;
 	}
 
 	/**
@@ -61,7 +97,7 @@ trait GDC_Admin_Page {
 				<p><?php esc_html_e( 'No fatal errors recorded.', 'globus-debug-control' ); ?></p>
 			<?php endif; ?>
 			<p>
-				<a href="<?php echo esc_url( admin_url( 'options-general.php?page=globus-debug-control&tab=log' ) ); ?>">
+				<a href="<?php echo esc_url( GDC_UI::module_url( 'log' ) ); ?>">
 					<?php esc_html_e( 'Open Error Log', 'globus-debug-control' ); ?>
 				</a>
 			</p>
@@ -70,222 +106,178 @@ trait GDC_Admin_Page {
 	}
 
 	/**
-	 * Renders the full settings page with tabbed navigation.
+	 * Renders the shared shell and the active module.
 	 */
 	public function render_settings_page() {
-		if ( ! current_user_can( \Globus_Debug_Control::manage_capability() ) ) {
+		if ( ! current_user_can( self::manage_capability() ) ) {
 			return;
 		}
 
-		$tabs = array(
-			'settings'   => __( 'Settings', 'globus-debug-control' ),
-			'wpcfg'      => __( 'WP_DEBUG', 'globus-debug-control' ),
-			'log'        => __( 'Error Log', 'globus-debug-control' ),
-			'cron'       => __( 'Cron Tasks', 'globus-debug-control' ),
-			'transients' => __( 'Transients', 'globus-debug-control' ),
-			'autoloaded' => __( 'Autoloaded', 'globus-debug-control' ),
-			'http'       => __( 'HTTP Log', 'globus-debug-control' ),
-			'constants'  => __( 'Constants', 'globus-debug-control' ),
-		);
+		$modules = GDC_UI::modules();
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab selection.
 		$raw_tab    = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
-		$active_tab = ( '' !== $raw_tab && array_key_exists( $raw_tab, $tabs ) ) ? $raw_tab : 'settings';
+		$active_tab = ( '' !== $raw_tab && isset( $modules[ $raw_tab ] ) ) ? $raw_tab : 'overview';
 
-		$opts          = $this->get_options();
-		$wp_debug_file = GDC_WpConfig_Debug::get_wp_debug_status();
+		$opts = $this->get_options();
+
+		GDC_UI::sprite();
+
+		$gdc_version      = self::VERSION;
+		$gdc_wp_debug_on  = GDC_WpConfig_Debug::is_wp_debug_on();
+		$gdc_nav          = GDC_UI::nav( $active_tab );
+		$gdc_active_label = $modules[ $active_tab ]['label'];
 		?>
-		<div class="wrap gdc-page">
-			<div class="gdc-page-header">
-				<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<div class="gdc-app">
+			<?php include GDC_INCLUDES . '/ui/partials/header.php'; ?>
 
-				<?php if ( null !== $wp_debug_file ) : ?>
-					<?php if ( $wp_debug_file ) : ?>
-						<span class="gdc-debug-badge gdc-debug-on">
-							<span class="dashicons dashicons-warning" aria-hidden="true"></span>
-							WP_DEBUG <?php esc_html_e( 'ON', 'globus-debug-control' ); ?>
-						</span>
-					<?php else : ?>
-						<span class="gdc-debug-badge gdc-debug-off">
-							<span class="dashicons dashicons-hidden" aria-hidden="true"></span>
-							WP_DEBUG <?php esc_html_e( 'OFF', 'globus-debug-control' ); ?>
-						</span>
-					<?php endif; ?>
-				<?php endif; ?>
+			<div class="gdc-content">
+				<div class="gdc-wrap">
+					<?php
+					if ( 'overview' === $active_tab ) {
+						$this->render_overview_module();
+					} elseif ( 'settings' === $active_tab ) {
+						$this->render_settings_module( $opts );
+					} elseif ( 'wpcfg' === $active_tab ) {
+						$this->render_wp_debug_module();
+					} else {
+						$this->render_module( $active_tab, $modules[ $active_tab ] );
+					}
+					?>
+				</div>
 			</div>
 
-			<hr class="wp-header-end">
+			<?php include GDC_INCLUDES . '/ui/partials/palette.php'; ?>
+		</div>
+		<?php
+	}
 
+	/**
+	 * Renders the Settings module with the design system.
+	 *
+	 * @param array<string, mixed> $opts Current plugin options.
+	 */
+	private function render_settings_module( array $opts ): void {
+		$gdc_opts         = $opts;
+		$gdc_opt          = self::OPT;
+		$gdc_version      = self::VERSION;
+		$gdc_log_path     = $this->resolve_log_path( $opts );
+		$gdc_log_exists   = '' !== $gdc_log_path && file_exists( $gdc_log_path );
+		$gdc_log_size     = $gdc_log_exists ? (int) @filesize( $gdc_log_path ) : 0;
+		$gdc_mu_installed = $this->is_mu_dropin_installed();
+		$gdc_is_api       = $this->is_api_context();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag after a verified save.
+		$gdc_settings_saved = isset( $_GET['settings-updated'] );
+
+		include GDC_INCLUDES . '/ui/partials/settings-tab.php';
+	}
+
+	/**
+	 * Renders the Overview module: health, KPIs, charts and environment.
+	 */
+	private function render_overview_module(): void {
+		$gdc         = GDC_Overview::get_data();
+		$gdc_version = self::VERSION;
+
+		include GDC_INCLUDES . '/ui/partials/overview-tab.php';
+	}
+
+	/**
+	 * Renders the WP_DEBUG module on the design system.
+	 */
+	private function render_wp_debug_module(): void {
+		?>
+		<div class="gdc-page" data-page="wpcfg">
+			<div class="gdc-pagehead">
+				<div>
+					<h1 class="gdc-pagehead-title"><?php esc_html_e( 'WP_DEBUG', 'globus-debug-control' ); ?></h1>
+					<div class="gdc-pagehead-sub"><?php esc_html_e( 'Toggle wp-config.php constants without editing files or using FTP.', 'globus-debug-control' ); ?></div>
+				</div>
+				<div class="gdc-pagehead-actions">
+					<a class="gdc-btn gdc-btn--surface" href="<?php echo esc_url( GDC_UI::module_url( 'constants' ) ); ?>">
+						<?php echo GDC_UI::icon( 'list' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+						<?php esc_html_e( 'All constants', 'globus-debug-control' ); ?>
+					</a>
+				</div>
+			</div>
+
+			<div class="gdc-settings-layout">
+				<?php
+				$gdc_nav          = GDC_UI::nav( 'wpcfg' );
+				$gdc_active_label = __( 'WP_DEBUG', 'globus-debug-control' );
+				include GDC_INCLUDES . '/ui/partials/snav.php';
+				?>
+
+				<div class="gdc-settings-content">
+					<?php GDC_WpConfig_Debug::render(); ?>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Renders a module that has not migrated to the design system yet.
+	 *
+	 * The legacy stylesheet is scoped to .gdc-legacy, so old markup keeps its
+	 * look without affecting the new shell.
+	 *
+	 * @param string               $tab    Module id.
+	 * @param array<string, mixed> $module Module metadata.
+	 */
+	private function render_module( string $tab, array $module ): void {
+		?>
+		<div class="gdc-pagehead">
+			<div>
+				<h1 class="gdc-pagehead-title"><?php echo esc_html( (string) $module['label'] ); ?></h1>
+				<?php if ( ! empty( $module['desc'] ) ) : ?>
+					<div class="gdc-pagehead-sub"><?php echo esc_html( (string) $module['desc'] ); ?></div>
+				<?php endif; ?>
+			</div>
+			<div class="gdc-pagehead-actions">
+				<a class="gdc-btn gdc-btn--surface" href="<?php echo esc_url( GDC_UI::module_url( 'settings' ) ); ?>">
+					<?php echo GDC_UI::icon( 'gear' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static sprite markup. ?>
+					<?php esc_html_e( 'Settings', 'globus-debug-control' ); ?>
+				</a>
+			</div>
+		</div>
+
+		<div class="gdc-settings-layout">
 			<?php
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flags after a nonce-verified redirect.
-			if ( isset( $_GET['gdc_debug_enabled'] ) ) {
-				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'WP_DEBUG and WP_DEBUG_LOG are enabled in wp-config.php.', 'globus-debug-control' ) . '</p></div>';
-			}
-
-			// The WP_DEBUG tab renders its own error notice; avoid showing it twice.
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status flag.
-			if ( isset( $_GET['gdc_cfg_error'] ) && 'wpcfg' !== $active_tab ) {
-				echo '<div class="notice notice-error"><p>' . esc_html__( 'wp-config.php could not be updated. Check that it is writable, then try again.', 'globus-debug-control' ) . '</p></div>';
-			}
+			$gdc_nav          = GDC_UI::nav( $tab );
+			$gdc_active_label = (string) $module['label'];
+			include GDC_INCLUDES . '/ui/partials/snav.php';
 			?>
 
-			<nav class="nav-tab-wrapper">
-				<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
-					<a
-						href="
-						<?php
-						echo esc_url(
-							add_query_arg(
-								array(
-									'page' => 'globus-debug-control',
-									'tab'  => $tab_key,
-								),
-								admin_url( 'options-general.php' )
-							)
-						);
-						?>
-								"
-						class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>"
-					><?php echo esc_html( $tab_label ); ?></a>
-				<?php endforeach; ?>
-			</nav>
-
-			<div class="gdc-tab-content">
-
-			<?php if ( 'settings' === $active_tab ) : ?>
-
-				<?php GDC_WpConfig_Debug::render_dependency_notice( 'settings' ); ?>
-
-				<form action="options.php" method="post">
+			<div class="gdc-settings-content">
+				<div class="gdc-legacy">
 					<?php
-					settings_fields( 'globus_debug_control' );
-					$this->render_settings_form();
+					switch ( $tab ) {
+						case 'wpcfg':
+							GDC_WpConfig_Debug::render();
+							break;
+						case 'cron':
+							GDC_Cron_Viewer::render();
+							break;
+						case 'transients':
+							GDC_Transient_Viewer::render();
+							break;
+						case 'autoloaded':
+							GDC_Options_Viewer::render();
+							break;
+						case 'http':
+							GDC_Http_Log::render();
+							break;
+						case 'constants':
+							GDC_Constants_Viewer::render();
+							break;
+						case 'log':
+						default:
+							GDC_Log_Viewer::render();
+							break;
+					}
 					?>
-				</form>
-
-				<div class="gdc-card">
-					<div class="gdc-card-header">
-						<div>
-							<h2><?php esc_html_e( 'System Information', 'globus-debug-control' ); ?></h2>
-							<p><?php esc_html_e( 'Runtime values reported by WordPress and PHP.', 'globus-debug-control' ); ?></p>
-						</div>
-					</div>
-					<div class="gdc-card-body">
-				<table class="widefat striped gdc-system-table">
-					<tr>
-						<td style="width: 250px;"><strong><?php esc_html_e( 'Plugin version:', 'globus-debug-control' ); ?></strong></td>
-						<td><?php echo esc_html( self::VERSION ); ?></td>
-					</tr>
-					<tr>
-						<td><strong><?php esc_html_e( 'PHP version:', 'globus-debug-control' ); ?></strong></td>
-						<td><?php echo esc_html( PHP_VERSION ); ?></td>
-					</tr>
-					<tr>
-						<td><strong>WP_DEBUG:</strong></td>
-						<td><?php echo defined( 'WP_DEBUG' ) && WP_DEBUG ? '<span style="color: #d63638;">&#9679;</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">&#9675;</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-					</tr>
-					<tr>
-						<td><strong>WP_DEBUG_DISPLAY:</strong></td>
-						<td><?php echo defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? '<span style="color: #d63638;">&#9679;</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">&#9675;</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-					</tr>
-					<tr>
-						<td><strong>WP_DEBUG_LOG:</strong></td>
-						<td><?php echo defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? '<span style="color: #d63638;">&#9679;</span> ' . esc_html__( 'Enabled', 'globus-debug-control' ) : '<span style="color: #999;">&#9675;</span> ' . esc_html__( 'Disabled', 'globus-debug-control' ); ?></td>
-					</tr>
-					<tr>
-						<td><strong><?php esc_html_e( 'Current error_reporting:', 'globus-debug-control' ); ?></strong></td>
-						<?php // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting,PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall -- Read-only admin diagnostic display. ?>
-						<td><code><?php echo esc_html( error_reporting() ); ?></code></td>
-					</tr>
-					<tr>
-						<td><strong>display_errors:</strong></td>
-						<td><code><?php echo esc_html( ini_get( 'display_errors' ) ); ?></code></td>
-					</tr>
-					<tr>
-						<td><strong>log_errors:</strong></td>
-						<td><code><?php echo esc_html( ini_get( 'log_errors' ) ); ?></code></td>
-					</tr>
-					<tr>
-						<td><strong><?php esc_html_e( 'Log file path:', 'globus-debug-control' ); ?></strong></td>
-						<td>
-							<?php
-							$log_path = $this->resolve_log_path( $opts );
-							if ( $log_path ) {
-								echo '<code>' . esc_html( $log_path ) . '</code>';
-								if ( file_exists( $log_path ) ) {
-									$size = filesize( $log_path );
-									echo ' <span style="color: #2271b1;">(' . esc_html__( 'size:', 'globus-debug-control' ) . ' ' . esc_html( size_format( $size ) ) . ')</span>';
-								} else {
-									echo ' <span style="color: #999;">(' . esc_html__( 'file does not exist', 'globus-debug-control' ) . ')</span>';
-								}
-							} else {
-								echo '<span style="color: #999;">' . esc_html__( 'Not configured', 'globus-debug-control' ) . '</span>';
-							}
-							?>
-						</td>
-					</tr>
-					<tr>
-						<td><strong><?php esc_html_e( 'Execution context:', 'globus-debug-control' ); ?></strong></td>
-						<td><?php echo $this->is_api_context() ? '<span style="color: #d63638;">' . esc_html__( 'API context', 'globus-debug-control' ) . '</span>' : '<span style="color: #2271b1;">' . esc_html__( 'Normal', 'globus-debug-control' ) . '</span>'; ?></td>
-					</tr>
-					<tr>
-						<td><strong><?php esc_html_e( 'MU-plugin dropin:', 'globus-debug-control' ); ?></strong></td>
-						<td><?php echo $this->is_mu_dropin_installed() ? '<span style="color: #00a32a;">&#9679;</span> ' . esc_html__( 'Installed', 'globus-debug-control' ) . ' (<code>' . esc_html( self::MU_FILE ) . '</code>)' : '<span style="color: #d63638;">&#9679;</span> ' . esc_html__( 'Not installed - early interception disabled', 'globus-debug-control' ); ?></td>
-					</tr>
-				</table>
-					</div>
 				</div>
-
-				<p class="gdc-text-muted"><small>&copy; 2026 GLOBUS.studio | <?php esc_html_e( 'Version', 'globus-debug-control' ); ?> <?php echo esc_html( self::VERSION ); ?></small></p>
-
-			<?php elseif ( 'wpcfg' === $active_tab ) : ?>
-
-				<?php GDC_WpConfig_Debug::render(); ?>
-
-				<p style="margin-top:16px;">
-					<a href="
-					<?php
-					echo esc_url(
-						add_query_arg(
-							array(
-								'page' => 'globus-debug-control',
-								'tab'  => 'constants',
-							),
-							admin_url( 'options-general.php' )
-						)
-					);
-					?>
-								" class="button button-secondary">
-						<?php esc_html_e( 'View all WP constants →', 'globus-debug-control' ); ?>
-					</a>
-				</p>
-
-			<?php elseif ( 'log' === $active_tab ) : ?>
-
-				<?php GDC_Log_Viewer::render(); ?>
-
-			<?php elseif ( 'cron' === $active_tab ) : ?>
-
-				<?php GDC_Cron_Viewer::render(); ?>
-
-			<?php elseif ( 'transients' === $active_tab ) : ?>
-
-				<?php GDC_Transient_Viewer::render(); ?>
-
-			<?php elseif ( 'autoloaded' === $active_tab ) : ?>
-
-				<?php GDC_Options_Viewer::render(); ?>
-
-			<?php elseif ( 'http' === $active_tab ) : ?>
-
-				<?php GDC_Http_Log::render(); ?>
-
-			<?php elseif ( 'constants' === $active_tab ) : ?>
-
-				<?php GDC_Constants_Viewer::render(); ?>
-
-			<?php endif; ?>
-
 			</div>
 		</div>
 		<?php
@@ -351,31 +343,70 @@ trait GDC_Admin_Page {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Enqueues CSS and JS for the plugin settings page.
+	 * Returns a cache-busting version for a plugin asset.
+	 *
+	 * @param string $relative Path relative to the plugin directory.
+	 * @return string
+	 */
+	private function asset_version( string $relative ): string {
+		$file = GDC_DIR . '/' . ltrim( $relative, '/' );
+
+		return file_exists( $file ) ? (string) filemtime( $file ) : self::VERSION;
+	}
+
+	/**
+	 * Enqueues CSS and JS for the plugin admin screen.
 	 *
 	 * @param string $hook Current admin page hook suffix.
 	 */
 	public function admin_enqueue_settings_assets( string $hook ): void {
-		if ( 'settings_page_globus-debug-control' !== $hook ) {
+		if ( 'toplevel_page_globus-debug-control' !== $hook ) {
 			return;
 		}
 
-		$css_file = GDC_DIR . '/assets/css/admin.css';
-		$js_file  = GDC_DIR . '/assets/js/admin.js';
+		$css = GDC_ASSETS_URL . 'css/';
+		$js  = GDC_ASSETS_URL . 'js/';
 
-		wp_enqueue_style(
-			'gdc-admin',
-			GDC_ASSETS_URL . 'css/admin.css',
-			array( 'dashicons' ),
-			file_exists( $css_file ) ? (string) filemtime( $css_file ) : self::VERSION
-		);
+		wp_enqueue_style( 'dashicons' );
 
-		wp_enqueue_script(
-			'gdc-admin',
-			GDC_ASSETS_URL . 'js/admin.js',
-			array( 'jquery' ),
-			file_exists( $js_file ) ? (string) filemtime( $js_file ) : self::VERSION,
-			true
+		wp_enqueue_style( 'gdc-tokens', $css . 'gdc-tokens.css', array(), $this->asset_version( 'assets/css/gdc-tokens.css' ) );
+		wp_enqueue_style( 'gdc-ui', $css . 'gdc-ui.css', array( 'gdc-tokens' ), $this->asset_version( 'assets/css/gdc-ui.css' ) );
+		wp_enqueue_style( 'gdc-components', $css . 'gdc-components.css', array( 'gdc-ui' ), $this->asset_version( 'assets/css/gdc-components.css' ) );
+		wp_enqueue_style( 'gdc-legacy', $css . 'legacy.css', array( 'gdc-tokens', 'dashicons' ), $this->asset_version( 'assets/css/legacy.css' ) );
+		wp_enqueue_style( 'gdc-toastify', GDC_ASSETS_URL . 'vendor/toastify/toastify.min.css', array(), $this->asset_version( 'assets/vendor/toastify/toastify.min.css' ) );
+
+		wp_enqueue_script( 'gdc-toastify', GDC_ASSETS_URL . 'vendor/toastify/toastify.min.js', array(), $this->asset_version( 'assets/vendor/toastify/toastify.min.js' ), true );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab detection.
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'overview';
+
+		if ( 'overview' === $tab ) {
+			wp_enqueue_script( 'gdc-chartjs', GDC_ASSETS_URL . 'vendor/chartjs/chart.umd.js', array(), $this->asset_version( 'assets/vendor/chartjs/chart.umd.js' ), true );
+		}
+
+		wp_enqueue_script( 'gdc-ui', $js . 'gdc-ui.js', array( 'gdc-toastify' ), $this->asset_version( 'assets/js/gdc-ui.js' ), true );
+		wp_enqueue_script( 'gdc-admin', $js . 'admin.js', array( 'gdc-ui' ), $this->asset_version( 'assets/js/admin.js' ), true );
+
+		wp_localize_script(
+			'gdc-ui',
+			'gdcUiData',
+			array(
+				'ajaxurl'     => admin_url( 'admin-ajax.php' ),
+				'nonce'       => wp_create_nonce( 'gdc_admin' ),
+				'searchIndex' => GDC_UI::search_index(),
+				'i18n'        => array(
+					'no_results'    => esc_html__( 'Nothing found', 'globus-debug-control' ),
+					'confirm_title' => esc_html__( 'Please confirm', 'globus-debug-control' ),
+					'cancel'        => esc_html__( 'Cancel', 'globus-debug-control' ),
+					'confirm'       => esc_html__( 'Confirm', 'globus-debug-control' ),
+					'close'         => esc_html__( 'Close', 'globus-debug-control' ),
+					'copied'        => esc_html__( 'Copied to clipboard.', 'globus-debug-control' ),
+					'saved'         => esc_html__( 'Saved.', 'globus-debug-control' ),
+					'active'        => esc_html__( 'Debug control is active', 'globus-debug-control' ),
+					'paused'        => esc_html__( 'Debug control is paused', 'globus-debug-control' ),
+					'error'         => esc_html__( 'Request failed. Please try again.', 'globus-debug-control' ),
+				),
+			)
 		);
 
 		wp_localize_script(
@@ -389,8 +420,6 @@ trait GDC_Admin_Page {
 			)
 		);
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
 		if ( 'log' === $tab ) {
 			wp_enqueue_code_editor( array( 'type' => 'text/plain' ) );
 		}
